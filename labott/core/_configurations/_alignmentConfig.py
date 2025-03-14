@@ -172,7 +172,7 @@ slices.append(slice(0,3)) # Parabola
 slices.append(slice(3,5)) # Reference Mirror
 slices.append(slice(5,7)) # M4 Exapode
 
-zernike_to_use = [1,2,3,6,7]
+zernike_to_use = [1,2,3,6,7]     # py-indexing
 push_pull_template = [+1,-2,+1]
 
 # Devices calls

@@ -27,11 +27,12 @@ PRODUCE_FOLDER_NAME_4D_PC = str(_cc["produce_4dpc"])
 PRODUCE_FOLDER_NAME_LOCAL_PC = str(_cc["produce"])
 SETTINGS_CONF_FILE = str(_ci["settings"])
 
-CONFIG_FOLDER_PATH = _os.path.dirname(INTERF_CONFIGURATION_FILE)
+CONFIGURATION_ROOT_FOLDER = _os.path.dirname(INTERF_CONFIGURATION_FILE)
 BASE_PATH = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
 BASE_DATA_PATH = str(_cc["data_path"])
 OPD_IMAGES_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "OPDImages")
 OPD_SERIES_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "OPDSeries")
+IFFUNCTIONS_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "IFFunctions")
 LOGGING_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Logs")
 
 
@@ -44,7 +45,6 @@ def mount4D():
     """
     Mount the 4d and 4dConfig shared folders in the local machine.
     """
-
     try:
         mount4d = _os.system("mount 4d")
         if mount4d == 0:
@@ -59,17 +59,18 @@ def mount4D():
 class _folds():
     """Wrapper class for the folder tree of the package"""
     def __init__(self):
-        self.CAPTURE_FOLDER_NAME_4D_PC = CAPTURE_FOLDER_NAME_4D_PC
-        self.PRODUCE_FOLDER_NAME_4D_PC = PRODUCE_FOLDER_NAME_4D_PC
-        self.PRODUCE_FOLDER_NAME_LOCAL_PC = PRODUCE_FOLDER_NAME_LOCAL_PC
-        self.SETTINGS_CONF_FILE = SETTINGS_CONF_FILE
-        self.BASE_PATH = BASE_PATH
-        self.BASE_DATA_PATH = BASE_DATA_PATH
-        self.OPD_IMAGES_ROOT_FOLDER = OPD_IMAGES_ROOT_FOLDER
-        self.OPD_SERIES_ROOT_FOLDER = OPD_SERIES_ROOT_FOLDER
-        self.LOGGING_FILE_PATH = LOGGING_ROOT_FOLDER
         self.I4D_IP = I4D_IP
         self.I4D_PORT = I4D_PORT
+        self.BASE_PATH = BASE_PATH
+        self.BASE_DATA_PATH = BASE_DATA_PATH
+        self.SETTINGS_CONF_FILE = SETTINGS_CONF_FILE
+        self.LOGGING_FILE_PATH = LOGGING_ROOT_FOLDER
+        self.OPD_SERIES_ROOT_FOLDER = OPD_SERIES_ROOT_FOLDER
+        self.OPD_IMAGES_ROOT_FOLDER = OPD_IMAGES_ROOT_FOLDER
+        self.IFFUNCTIONS_ROOT_FOLDER = IFFUNCTIONS_ROOT_FOLDER
+        self.PRODUCE_FOLDER_NAME_4D_PC = PRODUCE_FOLDER_NAME_4D_PC
+        self.CAPTURE_FOLDER_NAME_4D_PC = CAPTURE_FOLDER_NAME_4D_PC
+        self.PRODUCE_FOLDER_NAME_LOCAL_PC = PRODUCE_FOLDER_NAME_LOCAL_PC
 
 folders = _folds()
 

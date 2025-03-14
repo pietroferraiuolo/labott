@@ -55,9 +55,10 @@ performed. This can be done through the `reload_calibrated_parabola` method.
 >>> align.reload_calibrated_parabola(tn_parabola) # load the calibrated parabola
 """
 
-import numpy as np
-import optalign._systemConfiguration as sc
-from .dm import _ground as grd
+import numpy as _np
+from labott.core._configurations import _alignmentConfig as _sc
+from .ground import logger as _logger, zernike as _zern, geo as _geo
+from .ground.osutils import load_fits as _rfits, save_fits as _sfits, newtn as _ts
 
 
 class Alignment:
@@ -110,35 +111,35 @@ class Alignment:
         """
         self.mdev = mechanical_devices
         self.ccd = acquisition_devices
-        self.cmdMat = grd.read_fits_data(sc.commandMatrix)
+        self.cmdMat = _rfits(_sc.commandMatrix)
         self.intMat = None
         self.recMat = None
         self._cmdAmp = None
         self._surface = (
-            grd.read_fits_data(sc.fitting_surface).mask
-            if not sc.fitting_surface == ""
+            _rfits(_sc.fitting_surface).mask
+            if not _sc.fitting_surface == ""
             else None
         )
-        self._moveFnc = grd.get_callables(self.mdev, sc.devices_move_calls)
-        self._readFnc = grd.get_callables(self.mdev, sc.devices_read_calls)
-        self._acquire = grd.get_callables(self.ccd, sc.ccd_acquisition)
-        self._devName = grd.get_dev_names(sc.names, ndev=len(self._moveFnc))
+        self._moveFnc = self.__get_callables(self.mdev, _sc.devices_move_calls)
+        self._readFnc = self.__get_callables(self.mdev, _sc.devices_read_calls)
+        self._acquire = self.__get_callables(self.ccd, _sc.ccd_acquisition)
+        self._devName = self.__get_dev_names(_sc.names, ndev=len(self._moveFnc))
         self._dof = [
-            np.array(dof) if not isinstance(dof, np.ndarray) else dof for dof in sc.dof
+            _np.array(dof) if not isinstance(dof, _np.ndarray) else dof for dof in _sc.dof
         ]
         self._dofTot = (
-            sc.cmdDof
-            if isinstance(sc.cmdDof, list)
-            else [sc.cmdDof] * len(self._moveFnc)
+            _sc.cmdDof
+            if isinstance(_sc.cmdDof, list)
+            else [_sc.cmdDof] * len(self._moveFnc)
         )
-        self._idx = sc.slices
-        self._zvec2fit = np.arange(1, 11)
-        self._zvec2use = sc.zernike_to_use
-        self._template = sc.push_pull_template
-        self._readPath = sc.base_read_data_path
-        self._writePath = sc.base_write_data_path
-        self._txt = grd.txtLogger(sc.log_path.strip(".log") + "Record.txt")
-        grd.set_up_logger(sc.log_path, sc.logging_level)
+        self._idx = _sc.slices
+        self._zvec2fit = _np.arange(1, 11)
+        self._zvec2use = _sc.zernike_to_use
+        self._template = _sc.push_pull_template
+        self._readPath = _sc.base_read_data_path
+        self._writePath = _sc.base_write_data_path
+        self._txt = _logger.txtLogger(_sc.log_path.strip(".log") + "Record.txt")
+        _logger.set_up_logger(_sc.log_path, _sc.logging_level)
 
     def correct_alignment(
         self,
@@ -181,12 +182,12 @@ class Alignment:
         reconstruction matrix, calculates the reduced command, and either applies the
         correction command or returns it.
         """
-        grd.log(f"{self.correct_alignment.__qualname__}")
+        _logger.log(f"{self.correct_alignment.__qualname__}")
         image = self._acquire[0](n_frames)
         initpos = self.read_positions(show=False)
         zernike_coeff = self._zern_routine(image)
         if tn is not None:
-            intMat = grd.read_fits_data(
+            intMat = _rfits(
                 self._readPath + f"/{tn}/InteractionMatrix.fits"
             )
             self.intMat = intMat
@@ -201,12 +202,12 @@ class Alignment:
                     "No internal matrix found. Please calibrate the alignment first."
                 )
         reduced_intMat = intMat[
-            np.ix_(zern2correct, modes2correct)
+            _np.ix_(zern2correct, modes2correct)
         ]
         reduced_cmdMat = self.cmdMat[:, modes2correct]
         recMat = self._create_rec_mat(reduced_intMat)
-        reduced_cmd = np.dot(recMat, zernike_coeff[zern2correct])
-        f_cmd = -np.dot(reduced_cmdMat, reduced_cmd)
+        reduced_cmd = _np.dot(recMat, zernike_coeff[zern2correct])
+        f_cmd = -_np.dot(reduced_cmdMat, reduced_cmd)
         print(f"Resulting Command: {f_cmd}")
         self._write_correction_log(tn, initpos)
         self._txt.log(
@@ -258,18 +259,19 @@ class Alignment:
         4. Executes a Zernike routine on the image list to generate an internal matrix.
         5. Optionally saves the internal matrix to a FITS file.
         """
-        grd.log(f"{self.calibrate_alignment.__qualname__}")
+        import os
+        _logger.log(f"{self.calibrate_alignment.__qualname__}")
         self._cmdAmp = cmdAmp
         template = template if template is not None else self._template
         imglist = self._images_production(template, n_repetitions)
         intMat = self._zern_routine(imglist)
         self.intMat = intMat
         if save:
-            tn = grd.utils._new_tn()
-            filename = grd.os.path.join(self._writePath, tn, "InteractionMatrix.fits")
-            grd.os.mkdir(filename.strip("InteractionMatrix.fits"))
-            grd.save_fits_data("intMat.fits", self.intMat, overwrite=True)
-            grd.log(f"{grd.save_fits_data.__qualname__}")
+            tn = _ts()
+            filename = os.path.join(self._writePath, tn, "InteractionMatrix.fits")
+            os.mkdir(filename.strip("InteractionMatrix.fits"))
+            _sfits("intMat.fits", self.intMat, overwrite=True)
+            _logger.log(f"{_sfits.__qualname__}")
         return "Ready for Alignment..."
 
     def read_positions(self, show:bool=True):
@@ -281,7 +283,7 @@ class Alignment:
         pos : list
             The list of current positions of the devices.
         """
-        grd.log(f"{self.read_positions.__qualname__}")
+        _logger.log(f"{self.read_positions.__qualname__}")
         logMsg = ""
         pos = []
         logMsg += "Current Positions\n"
@@ -311,7 +313,7 @@ class Alignment:
         str
             A message indicating the successful loading of the file.
         """
-        surf = grd.read_fits_data(filepath)
+        surf = _rfits(filepath)
         self._surface = surf
         return f"Correctly loaded '{filepath}'"
 
@@ -364,26 +366,26 @@ class Alignment:
         intMat : ndarray
             The interaction matrix created from the images.
         """
-        grd.log(f"{self._zern_routine.__qualname__}")
+        _logger.log(f"{self._zern_routine.__qualname__}")
         coefflist = []
         if not isinstance(imglist, list):
             imglist = [imglist]
         for img in imglist:
             if self._auxMask is None:
-                coeff, _ = grd.zernikeFit(img, self._zvec2fit)
-                grd.log(f"{grd.zernikeFit.__qualname__}")
+                coeff, _ = _zern.zernikeFit(img, self._zvec2fit)
+                _logger.log(f"{_zern.zernikeFit.__qualname__}")
             else:
                 img = img - 2 * self._surface
-                cir = grd.qpupil(-1 * self._surface.mask + 1)
-                mm = grd.draw_mask(
+                cir = _geo.qpupil(-1 * self._surface.mask + 1)
+                mm = _geo.draw_mask(
                     self._surface.data * 0, cir[0], cir[1], 1.44 / 0.00076 / 2, out=0
                 )
-                coeff, _ = grd.zernikeFitAuxmask(img, mm, self._zvec2fit)
-                grd.log(f"{grd.zernikeFitAuxmask.__qualname__}")
+                coeff, _ = _zern.zernikeFitAuxmask(img, mm, self._zvec2fit)
+                _logger.log(f"{_zern.zernikeFitAuxmask.__qualname__}")
             coefflist.append(coeff[self._zvec2use])
         if len(coefflist) == 1:
-            coefflist = np.array([c for c in coefflist(0)])
-        intMat = np.array(coefflist).T
+            coefflist = _np.array([c for c in coefflist(0)])
+        intMat = _np.array(coefflist).T
         return intMat
 
     def _create_rec_mat(self, intMat):
@@ -396,8 +398,8 @@ class Alignment:
         recMat : ndarray
             Reconstruction matrix.
         """
-        grd.log(f"{self._create_rec_mat.__qualname__}")
-        recMat = np.linalg.pinv(intMat)
+        _logger.log(f"{self._create_rec_mat.__qualname__}")
+        recMat = _np.linalg.pinv(intMat)
         self.recMat = recMat
         return recMat
 
@@ -424,7 +426,7 @@ class Alignment:
                 try:
                     logMsg += f"Commanding {cmd} to {dev}\n"
                     fnc(cmd.vect)
-                    grd.log(f"{fnc.__qualname__} : {cmd.vect}")
+                    _logger.log(f"{fnc.__qualname__} : {cmd.vect}")
                 except Exception as e:
                     print(e)
         logMsg += "-" * 30
@@ -444,10 +446,10 @@ class Alignment:
         device_commands : list
             The list of commands to be applied to each device.
         """
-        grd.log(f"{self._extract_cmds_to_apply.__qualname__}")
+        _logger.log(f"{self._extract_cmds_to_apply.__qualname__}")
         commands = []
         for d, dof in enumerate(self._dof):
-            dev_cmd = np.zeros(self._dofTot[d])
+            dev_cmd = _np.zeros(self._dofTot[d])
             dev_idx = fullCmd[self._idx[d]]
             for i, idx in enumerate(dev_idx):
                 dev_cmd[dof[i]] = idx
@@ -475,8 +477,8 @@ class Alignment:
         imglist : list
             The list of acquired images.
         """
-        grd.log(f"{self._img_acquisition.__qualname__}")
-        grd.log(f"{self._acquire[0].__qualname__}")
+        _logger.log(f"{self._img_acquisition.__qualname__}")
+        _logger.log(f"{self._acquire[0].__qualname__}")
         imglist = [self._acquire[0](n_frames)]
         for t in template:
             logMsg = ""
@@ -485,7 +487,7 @@ class Alignment:
             logMsg += f" - Full Command : {cmd}"
             print(logMsg)
             self._apply_command(cmd)
-            grd.log(f"{self._acquire[0].__qualname__}")
+            _logger.log(f"{self._acquire[0].__qualname__}")
             imglist.append(self._acquire[0](n_frames))
         return imglist
 
@@ -502,21 +504,21 @@ class Alignment:
 
         Returns
         -------
-        image : np.ndarray
+        image : _np.ndarray
             The reduced image.
         """
-        grd.log(f"{self._push_pull_redux.__qualname__}")
+        _logger.log(f"{self._push_pull_redux.__qualname__}")
         template.insert(0, 1)
-        image = np.zeros((imglist[0].shape[0], imglist[0].shape[1]))
+        image = _np.zeros((imglist[0].shape[0], imglist[0].shape[1]))
         for x in range(1, len(imglist)):
             opd2add = imglist[x] * template[x] + imglist[x - 1] * template[x - 1]
-            mask2add = np.ma.mask_or(imglist[x].mask, imglist[x - 1].mask)
+            mask2add = _np.ma.mask_or(imglist[x].mask, imglist[x - 1].mask)
             if x == 1:
                 master_mask = mask2add
             else:
-                master_mask = np.ma.mask_or(master_mask, mask2add)
+                master_mask = _np.ma.mask_or(master_mask, mask2add)
             image += opd2add
-        image = np.ma.masked_array(image, mask=master_mask) / 6
+        image = _np.ma.masked_array(image, mask=master_mask) / 6
         template.pop(0)
         return image
 
@@ -543,6 +545,64 @@ class Alignment:
             )
         )
         return
+    
+    @staticmethod
+    def __get_callables(devices, callables):
+        """
+        Returns a list of callables for the instanced object, taken from the
+        configuration.py file.
+
+        Parameters
+        ----------
+        devices : object
+            The device object for which callables are retrieved.
+        callables : list
+            The list of callable names to be retrieved.
+
+        Returns
+        -------
+        functions : list
+            List of callables, which interacts with the input object of the class.
+        """
+        if not isinstance(devices, list):
+            devices = [devices]
+        functions = []
+        for dev in devices:
+            for dev_call in callables:
+                obj, *methods = dev_call.split(".")
+                call = getattr(dev, obj)
+                for method in methods:
+                    call = getattr(call, method)
+                functions.append(call)
+        return functions
+
+    @staticmethod
+    def __get_dev_names(names, ndev):
+        """
+        Returns the names of the devices.
+
+        Parameters
+        ----------
+        names : list
+            The list of device names.
+
+        Returns
+        -------
+        names : list
+            The list of device names.
+        """
+        dev_names = []
+        try:
+            for x in names:
+                dev_names.append(x)
+        except TypeError:
+            for x in range(ndev):
+                dev_names.append(f"Device {x}")
+        return dev_names
+
+
+
+
 
 class _Command:
     """
@@ -551,7 +611,7 @@ class _Command:
     the command, combining it with other commands, and checking if it is null.
 
     Attributes:
-        vect (np.ndarray): The vector representing the command.
+        vect (_np.ndarray): The vector representing the command.
         to_ignore (bool): A flag indicating whether the command should be ignored.
 
     Methods:
@@ -575,13 +635,13 @@ class _Command:
 
         Parameters
         ----------
-        vector : list or np.ndarray, optional
+        vector : list or _np.ndarray, optional
             The vector representing the command. If a list is provided, it will
             be converted to a numpy array.
         to_ignore : bool, optional
             A flag indicating whether the command should be ignored.
         """
-        self.vect = np.array(vector) if isinstance(vector, list) else vector
+        self.vect = _np.array(vector) if isinstance(vector, list) else vector
         self.to_ignore = to_ignore
 
     def __repr__(self):
@@ -631,8 +691,8 @@ class _Command:
         """
         if not isinstance(other, _Command):
             return NotImplemented
-        if not isinstance(self.vect, np.ndarray) and not isinstance(
-            other.vect, np.ndarray
+        if not isinstance(self.vect, _np.ndarray) and not isinstance(
+            other.vect, _np.ndarray
         ):
             raise NotImplementedError(
                 f"Operation not supported for operands types {type(self.vect)} and {type(other)}"
@@ -651,7 +711,7 @@ class _Command:
         bool
             True if the command is null, False otherwise.
         """
-        return np.all(self.vect == 0)
+        return _np.all(self.vect == 0)
 
     def _process_command_logic(self, P, C, S):
         """
@@ -663,7 +723,7 @@ class _Command:
             The previous command instance.
         C : _Command
             The current command instance.
-        S : np.ndarray
+        S : _np.ndarray
             The sum of the vectors of the previous and current commands.
 
         Returns
@@ -676,9 +736,9 @@ class _Command:
         # S = sum of P and C - command to apply (absolute)
         # _________________________________________________#
         # If S = 0
-        if np.all(S == 0):
+        if _np.all(S == 0):
             # C ≠ 0 and P ≠ 0 → TO_NOT_IGNORE
-            if not P.is_null and not C.is_null and np.array_equal(C.vect, -1 * P.vect):
+            if not P.is_null and not C.is_null and _np.array_equal(C.vect, -1 * P.vect):
                 decision = False
             # C = 0 and P = 0 → TO_IGNORE
             elif C.is_null and P.is_null:
@@ -686,12 +746,12 @@ class _Command:
         # If S ≠ 0
         else:
             # P ≠ 0 and C = 0 → TO_IGNORE
-            if not P.is_null and C.is_null and np.array_equal(S, P.vect):
+            if not P.is_null and C.is_null and _np.array_equal(S, P.vect):
                 decision = True
             # C ≠ 0 and P ≠ 0 → TO_NOT_IGNORE
             elif not C.is_null and not P.is_null:
                 decision = False
             # P = 0 and C ≠ 0 → TO_NOT_IGNORE
-            elif P.is_null and not C.is_null and np.array_equal(S, C.vect):
+            elif P.is_null and not C.is_null and _np.array_equal(S, C.vect):
                 decision = False
         return decision

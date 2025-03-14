@@ -2,14 +2,14 @@ import os as _os
 import numpy as _np
 import time as _time
 import shutil as _sh
-from .utils import logger as _logger
-from .utils.osutils import (
+from labott.ground import logger as _logger
+from labott.ground.osutils import (
     newtn as _newtn,
     InterferometerConverter,
     rename4D,
 )
-from .core import root as _folds
-from .analyzer import modeRebinner as _modeRebinner
+from labott.core.root import folders as _folds
+from labott.analyzer import modeRebinner as _modeRebinner
 
 _confReader = _folds.ConfSettingReader4D
 
@@ -20,13 +20,13 @@ class PhaseCam():
 
     def __init__(self, ip: str = None, port: int = None):
         """The constructor"""
-        from .core.i4d import I4D
+        from labott.core.i4d import I4D
 
         if (ip and port) is None:
-            from .core.root import I4D_IP, I4D_PORT
-
+            from labott.core.root import I4D_IP, I4D_PORT
             ip = I4D_IP
             port = I4D_PORT
+
         self._i4d = I4D(ip, port)
         self._ic = InterferometerConverter()
         self._logger = _logger.set_up_logger(_folds.LOGGING_FILE_PATH, 20)

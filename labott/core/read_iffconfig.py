@@ -6,26 +6,29 @@ Author(s)
 Written in 06/2024
 '''
 import os as _os
-from . import root
 import numpy as _np
 import json as _json
 import shutil as _sh
 import configparser as _cp
-
-config          = _cp.ConfigParser()
-cfoldname       = fn.CONFIGURATION_ROOT_FOLDER
-
-iff_configFile  = 'iffConfig.ini'
-nzeroName       = 'numberofzeros'
-modeIdName      = 'modeid'
-modeAmpName     = 'modeamp'
-templateName    = 'template'
-modalBaseName   = 'modalbase'
-
-items = [nzeroName, modeIdName, modeAmpName, templateName, modalBaseName]
+from .root import (
+    CONFIGURATION_ROOT_FOLDER as _cfold,
+    IFFUNCTIONS_ROOT_FOLDER as _iffold,
+)
 
 
-def getConfig(key, bpath=cfoldname):
+_config          = _cp.ConfigParser()
+
+iff_configFile   = 'iffConfig.ini'
+_nzeroName       = 'numberofzeros'
+_modeIdName      = 'modeid'
+_modeAmpName     = 'modeamp'
+_templateName    = 'template'
+_modalBaseName   = 'modalbase'
+
+_items = [_nzeroName, _modeIdName, _modeAmpName, _templateName, _modalBaseName]
+
+
+def getConfig(key, bpath=_cfold):
     """
     Reads the configuration file for the IFF acquisition.
     The key passed is the block of information retrieved
@@ -51,18 +54,18 @@ def getConfig(key, bpath=cfoldname):
             - template
             - modalBase 
     """
-    fname = os.path.join(bpath, iff_configFile)
-    config.read(fname)
-    cc = config[key]
-    nzeros      = int(cc[nzeroName])
-    modeId_str  = cc[modeIdName]
+    fname = _os.path.join(bpath, iff_configFile)
+    _config.read(fname)
+    cc = _config[key]
+    nzeros      = int(cc[_nzeroName])
+    modeId_str  = cc[_modeIdName]
     try:
-        modeId = np.array(json.loads(modeId_str))
-    except json.JSONDecodeError:
-        modeId = np.array(eval(modeId_str))
-    modeAmp     = float(cc[modeAmpName])
-    modalBase   = cc[modalBaseName]
-    template    = np.array(json.loads(cc[templateName]))
+        modeId = _np.array(_json.loads(modeId_str))
+    except _json.JSONDecodeError:
+        modeId = _np.array(eval(modeId_str))
+    modeAmp     = float(cc[_modeAmpName])
+    modalBase   = cc[_modalBaseName]
+    template    = _np.array(_json.loads(cc[_templateName]))
     info = {'zeros': nzeros,
             'modes': modeId,
             'amplitude': modeAmp,
@@ -72,7 +75,7 @@ def getConfig(key, bpath=cfoldname):
     return info
 
 
-def copyConfingFile(tn, old_path=cfoldname):
+def copyConfingFile(tn, old_path=_cfold):
     """
     This function copies the configuration file to the new folder created for the
     IFF data, to keep record of the configuration used on data acquisition.
@@ -90,14 +93,14 @@ def copyConfingFile(tn, old_path=cfoldname):
     res : str
         String containing the path where the file has been copied
     """
-    fname = os.path.join(old_path, iff_configFile)
-    nfname= os.path.join(fn.IFFUNCTIONS_ROOT_FOLDER, tn, iff_configFile)
-    res = shutil.copy2(fname, nfname)
+    fname = _os.path.join(old_path, iff_configFile)
+    nfname= _os.path.join(_iffold, tn, iff_configFile)
+    res = _sh.copy2(fname, nfname)
     print(f"{iff_configFile} copied to {res}")
     return nfname
 
 
-def updateConfigFile(key: str, item: str, value, bpath=cfoldname):
+def updateConfigFile(key: str, item: str, value, bpath=_cfold):
     """
     Updates the configuration file for the IFF acquisition.
     The key passed is the block of information to update
@@ -123,22 +126,22 @@ def updateConfigFile(key: str, item: str, value, bpath=cfoldname):
         folder
     """
     if not iff_configFile in bpath:
-        fname = os.path.join(bpath, iff_configFile)
+        fname = _os.path.join(bpath, iff_configFile)
         # Create a backup of the original file if it is the one in the configuration root folder
-        if bpath == cfoldname:
-            fnameBck = os.path.join(bpath, 'iffConfig_backup.ini')
-            shutil.copyfile(fname, fnameBck)
+        if bpath == _cfold:
+            fnameBck = _os.path.join(bpath, 'iffConfig_backup.ini')
+            _sh.copyfile(fname, fnameBck)
     else:
         fname = bpath
     content = getConfig(key, bpath)
-    if not item in items:
+    if not item in _items:
         raise KeyError(f"Item `{item}` not found in the configuration file")
     with open(fname, 'w') as configfile:
-        config[key][item] = str(value)
-        config.write(configfile)
+        _config[key][item] = str(value)
+        _config.write(configfile)
 
 
-def getNActs_fromConf(bpath=cfoldname):
+def getNActs_fromConf(bpath=_cfold):
     """
     Retrieves the number of actuators from the iffConfig.ini file. 
     DEPRECATED
@@ -155,14 +158,14 @@ def getNActs_fromConf(bpath=cfoldname):
         Number of DM's used actuators
 
     """
-    fname = os.path.join(bpath, iff_configFile)
-    config.read(fname)
-    cc = config['DM']
+    fname = _os.path.join(bpath, iff_configFile)
+    _config.read(fname)
+    cc = _config['DM']
     nacts = int(cc['NActs'])
     return nacts
 
 
-def getTiming(bpath=cfoldname):
+def getTiming(bpath=_cfold):
     """
     Retrieves the timing information from the iffConfig.ini file
     DEPRECATED??
@@ -178,14 +181,14 @@ def getTiming(bpath=cfoldname):
     timing : int
         Timing for the synchronization with the mirrors working frequency
     """
-    fname = os.path.join(bpath, iff_configFile)
-    config.read(fname)
-    cc = config['DM']
+    fname = _os.path.join(bpath, iff_configFile)
+    _config.read(fname)
+    cc = _config['DM']
     timing = int(cc['Timing'])
     return timing
 
 
-def getCmdDelay(bpath=cfoldname):
+def getCmdDelay(bpath=_cfold):
     """
     Retrieves the command delay information from the iffConfig.ini file.
 
@@ -200,8 +203,8 @@ def getCmdDelay(bpath=cfoldname):
     cmdDelay : int
         Command delay for the synchronization with the interferometer.
     """
-    fname = os.path.join(bpath, iff_configFile)
-    config.read(fname)
-    cc = config['DM']
+    fname = _os.path.join(bpath, iff_configFile)
+    _config.read(fname)
+    cc = _config['DM']
     cmdDelay = float(cc['delay'])
     return cmdDelay

@@ -9,6 +9,8 @@ Description
 import os as _os
 import numpy as _np
 import time as _time
+from labott.core.root import OPD_IMAGES_ROOT_FOLDER as _opdi
+from labott.ground.osutils import newtn as _ts, save_fits as _sf
 
 class AlpaoDm():
     """
@@ -18,7 +20,6 @@ class AlpaoDm():
     def __init__(self, ip:str, port:int):
         """The Contructor"""
         import plico_dm
-        print("Ricorda di spostare le _dmCoords!")
         self._dmCoords      = {
             'dm97' : [5, 7, 9, 11],
             'dm277': [7, 9, 11, 13, 15, 17, 19],
@@ -30,7 +31,7 @@ class AlpaoDm():
         self.mirrorModes    = None
         self.actCoord       = self._initActCoord()
         self.cmdHistory     = None
-        self.baseDataPath   = fn.OPD_IMAGES_ROOT_FOLDER
+        self.baseDataPath   = _opdi
         self.refAct         = 425
 
     def get_shape(self):
@@ -53,38 +54,38 @@ class AlpaoDm():
         else:
             tn = _ts.now() if save is None else save
             print(f"{tn} - {self.cmdHistory.shape[-1]} images to go.")
-            datafold = os.path.join(self.baseDataPath, tn)
+            datafold = _os.path.join(self.baseDataPath, tn)
             s = self.get_shape()
-            if not os.path.exists(datafold) and interf is not None:
-                os.mkdir(datafold)
+            if not _os.path.exists(datafold) and interf is not None:
+                _os.mkdir(datafold)
             for i,cmd in enumerate(self.cmdHistory.T):
                 print(f"{i+1}/{self.cmdHistory.shape[-1]}", end="\r", flush=True)
                 if differential:
                     cmd = cmd+s
                 self.set_shape(cmd)
                 if interf is not None:
-                    time.sleep(delay)
+                    _time.sleep(delay)
                     img = interf.acquire_phasemap()
-                    path = os.path.join(datafold, f"image_{i:05d}.fits")
-                    rd.save_phasemap(path, img)
+                    path = _os.path.join(datafold, f"image_{i:05d}.fits")
+                    _sf(path, img)
         self.set_shape(s)
         return tn
 
     def setZeros2Acts(self):
-        zero = np.zeros(self.nActs)
+        zero = _np.zeros(self.nActs)
         self.set_shape(zero)
 
     def nActuators(self):
         return self.nActs
     
     def _checkCmdIntegrity(self, cmd):
-        mcmd = np.max(cmd)
+        mcmd = _np.max(cmd)
         if mcmd > 0.9:
             raise ValueError(f"Command value {mcmd} is greater than 1.")
-        mcmd = np.min(cmd)
+        mcmd = _np.min(cmd)
         if mcmd < -0.9:
             raise ValueError(f"Command value {mcmd} is smaller than -1.")
-        scmd = np.std(cmd)
+        scmd = _np.std(cmd)
         if scmd > 0.5:
             raise ValueError(f"Command standard deviation {scmd} is greater than 0.1.")
 
@@ -100,10 +101,10 @@ class AlpaoDm():
         rows_number_of_acts = upper_rows + center_rows + lower_rows
         N_acts = sum(rows_number_of_acts)
         n_rows = len(rows_number_of_acts)
-        cx = np.array([], dtype=int)
-        cy = np.array([], dtype=int)
+        cx = _np.array([], dtype=int)
+        cy = _np.array([], dtype=int)
         for i in range(n_rows):
-            cx = np.concatenate((cx, np.arange(rows_number_of_acts[i]) + (n_dim - rows_number_of_acts[i]) // 2))
-            cy = np.concatenate((cy, np.full(rows_number_of_acts[i], i)))
-        self.actCoord = np.array([cx, cy])
+            cx = _np.concatenate((cx, _np.arange(rows_number_of_acts[i]) + (n_dim - rows_number_of_acts[i]) // 2))
+            cy = _np.concatenate((cy, _np.full(rows_number_of_acts[i], i)))
+        self.actCoord = _np.array([cx, cy])
         return self.actCoord
