@@ -1,18 +1,17 @@
-# -*- coding: utf-8 -*-
 """
 Autor(s)
 ---------
-    - Federico Miceli : added funcitonality on march 2022
     - Runa Briguglio : created Mar 2020
-    - Pietro Ferraiuolo : polished on 2024 for this Alignment Software
+    - Federico Miceli : added funcitonality on 2022
+    - Pietro Ferraiuolo : polished on 2024 
 
 Description
 -----------
 This module contains functions for geometric operations on images.
 """
-import numpy as np
-from skimage.measure import CircleModel
-from skimage.draw import disk
+import numpy as _np
+from skimage.draw import disk as _disk
+from skimage.measure import CircleModel as _CM
 
 
 def qpupil_circle(image, pixel_dir=0):
@@ -25,21 +24,21 @@ def qpupil_circle(image, pixel_dir=0):
         indicates which direction to use for counting the number of pixels in the image.
         Y direction as standard
     """
-    aa = np.shape(image)
+    aa = _np.shape(image)
     imagePixels = aa[pixel_dir]  # standard dir y
-    circ = CircleModel()
+    circ = _CM()
     cnt = _find_img_borders(image, imagePixels)
     circ.estimate(cnt)
-    xc, yc, radius = np.array(circ.params, dtype=int)
-    maskedd = np.zeros((imagePixels, imagePixels), dtype=np.uint8)
-    rr, cc = disk((xc, yc), int(radius))
+    xc, yc, radius = _np.array(circ.params, dtype=int)
+    maskedd = _np.zeros((imagePixels, imagePixels), dtype=_np.uint8)
+    rr, cc = _disk((xc, yc), int(radius))
     maskedd[rr, cc] = 1
-    idx = np.where(maskedd == 1)
-    ss = np.shape(maskedd)
-    x = np.arange(ss[0]).astype(float)
-    x = np.transpose(np.tile(x, [ss[1], 1]))
-    y = np.arange(ss[1]).astype(float)
-    y = np.tile(y, [ss[0], 1])
+    idx = _np.where(maskedd == 1)
+    ss = _np.shape(maskedd)
+    x = _np.arange(ss[0]).astype(float)
+    x = _np.transpose(_np.tile(x, [ss[1], 1]))
+    y = _np.arange(ss[1]).astype(float)
+    y = _np.tile(y, [ss[0], 1])
     xx = x
     yy = y
     xx = xx - xc
@@ -68,12 +67,12 @@ def qpupil(mask, xx=None, yy=None, nocircle=0):
     yy: numpy array
         grid of coordinates of the same size as input mask
     """
-    idx = np.where(mask == 1)
-    ss = np.shape(mask)
-    x = np.arange(ss[0]).astype(float)
-    x = np.transpose(np.tile(x, [ss[1], 1]))
-    y = np.arange(ss[1]).astype(float)
-    y = np.tile(y, [ss[0], 1])
+    idx = _np.where(mask == 1)
+    ss = _np.shape(mask)
+    x = _np.arange(ss[0]).astype(float)
+    x = _np.transpose(_np.tile(x, [ss[1], 1]))
+    y = _np.arange(ss[1]).astype(float)
+    y = _np.tile(y, [ss[0], 1])
     xx = x
     yy = y
     x0 = 0
@@ -93,7 +92,7 @@ def qpupil(mask, xx=None, yy=None, nocircle=0):
         y0 = r2 + minv
         yy = yy - (minv + maxv) / 2
         yy = yy / ((maxv - minv) / 2)
-        r = np.mean([r1, r2])
+        r = _np.mean([r1, r2])
         my = [minv, maxv]
     return xx, yy
 
@@ -108,12 +107,12 @@ def _find_img_borders(image, imagePixels):
     i = 0
     while i < imagePixels:
         a = x[i, :]
-        aa = np.where(a.mask.astype(int) == 0)
-        q = np.asarray(aa)
+        aa = _np.where(a.mask.astype(int) == 0)
+        q = _np.asarray(aa)
         if q.size < 2:
             i = i + 1
         else:
-            val.append(np.array([[i, q[0, 0]], [i, q[0, q.size - 1]]]))
+            val.append(_np.array([[i, q[0, 0]], [i, q[0, q.size - 1]]]))
             i = i + 1
-    cut = np.concatenate(val)
+    cut = _np.concatenate(val)
     return cut

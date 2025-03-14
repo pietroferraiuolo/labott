@@ -6,17 +6,17 @@ Author(s)
 
 """
 
-import os
-import h5py
-import time
-import numpy as np
-from numpy import uint8
-from astropy.io import fits
-from numpy.ma import masked_array
-from gentle.core import root as _fn
+import os as _os
+import numpy as _np
+import time as _time
+import h5py as _h5py
+from numpy import uint8 as _uint8
+from labott.core import root as _fn
+from astropy.io import fits as _fits
+from numpy.ma import masked_array as _masked_array
 
-OPTDATA = _fn.BASE_DATA_PATH
-OPDIMG = _fn.OPD_IMAGES_ROOT_FOLDER
+_OPTDATA = _fn.BASE_DATA_PATH
+_OPDIMG = _fn.OPD_IMAGES_ROOT_FOLDER
 
 
 def findTracknum(tn, complete_path: bool = False):
@@ -36,16 +36,15 @@ def findTracknum(tn, complete_path: bool = False):
     tn_path : list of str
         List containing all the folders (within the OPTData path) in which the
         tracking number is present, sorted in alphabetical order.
-
     """
     tn_path = []
-    for fold in os.listdir(OPTDATA):
-        search_fold = os.path.join(OPTDATA, fold)
-        if not os.path.isdir(search_fold):
+    for fold in _os.listdir(_OPTDATA):
+        search_fold = _os.path.join(_OPTDATA, fold)
+        if not _os.path.isdir(search_fold):
             continue
-        if tn in os.listdir(search_fold):
+        if tn in _os.listdir(search_fold):
             if complete_path:
-                tn_path.append(os.path.join(search_fold, tn))
+                tn_path.append(_os.path.join(search_fold, tn))
             else:
                 tn_path.append(fold)
     path_list = sorted(tn_path)
@@ -71,7 +70,7 @@ def getFileList(tn=None, fold=None, key: str = None):
 
     Returns
     -------
-    fl : list os str
+    fl : list of str
         List of sorted files inside the folder.
 
     How to Use it
@@ -117,7 +116,7 @@ def getFileList(tn=None, fold=None, key: str = None):
     ore after 'mode' to exclude the 'modesVector.fits' file from the list.
     """
     if tn is None and fold is not None:
-        fl = sorted([os.path.join(fold, file) for file in os.listdir(fold)])
+        fl = sorted([_os.path.join(fold, file) for file in _os.listdir(fold)])
     else:
         try:
             paths = findTracknum(tn, complete_path=True)
@@ -127,10 +126,10 @@ def getFileList(tn=None, fold=None, key: str = None):
                 if fold is None:
                     fl = []
                     fl.append(
-                        sorted([os.path.join(path, file) for file in os.listdir(path)])
+                        sorted([_os.path.join(path, file) for file in _os.listdir(path)])
                     )
                 elif fold in path.split("/")[-2]:
-                    fl = sorted([os.path.join(path, file) for file in os.listdir(path)])
+                    fl = sorted([_os.path.join(path, file) for file in _os.listdir(path)])
                 else:
                     raise Exception
         except Exception as exc:
@@ -166,41 +165,39 @@ def tnRange(tn0, tn1):
     Returns
     -------
     tnMat : list of str
-        A list or a matrix of tracking number in between the start and finish
-        ones.
+        A list or a matrix of tracking number in between the start and finish ones.
 
     Raises
     ------
     Exception
-        An exception is raised if the two tracking numbers are not found in the
-        same folder
+        An exception is raised if the two tracking numbers are not found in the same folder
     """
     tn0_fold = findTracknum(tn0)
     tn1_fold = findTracknum(tn1)
     if len(tn0_fold) == 1 and len(tn1_fold) == 1:
         if tn0_fold[0] == tn1_fold[0]:
-            fold = os.path.join(OPTDATA, tn0_fold[0])
-            tn_folds = sorted(os.listdir(fold))
+            fold_path = _os.path.join(_OPTDATA, tn0_fold[0])
+            tn_folds = sorted(_os.listdir(fold_path))
             id0 = tn_folds.index(tn0)
             id1 = tn_folds.index(tn1)
-            tnMat = [os.path.join(fold, tn) for tn in tn_folds[id0 : id1 + 1]]
+            tnMat = [_os.path.join(fold_path, tn) for tn in tn_folds[id0 : id1 + 1]]
         else:
             raise FileNotFoundError("The tracking numbers are in different foldes")
     else:
         tnMat = []
         for ff in tn0_fold:
             if ff in tn1_fold:
-                fold = os.path.join(OPTDATA, ff)
-                tn_folds = sorted(os.listdir(fold))
+                fold_path = _os.path.join(_OPTDATA, ff)
+                tn_folds = sorted(_os.listdir(fold_path))
                 id0 = tn_folds.index(tn0)
                 id1 = tn_folds.index(tn1)
-                tnMat.append([os.path.join(fold, tn) for tn in tn_folds[id0 : id1 + 1]])
+                tnMat.append([_os.path.join(fold_path, tn) for tn in tn_folds[id0 : id1 + 1]])
     return tnMat
 
 
 def read_phasemap(file_path):
     """
-    Function to read interferometric data, in the trhee possible formats
+    Function to read interferometric data, in the three possible formats
     (FITS, 4D, H5)
 
     Parameters
@@ -239,11 +236,11 @@ def load_fits(filepath):
     np.array
         FITS file data.
     """
-    with fits.open(filepath) as hdul:
+    with _fits.open(filepath) as hdul:
         fit = hdul[0].data
         if len(hdul) > 1 and hasattr(hdul[1], "data"):
             mask = hdul[1].data.astype(bool)
-            fit = masked_array(fit, mask=mask)
+            fit = _masked_array(fit, mask=mask)
     return fit
 
 
@@ -255,16 +252,15 @@ def save_fits(filepath, data):
     ----------
     filepath : str
         Path to the FITS file.
-
     data : np.array
         Data to be saved.
     """
-    if isinstance(data, masked_array):
-        fits.writeto(filepath, data.data, overwrite=True)
+    if isinstance(data, _masked_array):
+        _fits.writeto(filepath, data.data, overwrite=True)
         if hasattr(data, "mask"):
-            fits.append(filepath, data.mask.astype(uint8))
+            _fits.append(filepath, data.mask.astype(_uint8))
     else:
-        fits.writeto(filepath, data, overwrite=True)
+        _fits.writeto(filepath, data, overwrite=True)
 
 
 def newtn():
@@ -276,7 +272,7 @@ def newtn():
     str
         Current time in a string format.
     """
-    return time.strftime("%Y%m%d_%H%M%S")
+    return _time.strftime("%Y%m%d_%H%M%S")
 
 
 def rename4D(folder):
@@ -288,17 +284,17 @@ def rename4D(folder):
     folder : str
         The folder where the 4D data is stored.
     """
-    fold = os.path.join(OPDIMG, folder)
-    files = os.listdir(fold)
+    fold = _os.path.join(_OPDIMG, folder)
+    files = _os.listdir(fold)
     for file in files:
         if file.endswith(".4D"):
             num_str = file.split(".")[0]
             if num_str.isdigit():
                 num = int(num_str)
                 new_name = f"{num:05d}.4D"
-                old_file = os.path.join(fold, file)
-                new_file = os.path.join(fold, new_name)
-                os.rename(old_file, new_file)
+                old_file = _os.path.join(fold, file)
+                new_file = _os.path.join(fold, new_name)
+                _os.rename(old_file, new_file)
 
 
 class InterferometerConverter:
@@ -310,85 +306,87 @@ class InterferometerConverter:
     def fromPhaseCam4020(h5filename):
         """
         Function for PhaseCam4020
+
         Parameters
         ----------
-            h5filename: string
-                 path of h5 file to convert
+        h5filename: string
+            Path of the h5 file to convert
 
         Returns
         -------
-                ima: numpy masked array
-                     masked array image
+        ima: numpy masked array
+            Masked array image
         """
-        file = h5py.File(h5filename, "r")
+        file = _h5py.File(h5filename, "r")
         genraw = file["measurement0"]["genraw"]["data"]
-        data = np.array(genraw)
-        mask = np.zeros(data.shape, dtype=bool)
-        mask[np.where(data == data.max())] = True
-        ima = np.ma.masked_array(data * 632.8e-9, mask=mask)
+        data = _np.array(genraw)
+        mask = _np.zeros(data.shape, dtype=bool)
+        mask[_np.where(data == data.max())] = True
+        ima = _np.ma.masked_array(data * 632.8e-9, mask=mask)
         return ima
 
     @staticmethod
     def fromPhaseCam6110(i4dfilename):
         """
         Function for PhaseCam6110
+
         Parameters
         ----------
-            h5filename: string
-                 path of h5 file to convert
+        i4dfilename: string
+            Path of the 4D file to convert
 
         Returns
         -------
-                ima: numpy masked array
-                     masked array image
+        ima: numpy masked array
+            Masked array image
         """
-        with h5py.File(i4dfilename, "r") as ff:
+        with _h5py.File(i4dfilename, "r") as ff:
             data = ff.get("/Measurement/SurfaceInWaves/Data")
             meas = data[()]
-            mask = np.invert(np.isfinite(meas))
-
-        image = np.ma.masked_array(meas * 632.8e-9, mask=mask)
-
+            mask = _np.invert(_np.isfinite(meas))
+        image = _np.ma.masked_array(meas * 632.8e-9, mask=mask)
         return image
 
     @staticmethod
     def fromFakeInterf(filename):
         """
         Function for fake interferometer
+
         Parameters
         ----------
-            file: string
-                 path name for data
+        filename: string
+            Path name for data
 
         Returns
         -------
-                ima: numpy masked array
-                     masked array image
+        ima: numpy masked array
+            Masked array image
         """
         masked_ima = load_fits(filename)
         return masked_ima
 
     @staticmethod
     def fromI4DToSimplerData(i4dname, folder, h5name):
-        """Function for converting files from 4d 6110 files to H5 files
+        """
+        Function for converting files from 4D 6110 files to H5 files
+
         Parameters
         ----------
         i4dname: string
-            file name path of 4d data
+            File name path of 4D data
         folder: string
-            folder path for new data
+            Folder path for new data
         h5name: string
-            name for h5 data
+            Name for H5 data
 
         Returns
         -------
         file_name: string
-            finale path name
+            Final path name
         """
-        file = h5py.File(i4dname, "r")
+        file = _h5py.File(i4dname, "r")
         data = file.get("/Measurement/SurfaceInWaves/Data")
-
-        file_name = os.path.join(folder, h5name)
-        hf = h5py.File(file_name, "w")
+        file_name = _os.path.join(folder, h5name)
+        hf = _h5py.File(file_name, "w")
         hf.create_dataset("Data", data=data)
         return file_name

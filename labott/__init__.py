@@ -19,7 +19,7 @@ How to Use:
 from . import analyzer
 from .interferometer import PhaseCam
 from .core import zernike as zern
-from .utils.osutils import (
+from .ground.osutils import (
     load_fits,
     save_fits,
     getFileList,
@@ -55,19 +55,6 @@ class _folds():
 
 
 folders = _folds()
-
-
-try:
-    import os as _os
-    import shutil as _sh
-    mount4d = _os.system("mount 4d")
-    if mount4d == 0:
-        print("4d mounted")
-    mount4dc= _os.system("mount 4dConfig")
-    if mount4dc == 0:
-        print("4dConfig mounted")
-except Exception as e:
-    print(e)
 
 
 __all__ = [

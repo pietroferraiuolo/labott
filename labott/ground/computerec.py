@@ -5,8 +5,8 @@ Author(s):
     - Marco Xompero : modified in 2024
     - Pietro Ferraiuolo : modified in 2024
 """
-import os as _os
 import numpy as _np
+from . import logger as _log
 import matplotlib.pyplot as _plt
 
 imgFold     = fn.OPD_IMAGES_ROOT_FOLDER
@@ -37,7 +37,7 @@ class ComputeReconstructor:
 
     def __init__(self, interaction_matrix_cube, mask2intersect=None):
         """The constructor"""
-        self._logger        = logging.getLogger("COMPUTE_REC:")
+        self._logger        = _log.set_up_logger('computerec.log', 20)
         self._intMatCube    = interaction_matrix_cube
         self._cubeMask      = self._intersectCubeMask()
         self._imgMask       = self._mask2intersect(mask2intersect)
@@ -71,21 +71,21 @@ class ComputeReconstructor:
         self._computeIntMat()
         self._logger.info("Computing singular values")
         self._intMat_U, self._intMat_S, self._intMat_Vt = \
-            np.linalg.svd(self._intMat, full_matrices=False)
+            _np.linalg.svd(self._intMat, full_matrices=False)
         if Interactive:
             self._threshold = self.make_interactive_plot(self._intMat_S)
         else:
             if sv_threshold is None:
-                return np.linalg.pinv(self._intMat)
+                return _np.linalg.pinv(self._intMat)
             elif isinstance(sv_threshold, int):
                 self._threshold = {
-                    "y": np.finfo(np.float32).eps,
+                    "y": _np.finfo(_np.float32).eps,
                     "x": -sv_threshold,
                 }
             else:
                 self._threshold = {
                     "y": sv_threshold,
-                    "x": np.argmin(np.abs(self._intMat_S - sv_threshold)),
+                    "x": _np.argmin(_np.abs(self._intMat_S - sv_threshold)),
                 }
         sv_threshold = self._intMat_S.copy()
         sv_threshold[self._threshold["x"]:] = 0
@@ -93,7 +93,7 @@ class ComputeReconstructor:
         sv_inv_threshold[0:self._threshold['x']] = 1/sv_threshold[0:self._threshold['x']]
         self._filtered_sv = sv_inv_threshold
         self._logger.info("Assembling reconstructor")
-        return self._intMat_Vt.T @ np.diag(sv_inv_threshold) @ self._intMat_U.T
+        return self._intMat_Vt.T @ _np.diag(sv_inv_threshold) @ self._intMat_U.T
 
     def loadShape2Flat(self, img):
         """
@@ -124,6 +124,7 @@ class ComputeReconstructor:
         Returns
         -------
         """
+        import os
         if intCube is not None:
             self._intMatCube = intCube
         elif tn is not None:
@@ -145,7 +146,7 @@ class ComputeReconstructor:
             "Computing interaction matrix from cube of size %s", self._intMatCube.shape)
         try:            
             self._setAnalysisMask()
-            self._intMat = np.array(
+            self._intMat = _np.array(
                 [
                     (self._intMatCube[:, :, i].data)[self._analysisMask == 0]
                     for i in range(self._intMatCube.shape[2])
@@ -166,7 +167,7 @@ class ComputeReconstructor:
             if self._imgMask is None:
                 analysisMask = self._cubeMask
             else:
-                analysisMask = np.logical_or(self._cubeMask, self._imgMask)
+                analysisMask = _np.logical_or(self._cubeMask, self._imgMask)
         except Exception as e:
             raise e
         self._analysisMask = analysisMask
@@ -205,7 +206,7 @@ class ComputeReconstructor:
         """
         mask = self._intMatCube[:, :, 0].mask
         for i in range(1, self._intMatCube.shape[2]):
-            cube_mask = np.logical_or(
+            cube_mask = _np.logical_or(
                 mask, self._intMatCube[:, :, i].mask
             )
         return cube_mask
@@ -214,8 +215,8 @@ class ComputeReconstructor:
     @staticmethod
     def make_interactive_plot(singular_values, current_threshold=None):
         # Creare il grafico
-        fig, ax = plt.subplots()
-        modelist = np.arange(len(singular_values))
+        fig, ax = _plt.subplots()
+        modelist = _np.arange(len(singular_values))
         ax.loglog(modelist, singular_values, "b-o")
         ax.set_xlabel("Mode number")
         ax.set_ylabel("Singular value")
@@ -226,7 +227,7 @@ class ComputeReconstructor:
         # if current_threshold is None:
         threshold = dict()
 
-        threshold["y"] = np.finfo(np.float32).eps  # 0.01
+        threshold["y"] = _np.finfo(_np.float32).eps  # 0.01
         threshold["x"] = 0  # 5 % len(singular_values)
         ax.axhline(threshold["y"], color="g", linestyle="-", linewidth=1)
         ax.axvline(threshold["x"], color="g", linestyle="-", linewidth=1)
@@ -262,7 +263,7 @@ class ComputeReconstructor:
                 x_mouse, y_mouse = event.xdata, event.ydata
                 ax.axhline(y_mouse, color="r", linestyle="-", linewidth=1)
                 ax.axvline(
-                    np.argmin(np.abs(singular_values - y_mouse)),
+                    _np.argmin(_np.abs(singular_values - y_mouse)),
                     color="r",
                     linestyle="-",
                     linewidth=1,
@@ -285,7 +286,7 @@ class ComputeReconstructor:
             if event.inaxes and event.dblclick:
                 x_click, y_click = event.xdata, event.ydata
                 threshold["y"] = y_click
-                threshold["x"] = np.argmin(np.abs(singular_values - y_click))
+                threshold["x"] = _np.argmin(_np.abs(singular_values - y_click))
                 ax.axhline(threshold["x"], color="g",
                            linestyle="-", linewidth=1)
                 ax.axvline(threshold["y"], color="g",
@@ -301,13 +302,13 @@ class ComputeReconstructor:
                                lambda event: record_click(event))
 
         # Visualizzare il grafico
-        plt.show()
+        _plt.show()
         return threshold
 
 # if __name__ == "__main__":
 #    import random
 #    random.seed(0)
-#    mat = np.array([
+#    mat = _np.array([
 #        [random.random() for i in range(100)] for j in range(100)])
 #    sqmat = mat @ mat.T
 #    rec = ComputeReconstructor.make_interactive_plot_bokeh(sqmat)

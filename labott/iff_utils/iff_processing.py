@@ -54,8 +54,6 @@ import configparser
 from m4.utils import osutils as osu
 from astropy.io import fits as pyfits
 from scripts.misc.IFFPackage import actuator_identification_lib as fa
-from m4.configuration import read_iffconfig, update_folder_paths as ufp
-from m4.ground import read_data as rd, zernike as zern, timestamp, rebinner as rb
 
 config          = configparser.ConfigParser()
 fn              = ufp.folders

@@ -37,16 +37,11 @@ dedicated folder in the flat root folder.
 
 """
 
-import os
-import numpy as np
-from m4.ground import read_data as rd
-from m4.ground.timestamp import Timestamp
-from m4.dmutils import iff_processing as ifp
-from m4.analyzers import compute_reconstructor as crec
-
-_ts = Timestamp().now
-_fn = ifp.fn
-
+import os as _os
+import numpy as _np
+from . import iff_processing as _ifp
+from labott.ground import computerec as _crec
+from labott.ground.osutils import newtn as _ts
 
 class Flattening:
     """

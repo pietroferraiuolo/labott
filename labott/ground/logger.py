@@ -10,11 +10,11 @@ Sets up the logger for the application.
 
 """
 
-import logging
-import logging.handlers
+import logging as _l
+import logging.handlers as _lh
 
 
-def set_up_logger(file_path, logging_level):
+def set_up_logger(filename, logging_level):
     """
     Set up a rotating file logger.
     This function configures a logger to write log messages to a file with
@@ -40,14 +40,17 @@ def set_up_logger(file_path, logging_level):
 
     Examples
     --------
-    >>> set_up_logger('/path/to/logfile.log', logging.DEBUG)
+>>> set_up_logger('/path/to/logfile.log', logging.DEBUG)
     """
+    import os
+    from labott.core.root import LOGGING_ROOT_FOLDER
+    file_path = os.path.join(LOGGING_ROOT_FOLDER, filename)
     FORMAT = "%(asctime)s %(levelname)s %(name)s %(message)s"
-    formato = logging.Formatter(fmt=FORMAT)
-    handler = logging.handlers.RotatingFileHandler(
+    formato = _l.Formatter(fmt=FORMAT)
+    handler = _lh.RotatingFileHandler(
         file_path, encoding="utf8", maxBytes=10000000, backupCount=3
     )
-    root_logger = logging.getLogger()
+    root_logger = _l.getLogger()
     root_logger.setLevel(logging_level)
     handler.setFormatter(formato)
     handler.setLevel(logging_level)
@@ -78,18 +81,18 @@ def log(message, level: str = "INFO"):
     """
     level = level.upper()
     if level == "DEBUG":
-        logging.debug(message)
+        _l.debug(message)
     elif level == "INFO":
-        logging.info(message)
+        _l.info(message)
     elif level == "WARNING":
-        logging.warning(message)
+        _l.warning(message)
     elif level == "ERROR":
-        logging.error(message)
+        _l.error(message)
     elif level == "CRITICAL":
-        logging.critical(message)
+        _l.critical(message)
     else:
-        logging.debug(message)
-        logging.warning(f"Invalid log level '{level}'. Defaulting to 'DEBUG'.")
+        _l.debug(message)
+        _l.warning(f"Invalid log level '{level}'. Defaulting to 'DEBUG'.")
 
 
 class txtLogger:

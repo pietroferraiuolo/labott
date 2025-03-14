@@ -5,21 +5,23 @@ Author(s)
     
 Written in 06/2024
 '''
-import os
-import configparser
-import json
-import numpy as np
-import shutil
-import m4.configuration.config_folder_names as fn
+import os as _os
+from . import root
+import numpy as _np
+import json as _json
+import shutil as _sh
+import configparser as _cp
 
-config=configparser.ConfigParser()
+config          = _cp.ConfigParser()
 cfoldname       = fn.CONFIGURATION_ROOT_FOLDER
+
 iff_configFile  = 'iffConfig.ini'
 nzeroName       = 'numberofzeros'
 modeIdName      = 'modeid'
 modeAmpName     = 'modeamp'
 templateName    = 'template'
 modalBaseName   = 'modalbase'
+
 items = [nzeroName, modeIdName, modeAmpName, templateName, modalBaseName]
 
 

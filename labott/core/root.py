@@ -2,22 +2,23 @@ import os as _os
 import configparser as _cp
 from shutil import copy as _copy
 
-_config = _cp.ConfigParser()
+_iconfig = _cp.ConfigParser()
 
-CONFIGURATION_FILE = _os.path.dirname(_os.path.abspath(__file__)) + "/config.conf"
-_cpfile = _os.path.expanduser("~") + "/interfConfig.conf"
+INTERF_CONFIGURATION_FILE = _os.path.dirname(_os.path.abspath(__file__)) + \
+                                                "/configurations/interfConfig.ini"
+_cpfile = _os.path.expanduser("~") + "/interfConfig.ini"
 if not _os.path.exists(_cpfile):
-    _copy(CONFIGURATION_FILE, _cpfile)
-    CONFIGURATION_FILE = _cpfile
+    _copy(INTERF_CONFIGURATION_FILE, _cpfile)
+    INTERF_CONFIGURATION_FILE = _cpfile
     print(f"Created configuration file at `{_cpfile}`")
 else: 
-    CONFIGURATION_FILE = _cpfile
+    INTERF_CONFIGURATION_FILE = _cpfile
     print(f"Reading configuration file at `{_cpfile}`")
 
 
-_config.read(CONFIGURATION_FILE)
-_cc = _config["PATHS"]
-_ci = _config["INTERF"]
+_iconfig.read(INTERF_CONFIGURATION_FILE)
+_cc = _iconfig["PATHS"]
+_ci = _iconfig["INTERF"]
 
 I4D_IP = str(_ci["i4d_ip"])
 I4D_PORT = int(_ci["i4d_port"])
@@ -26,18 +27,51 @@ PRODUCE_FOLDER_NAME_4D_PC = str(_cc["produce_4dpc"])
 PRODUCE_FOLDER_NAME_LOCAL_PC = str(_cc["produce"])
 SETTINGS_CONF_FILE = str(_ci["settings"])
 
-CORE_FOLDER_PATH = _os.path.dirname(CONFIGURATION_FILE)
-BASE_PATH = _os.path.dirname(CORE_FOLDER_PATH)
+CONFIG_FOLDER_PATH = _os.path.dirname(INTERF_CONFIGURATION_FILE)
+BASE_PATH = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
 BASE_DATA_PATH = str(_cc["data_path"])
 OPD_IMAGES_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "OPDImages")
 OPD_SERIES_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "OPDSeries")
-LOGGING_FILE_PATH = _os.path.join(BASE_DATA_PATH, "interf.log")
+LOGGING_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Logs")
 
 
 for p in [BASE_DATA_PATH, OPD_IMAGES_ROOT_FOLDER, OPD_SERIES_ROOT_FOLDER]:
     if not _os.path.exists(p):
         _os.makedirs(p)
 
+
+def mount4D():
+    """
+    Mount the 4d and 4dConfig shared folders in the local machine.
+    """
+
+    try:
+        mount4d = _os.system("mount 4d")
+        if mount4d == 0:
+            print("4d mounted")
+        mount4dc= _os.system("mount 4dConfig")
+        if mount4dc == 0:
+            print("4dConfig mounted")
+    except Exception as e:
+        print(e)
+
+
+class _folds():
+    """Wrapper class for the folder tree of the package"""
+    def __init__(self):
+        self.CAPTURE_FOLDER_NAME_4D_PC = CAPTURE_FOLDER_NAME_4D_PC
+        self.PRODUCE_FOLDER_NAME_4D_PC = PRODUCE_FOLDER_NAME_4D_PC
+        self.PRODUCE_FOLDER_NAME_LOCAL_PC = PRODUCE_FOLDER_NAME_LOCAL_PC
+        self.SETTINGS_CONF_FILE = SETTINGS_CONF_FILE
+        self.BASE_PATH = BASE_PATH
+        self.BASE_DATA_PATH = BASE_DATA_PATH
+        self.OPD_IMAGES_ROOT_FOLDER = OPD_IMAGES_ROOT_FOLDER
+        self.OPD_SERIES_ROOT_FOLDER = OPD_SERIES_ROOT_FOLDER
+        self.LOGGING_FILE_PATH = LOGGING_ROOT_FOLDER
+        self.I4D_IP = I4D_IP
+        self.I4D_PORT = I4D_PORT
+
+folders = _folds()
 
 
 class ConfSettingReader4D:

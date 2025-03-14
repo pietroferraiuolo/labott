@@ -4,11 +4,9 @@ Author(s)
                     rewritten in 2022
     - Pietro Ferraiuolo: modified in 2024
 """
-import logging
-import numpy as np
-from skimage import measure
-from matplotlib import pyplot as plt
 
+import numpy as _np
+from skimage import measure as _meas
 
 def roiGenerator(ima):
     '''
@@ -27,12 +25,12 @@ def roiGenerator(ima):
         roiList[3] = RM roi for alignement, roiList[3] = central roi for segment
 
     '''
-    labels = measure.label(np.invert(ima.mask))
+    labels = _meas.label(_np.invert(ima.mask))
     roiList = []
     for i in range(1, 13):
-        maski = np.zeros(labels.shape, dtype=bool)
-        maski[np.where(labels == i)] = 1
-        final_roi = np.ma.mask_or(np.invert(maski), ima.mask)
+        maski = _np.zeros(labels.shape, dtype=bool)
+        maski[_np.where(labels == i)] = 1
+        final_roi = _np.ma.mask_or(_np.invert(maski), ima.mask)
         roiList.append(final_roi)
     return roiList
 
@@ -103,16 +101,16 @@ def single_segment_mask(image, apply:bool=True):
     img_out : masked ndarray
         Input image masked so that only the principal segment is visible.
     """
-    roilist = measure.label(np.invert(image.mask))
+    roilist = _meas.label(_np.invert(image.mask))
     segments = _find_big_segments_roi(roilist)
     max_area = max([seg.area for seg in segments])
     act_seg = segments[next(i for i, obj in enumerate(segments) \
                                                     if obj.area == max_area)]
-    maski = np.zeros(roilist.shape, dtype=bool)
-    maski[np.where(roilist == act_seg.label)] = 1
-    final_roi = np.ma.mask_or(np.invert(maski), image.mask)
+    maski = _np.zeros(roilist.shape, dtype=bool)
+    maski[_np.where(roilist == act_seg.label)] = 1
+    final_roi = _np.ma.mask_or(_np.invert(maski), image.mask)
     if apply:
-        out = np.ma.masked_array(data=image, mask=final_roi)
+        out = _np.ma.masked_array(data=image, mask=final_roi)
     else:
         out = final_roi
     return out
@@ -137,16 +135,16 @@ def adjacent_segments_mask(image, apply:bool=True):
         Input image masked so that only the three principal segments are
         visible (the pointed one and its adjacents).
     """
-    roilist = measure.label(np.invert(image.mask))
+    roilist = _meas.label(_np.invert(image.mask))
     segments = _find_big_segments_roi(roilist)
-    maski = mask1 = mask2 = mask3 = np.zeros(roilist.shape, dtype=bool)
-    mask1[(np.where(roilist == segments[0].label))] = 1
-    mask2[(np.where(roilist == segments[1].label))] = 1
-    mask3[(np.where(roilist == segments[2].label))] = 1
-    maski = np.ma.mask_or(np.ma.mask_or(mask1, mask2), mask3)
-    final_roi = np.ma.mask_or(np.invert(maski), image.mask)
+    maski = mask1 = mask2 = mask3 = _np.zeros(roilist.shape, dtype=bool)
+    mask1[(_np.where(roilist == segments[0].label))] = 1
+    mask2[(_np.where(roilist == segments[1].label))] = 1
+    mask3[(_np.where(roilist == segments[2].label))] = 1
+    maski = _np.ma.mask_or(_np.ma.mask_or(mask1, mask2), mask3)
+    final_roi = _np.ma.mask_or(_np.invert(maski), image.mask)
     if apply:
-        out = np.ma.masked_array(data=image, mask=final_roi)
+        out = _np.ma.masked_array(data=image, mask=final_roi)
     else:
         out = final_roi
     return out
@@ -168,18 +166,18 @@ def all_segments_mask(image, apply:bool=True):
         DESCRIPTION.
 
     """
-    roilist = measure.label(np.invert(image.mask))
+    roilist = _meas.label(_np.invert(image.mask))
     segments = _find_all_segments_roi(roilist)
-    masks = [np.zeros(roilist.shape, dtype=bool)]
+    masks = [_np.zeros(roilist.shape, dtype=bool)]
     for i, seg in enumerate(segments):
-        mask = np.zeros(roilist.shape, dtype=bool)
-        mask[(np.where(roilist == seg.label))] = 1
+        mask = _np.zeros(roilist.shape, dtype=bool)
+        mask[(_np.where(roilist == seg.label))] = 1
         masks.append(mask)
     for i in range(1, len(masks)):
-        masks[0] = np.ma.mask_or(masks[0], masks[i])
-    final_roi = np.ma.mask_or(np.invert(masks[0]), image.mask)
+        masks[0] = _np.ma.mask_or(masks[0], masks[i])
+    final_roi = _np.ma.mask_or(_np.invert(masks[0]), image.mask)
     if apply:
-        out = np.ma.masked_array(data=image, mask=final_roi)
+        out = _np.ma.masked_array(data=image, mask=final_roi)
     else:
         out = final_roi
     return out
@@ -199,7 +197,7 @@ def imgCut(img):
         The cut image within the bounding box of finite pixels.
     """
     # Find indices of finite (non-NaN) pixels
-    finite_coords = np.argwhere(np.isfinite(img))
+    finite_coords = _np.argwhere(_np.isfinite(img))
     # If there are no finite pixels, return the original image
     if finite_coords.size == 0:
         return img
@@ -224,7 +222,7 @@ def _find_all_segments_roi(roilist):
         DESCRIPTION.
 
     """
-    regions = measure.regionprops(roilist)
+    regions = _meas.regionprops(roilist)
     for i,region in enumerate(regions):
         if region.area < 10000: #TODO - Find good criteria
             regions.pop(i)
@@ -246,7 +244,7 @@ def _find_big_segments_roi(roilist):
         List containing the properties for the selected segments.
     """
     segments = []
-    regions = measure.regionprops(roilist)
+    regions = _meas.regionprops(roilist)
     for region in regions:
         if region.area > 10000:
             segments.append(region)
