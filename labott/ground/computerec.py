@@ -211,6 +211,7 @@ class ComputeReconstructor:
             cube_mask = _np.logical_or(
                 mask, self._intMatCube[:, :, i].mask
             )
+            mask = cube_mask
         return cube_mask
 
 # ______________________________________________________________________________
