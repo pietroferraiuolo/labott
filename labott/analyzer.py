@@ -14,10 +14,10 @@ import numpy as _np
 import jdcal as _jdcal
 import matplotlib.pyplot as _plt
 from .core import zernike as _zern
-from .utils import osutils as _osu
+from .ground import osutils as _osu
 from .core import root as _foldname
-from .core.geo import qpupil as _qpupil
-from .utils.osutils import InterferometerConverter
+from .ground.geo import qpupil as _qpupil
+from .ground.osutils import InterferometerConverter
 from scipy import stats as _stats, fft as _fft, ndimage as _ndimage
 
 _OPDIMG = _foldname.OPD_IMAGES_ROOT_FOLDER
