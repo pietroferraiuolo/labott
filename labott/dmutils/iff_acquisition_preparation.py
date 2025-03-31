@@ -13,13 +13,12 @@ mand matrix history that will be ultimately used.
 More information on its use can be found on the class documentation.
 """
 
-import os
-import numpy as np
-from m4.configuration import read_iffconfig, config_folder_names as fn
-from m4.ground import read_data as rd
-from m4.dmutils.iff_processing import _getAcqInfo
-
-iffold = fn.IFFUNCTIONS_ROOT_FOLDER
+import os as _os
+import numpy as _np
+from labott.ground import osutils as _osu
+from labott.core import read_iffconfig as _rif
+from labott.core.root import IFFUNCTIONS_ROOT_FOLDER as _iffold
+from .iff_processing import _getAcqInfo
 
 
 class IFFCapturePreparation:
@@ -138,12 +137,12 @@ class IFFCapturePreparation:
         self.createCmdMatrixHistory(modesList, modesAmp, template, shuffle)
         self.createAuxCmdHistory()
         if not self.auxCmdHistory is None:
-            cmdHistory = np.hstack((self.auxCmdHistory, self.cmdMatHistory))
+            cmdHistory = _np.hstack((self.auxCmdHistory, self.cmdMatHistory))
         else:
             cmdHistory = self.cmdMatHistory
-            self._regActs = np.array([])
-        timing = read_iffconfig.getTiming()
-        timedCmdHist = np.repeat(cmdHistory, timing, axis=1)
+            self._regActs = _np.array([])
+        timing = _rif.getTiming()
+        timedCmdHist = _np.repeat(cmdHistory, timing, axis=1)
         self.timedCmdHistory = timedCmdHist
         return timedCmdHist
 
@@ -205,25 +204,25 @@ class IFFCapturePreparation:
         self._modesList = mlist
         nModes = self._cmdMatrix.shape[1]
         n_push_pull = len(template)
-        if np.size(modesAmp) == 1:
-            modesAmp = np.full(nModes, modesAmp)
+        if _np.size(modesAmp) == 1:
+            modesAmp = _np.full(nModes, modesAmp)
         self._modesAmp = modesAmp
         if shuffle is not False:
             self._shuffle = shuffle
-            cmd_matrix = np.zeros((self._cmdMatrix.shape[0], self._cmdMatrix.shape[1]))
-            modesList = np.copy(self._modesList)
-            np.random.shuffle(modesList)
+            cmd_matrix = _np.zeros((self._cmdMatrix.shape[0], self._cmdMatrix.shape[1]))
+            modesList = _np.copy(self._modesList)
+            _np.random.shuffle(modesList)
             k = 0
             for i in modesList:
                 cmd_matrix.T[k] = self._cmdMatrix[i]
                 k += 1
-            self._indexingList = np.arange(0, len(modesList), 1)
+            self._indexingList = _np.arange(0, len(modesList), 1)
         else:
             cmd_matrix = self._cmdMatrix
             modesList = self._modesList
-            self._indexingList = np.arange(0, len(modesList), 1)
+            self._indexingList = _np.arange(0, len(modesList), 1)
         n_frame = len(self._modesList) * n_push_pull
-        cmd_matrixHistory = np.zeros((self._NActs, n_frame + zeroScheme))
+        cmd_matrixHistory = _np.zeros((self._NActs, n_frame + zeroScheme))
         k = zeroScheme
         for i in range(nModes):
             for j in range(n_push_pull):
@@ -248,7 +247,7 @@ class IFFCapturePreparation:
         self._createTriggerPadding()
         self._createRegistrationPattern()
         if self.triggPadCmdHist is not None and self.regPadCmdHist is not None:
-            aux_cmdHistory = np.hstack((self.triggPadCmdHist, self.regPadCmdHist))
+            aux_cmdHistory = _np.hstack((self.triggPadCmdHist, self.regPadCmdHist))
         elif self.triggPadCmdHist is not None:
             aux_cmdHistory = self.triggPadCmdHist
         elif self.regPadCmdHist is not None:
@@ -270,14 +269,14 @@ class IFFCapturePreparation:
             Registration pattern command history
 
         """
-        infoR = read_iffconfig.getConfig("REGISTRATION")
+        infoR = _rif.getConfig("REGISTRATION")
         if len(infoR["modes"]) == 0:
             self._regActs = infoR["modes"]
             return
         self._regActs = infoR["modes"]
         self._updateModalBase(infoR["modalBase"])
-        zeroScheme = np.zeros((self._NActs, infoR["zeros"]))
-        regScheme = np.zeros(
+        zeroScheme = _np.zeros((self._NActs, infoR["zeros"]))
+        regScheme = _np.zeros(
             (self._NActs, len(infoR["template"]) * len(infoR["modes"]))
         )
         k = 0
@@ -287,7 +286,7 @@ class IFFCapturePreparation:
                     self._modalBase.T[mode] * infoR["amplitude"] * infoR["template"][t]
                 )
                 k += 1
-        regHist = np.hstack((zeroScheme, regScheme))
+        regHist = _np.hstack((zeroScheme, regScheme))
         self.regPadCmdHist = regHist
         return regHist
 
@@ -302,13 +301,13 @@ class IFFCapturePreparation:
         triggHist : float | ArrayLike
             Trigger padding command history
         """
-        infoT = read_iffconfig.getConfig("TRIGGER")
+        infoT = _rif.getConfig("TRIGGER")
         if len(infoT["modes"]) == 0:
             return
         self._updateModalBase(infoT["modalBase"])
-        zeroScheme = np.zeros((self._NActs, infoT["zeros"]))
+        zeroScheme = _np.zeros((self._NActs, infoT["zeros"]))
         trigMode = self._modalBase[:, infoT["modes"]] * infoT["amplitude"]
-        triggHist = np.hstack((zeroScheme, trigMode))
+        triggHist = _np.hstack((zeroScheme, trigMode))
         self.triggPadCmdHist = triggHist
         return triggHist
 
@@ -316,7 +315,7 @@ class IFFCapturePreparation:
         """
         Cuts the modal base according the given modes list
         """
-        infoIF = read_iffconfig.getConfig("IFFUNC")
+        infoIF = _rif.getConfig("IFFUNC")
         self._updateModalBase(infoIF["modalBase"])
         self._cmdMatrix = self._modalBase[:, mlist]
         return self._cmdMatrix
@@ -369,10 +368,11 @@ class IFFCapturePreparation:
             DESCRIPTION.
 
         """
+        from labott.core.root import MODALBASE_ROOT_FOLDER
         print("Reading modal base from tracknum: " + tracknum)
         modalBaseFileName = "Standard modal base file name"  # !!! RE-DEFINE THIS
-        mbfile = os.path.join(fn.MODALBASE_ROOT_FOLDER, tracknum, modalBaseFileName)
-        cmdBase = rd.readFits_data(mbfile)
+        mbfile = _os.path.join(MODALBASE_ROOT_FOLDER, tracknum, modalBaseFileName)
+        cmdBase = _osu.load_fits(mbfile)
         return cmdBase
 
     def _createZonalMat(self):
@@ -385,7 +385,7 @@ class IFFCapturePreparation:
             DESCRIPTION.
 
         """
-        cmdBase = np.eye(self._NActs)
+        cmdBase = _np.eye(self._NActs)
         return cmdBase
 
     def _createHadamardMat(self):

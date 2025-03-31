@@ -1,7 +1,8 @@
 import numpy as np
-from photutils.centroids import centroid_2dg
 from m4.ground import geo
+from photutils.centroids import centroid_2dg
 from m4.utils import image_registration_lib as imgreg
+
 center_act = 313
 
 def findFrameCoord(imglist, actlist, actcoord):
@@ -73,11 +74,3 @@ def marker_general_remap(cghf,ottf,pos2t):
     base_cgh = pfr._expandbase(pos2t[0,:], pos2t[1,:])
     cghf_tra = np.transpose(np.dot(np.transpose(base_cgh),np.transpose(polycoeff)))
     return cghf_tra
-
-#how to find the M4 segment position in frame:
-# Sc: segment center, coordinate of the central actuator in segment (defined)
-# Scf: nominal position in the frame of the Sc posistion (this is defined by moving the truss to aim a given segment
-# procedure: we acquire a number of actuators and measure their position in the frame (MAct);
-# then we build the system with nominal coordinate (PAct) and measured ones (MAct).
-# the current Scf_i is found with:
-    #   Scf_i = imgreg.marker_general_remap(MAct, PAct, Scf) (check the inputs)

@@ -40,8 +40,11 @@ dedicated folder in the flat root folder.
 import os as _os
 import numpy as _np
 from . import iff_processing as _ifp
+from labott.ground import osutils as _osu
+from labott.core.root import _folds as _fn
 from labott.ground import computerec as _crec
-from labott.ground.osutils import newtn as _ts
+
+_ts = _osu.newtn
 
 class Flattening:
     """
@@ -66,7 +69,7 @@ class Flattening:
         self.flatCmd            = None
         self.rebin              = None
         self.filtered           = False
-        self._path              = os.path.join(ifp.intMatFold, self.tn)
+        self._path              = _os.path.join(_ifp.intMatFold, self.tn)
         self._oldtn             = tn
         self._intCube           = self._loadIntCube()
         self._cmdMat            = self._loadCmdMat()
@@ -114,16 +117,16 @@ class Flattening:
             "imgflat.fits",
         ]
         data = [cmd, deltacmd, imgstart, imgflat]
-        fold = os.path.join(_fn.FLAT_ROOT_FOLD, new_tn)
-        if not os.path.exists(fold):
-            os.mkdir(fold)
+        fold = _os.path.join(_fn.FLAT_ROOT_FOLD, new_tn)
+        if not _os.path.exists(fold):
+            _os.mkdir(fold)
         for f, d in zip(files, data):
-            path = os.path.join(fold, f)
-            if isinstance(d, np.ma.masked_array):
-                rd.save_phasemap(path, d)
+            path = _os.path.join(fold, f)
+            if isinstance(d, _np.ma.masked_array):
+                _osu.save_fits(path, d)
             else:
-                rd.saveFits_data(path, d)
-        with open(os.path.join(fold, "info.txt"), "w") as info:
+                _osu.save_fits(path, d)
+        with open(_os.path.join(fold, "info.txt"), "w") as info:
             info.write(f"Flattened with `{self.tn}` data")
         print(f"Flat command saved in {'/'.join(fold.split('/')[-2:])}")
 
@@ -136,13 +139,13 @@ class Flattening:
         flat_cmd : ndarray
             Flat command.
         """
-        img = np.ma.masked_array(self.shape2flat, mask=self._getMasterMask())
-        _cmd = -np.dot(img.compressed(), self._recMat)
+        img = _np.ma.masked_array(self.shape2flat, mask=self._getMasterMask())
+        _cmd = -_np.dot(img.compressed(), self._recMat)
         if isinstance(n_modes, int):
             flat_cmd = self._cmdMat[:, :n_modes] @ _cmd[:n_modes]
         elif isinstance(n_modes, list):
-            _cmdMat = np.zeros((self._cmdMat.shape[1], len(n_modes)))
-            _scmd = np.zeros(_cmd.shape[0])
+            _cmdMat = _np.zeros((self._cmdMat.shape[1], len(n_modes)))
+            _scmd = _np.zeros(_cmd.shape[0])
             for i, mode in enumerate(n_modes):
                 _cmdMat.T[i] = self._cmdMat.T[mode]
                 _scmd[i] = _cmd[mode]
@@ -186,7 +189,7 @@ class Flattening:
             Zernike modes to filter out this cube (if it's not already filtered).
             Default modes are [1,2,3] -> piston/tip/tilt.
         """
-        with open(os.path.join(self._path, ifp.flagFile), "r", encoding="utf-8") as f:
+        with open(_os.path.join(self._path, _ifp.flagFile), "r", encoding="utf-8") as f:
             flag = f.read()
         if " filtered " in flag:
             print("Cube already filtered, skipping...")
@@ -195,7 +198,7 @@ class Flattening:
             print("Filtering cube...")
             self._oldCube = self._intCube
             zern2fit = zernModes if zernModes is not None else [1, 2, 3]
-            self._intCube, new_tn = ifp.filterZernikeCube(self.tn, zern2fit)
+            self._intCube, new_tn = _ifp.filterZernikeCube(self.tn, zern2fit)
             self.loadNewTn(new_tn)
         return self
 
@@ -232,9 +235,9 @@ class Flattening:
         """
         Creates the intersection mask of the interaction cube.
         """
-        cubeMask = np.sum(self._intCube.mask.astype(int), axis=2)
-        master_mask = np.zeros(cubeMask.shape, dtype=np.bool_)
-        master_mask[np.where(cubeMask > 0)] = True
+        cubeMask = _np.sum(self._intCube.mask.astype(int), axis=2)
+        master_mask = _np.zeros(cubeMask.shape, dtype=_np.bool_)
+        master_mask[_np.where(cubeMask > 0)] = True
         return master_mask
     
 
@@ -247,11 +250,11 @@ class Flattening:
         intCube : ndarray
             The interaction cube data array.
         """
-        intCube = rd.read_phasemap(os.path.join(self._path, ifp.cubeFile))
-        with open(os.path.join(self._path, ifp.flagFile), "r") as file:
+        intCube = _osu.read_phasemap(_os.path.join(self._path, _ifp.cubeFile))
+        with open(_os.path.join(self._path, _ifp.flagFile), "r") as file:
             lines = file.readlines()
         rebin = eval(lines[1].split("=")[-1])
-        with open(os.path.join(self._path, ifp.flagFile), "r", encoding="utf-8") as f:
+        with open(_os.path.join(self._path, _ifp.flagFile), "r", encoding="utf-8") as f:
             flag = f.read()
         if " filtered " in flag:
             self.filtered = True
@@ -270,7 +273,7 @@ class Flattening:
         cmdMat : ndarray
             Command matrix of the cube, saved in the tn path.
         """
-        cmdMat = rd.readFits_data(os.path.join(self._path, ifp.cmdMatFile))
+        cmdMat = _osu.load_fits(_os.path.join(self._path, _ifp.cmdMatFile))
         return cmdMat
 
     def _loadReconstructor(self):
@@ -282,7 +285,7 @@ class Flattening:
         rec : object
             Reconstructor class.
         """
-        rec = crec.ComputeReconstructor(self._intCube)
+        rec = _crec.ComputeReconstructor(self._intCube)
         return rec
 
     def _loadFrameCenter(self):
@@ -295,12 +298,12 @@ class Flattening:
             DESCRIPTION.
 
         """
-        frame_center = rd.readFits_data("data")
+        frame_center = _osu.load_fits("data")
         return frame_center
 
     def _registerShape(self, shape):
         xxx = None
-        dp = ifp.findFrameOffset(self.tn, xxx)
+        dp = _ifp.findFrameOffset(self.tn, xxx)
         # cannot work. we should create a dedicated function, not necessarily linked to IFF or flattening
         return dp
 
@@ -314,4 +317,4 @@ class Flattening:
             New tracking number.
         """
         self.tn = tn
-        self._path = os.path.join(ifp.intMatFold, self.tn)
+        self._path = _os.path.join(_ifp.intMatFold, self.tn)

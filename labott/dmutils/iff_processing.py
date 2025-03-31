@@ -48,20 +48,24 @@ Cube saved in '.../m4/data/M4Data/OPTData/INTMatrices/20160516_114917/IMcube.fit
 Stacekd cube and matrices saved in '.../m4/data/M4Data/OPTData/INTMatrices/'new_tn'/IMcube.fits'
 """
 
-import os, shutil
-import numpy as np
-import configparser
-from m4.utils import osutils as osu
-from astropy.io import fits as pyfits
-from scripts.misc.IFFPackage import actuator_identification_lib as fa
+import os as _os
+import numpy as _np
+import shutil as _sh
+import configparser as _cp
+from labott.ground import osutils as _osu
+from labott.ground import zernike as _zern
+from labott.core.root import _folds as _fn
+from labott.core import read_iffconfig as _rif
+from scripts.misc.IFFPackage import actuator_identification_lib as _fa
 
-config          = configparser.ConfigParser()
-fn              = ufp.folders
-imgFold         = fn.OPD_IMAGES_ROOT_FOLDER
-ifFold          = fn.IFFUNCTIONS_ROOT_FOLDER
-intMatFold      = fn.INTMAT_ROOT_FOLDER
-confFold        = fn.CONFIGURATION_ROOT_FOLDER
-frameCenter     = [200, 200]
+_config          = _cp.ConfigParser()
+_imgFold         = _fn.OPD_IMAGES_ROOT_FOLDER
+_ifFold          = _fn.IFFUNCTIONS_ROOT_FOLDER
+_intMatFold      = _fn.INTMAT_ROOT_FOLDER
+_confFold        = _fn.CONFIGURATION_ROOT_FOLDER
+_frameCenter     = [200, 200]
+_ts = _osu.newtn
+
 ampVecFile      = "ampVector.fits"
 modesVecFile    = "modesVector.fits"
 templateFile    = "template.fits"
@@ -95,9 +99,9 @@ def process(tn, register: bool = False, save_and_rebin_cube = (False, 1)):
     ampVector, modesVector, template, _, registrationActs, shuffle = _getAcqPar(tn)
     _, regMat = getRegFileMatrix(tn)
     modesMat = getIffFileMatrix(tn)
-    new_fold = os.path.join(intMatFold, tn)
-    if not os.path.exists(new_fold):
-        os.mkdir(new_fold)
+    new_fold = _os.path.join(_intMatFold, tn)
+    if not _os.path.exists(new_fold):
+        _os.mkdir(new_fold)
     actImgList = registrationRedux(tn, regMat)
     modesMatReorg = _modesReorganization(modesMat)
     iffRedux(tn, modesMatReorg, ampVector, modesVector, template, shuffle)
@@ -140,25 +144,26 @@ def saveCube(tn, rebin, register=False):
     cube : masked_array
         Data cube of the images, with shape (npx, npx, nmodes).
     """
-    old_fold = os.path.join(ifFold, tn)
-    filelist = osu.getFileList(fold=old_fold, key="mode_")
-    cube = osu.createCube(filelist, register=register)
+    from labott.analyzer import cubeRebinner
+    old_fold = _os.path.join(_ifFold, tn)
+    filelist = _osu.getFileList(fold=old_fold, key="mode_")
+    cube = _osu.createCube(filelist, register=register)
     # Rebinning the cube
     if rebin > 1:
-        cube = rb.cubeRebinner(cube, rebin)
+        cube = cubeRebinner(cube, rebin)
     # Saving the cube
-    new_fold = os.path.join(intMatFold, tn)
-    if not os.path.exists(new_fold):
-        os.mkdir(new_fold)
-    cube_path = os.path.join(new_fold, cubeFile)
-    rd.save_phasemap(cube_path, cube, overwrite=True)
+    new_fold = _os.path.join(_intMatFold, tn)
+    if not _os.path.exists(new_fold):
+        _os.mkdir(new_fold)
+    cube_path = _os.path.join(new_fold, cubeFile)
+    _osu.save_phasemap(cube_path, cube, overwrite=True)
     # Copying the cmdMatrix and the ModesVector into the INTMAT Folder
-    cmat = rd.readFits_data(os.path.join(ifFold, tn, "cmdMatrix.fits"))
-    mvec = rd.readFits_data(os.path.join(ifFold, tn, "modesVector.fits"))
-    pyfits.writeto(os.path.join(intMatFold, tn, "cmdMatrix.fits"), cmat, overwrite=True)
-    pyfits.writeto(os.path.join(intMatFold, tn, "modesVector.fits"), mvec, overwrite=True)
+    cmat = _osu.load_fits(_os.path.join(_ifFold, tn, "cmdMatrix.fits"))
+    mvec = _osu.load_fits(_os.path.join(_ifFold, tn, "modesVector.fits"))
+    _osu.save_fits(_os.path.join(_intMatFold, tn, "cmdMatrix.fits"), cmat, overwrite=True)
+    _osu.save_fits(_os.path.join(_intMatFold, tn, "modesVector.fits"), mvec, overwrite=True)
     # Creating the flag file
-    with open(os.path.join(intMatFold, tn, flagFile), "w", encoding="utf-8") as f:
+    with open(_os.path.join(_intMatFold, tn, flagFile), "w", encoding="utf-8") as f:
         f.write(
             f"Cube created from '{old_fold.split('/')[-1]}' data.\nRebin={rebin}\n \n"
         )
@@ -182,24 +187,24 @@ def stackCubes(tnlist):
     stacked_cube : masked_array
         Final cube, stacked along the 3th axis.
     """
-    new_tn = timestamp.Timestamp.now()
-    stacked_cube_fold = os.path.join(fn.INTMAT_ROOT_FOLDER, new_tn)
-    if not os.path.exists(stacked_cube_fold):
-        os.mkdir(stacked_cube_fold)
+    new_tn = _ts()
+    stacked_cube_fold = _os.path.join(_fn.INTMAT_ROOT_FOLDER, new_tn)
+    if not _os.path.exists(stacked_cube_fold):
+        _os.mkdir(stacked_cube_fold)
     cube_parameters = _getCubeList(tnlist)
     flag = _checkStackedCubes(tnlist)
     # Stacking the cube and the matrices
-    stacked_cube = np.ma.dstack(cube_parameters[0])
-    stacked_cmat = np.hstack(cube_parameters[1])
-    stacked_mvec = np.dstack(cube_parameters[2])
+    stacked_cube = _np.ma.dstack(cube_parameters[0])
+    stacked_cmat = _np.hstack(cube_parameters[1])
+    stacked_mvec = _np.dstack(cube_parameters[2])
     # Saving everithing to a new file into a new tn
-    save_cube = os.path.join(stacked_cube_fold, cubeFile)
-    save_cmat = os.path.join(stacked_cube_fold, "cmdMatrix.fits")
-    save_mvec = os.path.join(stacked_cube_fold, "modesVector.fits")
-    rd.save_phasemap(save_cube, stacked_cube)
-    pyfits.writeto(save_cmat, stacked_cmat)
-    pyfits.writeto(save_mvec, stacked_mvec)
-    with open(os.path.join(stacked_cube_fold, flagFile), "w", encoding="UTF-8") as file:
+    save_cube = _os.path.join(stacked_cube_fold, cubeFile)
+    save_cmat = _os.path.join(stacked_cube_fold, "cmdMatrix.fits")
+    save_mvec = _os.path.join(stacked_cube_fold, "modesVector.fits")
+    _osu.save_phasemap(save_cube, stacked_cube)
+    _osu.save_fits(save_cmat, stacked_cmat)
+    _osu.save_fits(save_mvec, stacked_mvec)
+    with open(_os.path.join(stacked_cube_fold, flagFile), "w", encoding="UTF-8") as file:
         flag.write(file)
     print(f"Stacked cube and matrices saved in {new_tn}")
 
@@ -221,26 +226,26 @@ def filterZernikeCube(tn, zern_modes: list = None, save: bool = True):
     ffcube : masked array
         Filtered cube.
     """
-    new_tn = os.path.join(intMatFold, timestamp.Timestamp.now())
-    os.mkdir(new_tn)
-    oldCube = os.path.join(intMatFold, tn, cubeFile)
-    ocFlag = os.path.join(intMatFold, tn, flagFile)
-    newCube = os.path.join(new_tn, cubeFile)
-    ocFlag = os.path.join(intMatFold, tn, flagFile)
-    newFlag = os.path.join(new_tn, flagFile)
-    CmdMat = os.path.join(intMatFold, tn, cmdMatFile)
-    ModesVec = os.path.join(intMatFold, tn, modesVecFile)
-    cube = rd.readFits_maskedImage(oldCube)
+    new_tn = _os.path.join(_intMatFold, _ts())
+    _os.mkdir(new_tn)
+    oldCube = _os.path.join(_intMatFold, tn, cubeFile)
+    ocFlag = _os.path.join(_intMatFold, tn, flagFile)
+    newCube = _os.path.join(new_tn, cubeFile)
+    ocFlag = _os.path.join(_intMatFold, tn, flagFile)
+    newFlag = _os.path.join(new_tn, flagFile)
+    CmdMat = _os.path.join(_intMatFold, tn, cmdMatFile)
+    ModesVec = _os.path.join(_intMatFold, tn, modesVecFile)
+    cube = _osu.load_fits(oldCube)
     zern2filter = zern_modes if zern_modes is not None else [1, 2, 3]
     fcube = []
     for i in range(cube.shape[-1]):
-        filtered = zern.removeZernike(cube[:, :, i], zern2filter)
+        filtered = _zern.removeZernike(cube[:, :, i], zern2filter)
         fcube.append(filtered)
-    ffcube = np.ma.dstack(fcube)
+    ffcube = _np.ma.dstack(fcube)
     if save:
-        rd.save_phasemap(newCube, ffcube)
-        shutil.copyfile(CmdMat, os.path.join(new_tn, cmdMatFile))
-        shutil.copyfile(ModesVec, os.path.join(new_tn, modesVecFile))
+        _osu.save_phasemap(newCube, ffcube)
+        _sh.copyfile(CmdMat, _os.path.join(new_tn, cmdMatFile))
+        _sh.copyfile(ModesVec, _os.path.join(new_tn, modesVecFile))
         with open(ocFlag, "r", encoding="utf-8") as oflag:
             flag = oflag.readlines()
         flag.pop(-1)
@@ -274,13 +279,13 @@ def iffRedux(tn, fileMat, ampVect, modeList, template, shuffle=0):
         value is the number of repetition for each mode's push-pull packet. The
         default is 0, which means the shuffle is OFF.
     """
-    fold = os.path.join(ifFold, tn)
+    fold = _os.path.join(_ifFold, tn)
     nmodes = len(modeList)
     for i in range(0, nmodes):
         img = pushPullRedux(fileMat[i, :], template, shuffle)
         norm_img = img / (2 * ampVect[i])
-        img_name = os.path.join(fold, f"mode_{modeList[i]:04d}.fits")
-        rd.save_phasemap(img_name, norm_img, overwrite=True)
+        img_name = _os.path.join(fold, f"mode_{modeList[i]:04d}.fits")
+        _osu.save_phasemap(img_name, norm_img, overwrite=True)
 
 
 def pushPullRedux(fileVec, template, shuffle=0):
@@ -312,11 +317,11 @@ def pushPullRedux(fileVec, template, shuffle=0):
         Final processed mode's image.
     """
     image_list = []
-    template = np.array(template)
+    template = _np.array(template)
     for i in range(0, template.shape[0]):
-        ima = rd.read_phasemap(fileVec[i])
+        ima = _osu.read_phasemap(fileVec[i])
         image_list.append(ima)
-    image = np.zeros((ima.shape[0], ima.shape[1]))
+    image = _np.zeros((ima.shape[0], ima.shape[1]))
     if shuffle == 0:
         if len(template) == 1:
             image = image_list[0] * template[0]
@@ -324,11 +329,11 @@ def pushPullRedux(fileVec, template, shuffle=0):
         else:
             for x in range(1, len(image_list)):
                 opd2add = image_list[x] * template[x] + image_list[x - 1] * template[x - 1]
-                master_mask2add = np.ma.mask_or(image_list[x].mask, image_list[x - 1].mask)
+                master_mask2add = _np.ma.mask_or(image_list[x].mask, image_list[x - 1].mask)
                 if x == 1:
                     master_mask = master_mask2add
                 else:
-                    master_mask = np.ma.mask_or(master_mask, master_mask2add)
+                    master_mask = _np.ma.mask_or(master_mask, master_mask2add)
                 image += opd2add
     else:
         print("Shuffle option")
@@ -338,15 +343,15 @@ def pushPullRedux(fileVec, template, shuffle=0):
                     image_list[i * 3 + x] * template[x]
                     + image_list[i * 3 + x - 1] * template[x - 1]
                 )
-                master_mask2add = np.ma.mask_or(
+                master_mask2add = _np.ma.mask_or(
                     image_list[i * 3 + x].mask, image_list[i * 3 + x - 1].mask
                 )
                 if i == 0 and x == 1:
                     master_mask = master_mask2add
                 else:
-                    master_mask = np.na.mask_or(master_mask, master_mask2add)
+                    master_mask = _np.na.mask_or(master_mask, master_mask2add)
                 image += opd2add
-    image = np.ma.masked_array(image, mask=master_mask) / np.max(((template.shape[0] - 1), 1))  #!!!
+    image = _np.ma.masked_array(image, mask=master_mask) / _np.max(((template.shape[0] - 1), 1))  #!!!
     return image
 
 
@@ -368,7 +373,7 @@ def registrationRedux(tn, fileMat):
     """
     _, infoR, _ = _getAcqInfo(tn)
     template = infoR["template"]
-    if np.array_equal(fileMat, np.array([])) and len(infoR["modesid"]) == 0:
+    if _np.array_equal(fileMat, _np.array([])) and len(infoR["modesid"]) == 0:
         print("No registration data found")
         return []
     nActs = fileMat.shape[0]
@@ -376,8 +381,8 @@ def registrationRedux(tn, fileMat):
     for i in range(0, nActs - 1):
         img = pushPullRedux(fileMat[i, :], template)
         imglist.append(img)
-    cube = np.ma.masked_array(imglist)
-    #rd.save_phasemap(os.path.join(intMatFold, tn, "regActCube.fits"), cube)
+    cube = _np.ma.masked_array(imglist)
+    #_osu.save_phasemap(_os.path.join(_intMatFold, tn, "regActCube.fits"), cube)
     return imglist
 
 
@@ -400,10 +405,10 @@ def findFrameOffset(tn, imglist, actlist):
     dp: float
         Position difference
     """
-    actCoordFile = os.path.join(ifFold, tn, coordfile)
-    actCoord = rd.readFits_data(actCoordFile)
-    xy = fa.findFrameCoord(imglist, actlist, actCoord)
-    dp = xy - frameCenter
+    actCoordFile = _os.path.join(_ifFold, tn, coordfile)
+    actCoord = _osu.load_fits(actCoordFile)
+    xy = _fa.findFrameCoord(imglist, actlist, actCoord)
+    dp = xy - _frameCenter
     return dp
 
 
@@ -435,8 +440,8 @@ def getTriggerFrame(tn, amplitude=None):
     infoT, _, _ = _getAcqInfo(tn)
     if amplitude is not None:
         infoT["amplitude"] = amplitude
-    fileList = osu.getFileList(tn)
-    img0 = rd.read_phasemap(fileList[0])
+    fileList = _osu.getFileList(tn)
+    img0 = _osu.read_phasemap(fileList[0])
     go = i = 1
     # add the condition where if there are not trigger frames the code is skipped and the
     # the rest is handled with care
@@ -445,8 +450,8 @@ def getTriggerFrame(tn, amplitude=None):
         return trigFrame
     while go != 0:
         thresh = infoT["amplitude"] / 3
-        img1 = rd.read_phasemap(fileList[i])
-        rr2check = zern.removeZernike(img1 - img0, [1, 2, 3]).std()
+        img1 = _osu.read_phasemap(fileList[i])
+        rr2check = _zern.removeZernike(img1 - img0, [1, 2, 3]).std()
         if go > infoT["zeros"]:
             raise RuntimeError(
                 f"Frame {go}. Heading Zeros exceeded: std= {rr2check:.2e} < {thresh:.2e} =Amp/3"
@@ -480,9 +485,9 @@ def getRegFileMatrix(tn):
         A matrix of images in string format, containing the registration frames.
         It has shape (registration_modes, n_push_pull).
     """
-    fileList = osu.getFileList(tn)
+    fileList = _osu.getFileList(tn)
     _, infoR, _ = _getAcqInfo(tn)
-    timing = read_iffconfig.getTiming()
+    timing = _rif.getTiming()
     trigFrame = getTriggerFrame(tn)
     if infoR["zeros"] == 0 and len(infoR["modes"]) == 0:
         regStart = regEnd = (trigFrame + 1) if trigFrame != 0 else 0
@@ -490,7 +495,7 @@ def getRegFileMatrix(tn):
         regStart = trigFrame + infoR["zeros"] * timing + (1 if trigFrame != 0 else 0)
         regEnd = regStart + len(infoR["modes"]) * len(infoR["template"]) * timing
     regList = fileList[regStart:regEnd]
-    regMat = np.reshape(regList, (len(infoR["modes"]), len(infoR["template"])))
+    regMat = _np.reshape(regList, (len(infoR["modes"]), len(infoR["template"])))
     return regEnd, regMat
 
 
@@ -510,11 +515,11 @@ def getIffFileMatrix(tn):
         IFF acquisition, that is all the modes with each push-pull realization.
         It has shape (modes, n_push_pull)
     """
-    fileList = osu.getFileList(tn)
+    fileList = _osu.getFileList(tn)
     _, _, infoIF = _getAcqInfo(tn)
     regEnd, _ = getRegFileMatrix(tn)
     iffList = fileList[regEnd + infoIF["zeros"] :]
-    iffMat = np.reshape(iffList, (len(infoIF["modes"]), len(infoIF["template"])))
+    iffMat = _np.reshape(iffList, (len(infoIF["modes"]), len(infoIF["template"])))
     return iffMat
 
 
@@ -541,14 +546,14 @@ def _getCubeList(tnlist):
     modesVectList = []
     rebins = []
     for tn in tnlist:
-        fold = os.path.join(intMatFold, tn)
-        cube_name = os.path.join(fold, "IMCube.fits")
-        matrix_name = os.path.join(fold, "cmdMatrix.fits")
-        modesVec_name = os.path.join(fold, "modesVector.fits")
-        flag_file = os.path.join(fold, "flag.txt")
-        cubeList.append(rd.readFits_data(cube_name))
-        matrixList.append(rd.readFits_data(matrix_name))
-        modesVectList.append(rd.readFits_data(modesVec_name))
+        fold = _os.path.join(_intMatFold, tn)
+        cube_name = _os.path.join(fold, "IMCube.fits")
+        matrix_name = _os.path.join(fold, "cmdMatrix.fits")
+        modesVec_name = _os.path.join(fold, "modesVector.fits")
+        flag_file = _os.path.join(fold, "flag.txt")
+        cubeList.append(_osu.load_fits(cube_name))
+        matrixList.append(_osu.load_fits(matrix_name))
+        modesVectList.append(_osu.load_fits(modesVec_name))
         with open(flag_file, "r", encoding="UTF-8") as f:
             flag = f.readlines()
         rebins.append(int(flag[1].split("=")[1].strip()))
@@ -583,13 +588,13 @@ def _getAcqPar(tn):
         Shuffle information. If it's nor 0, the values indicates the number of
         template sampling repetition for each mode.
     """
-    base = os.path.join(ifFold, tn)
-    ampVector = rd.readFits_data(os.path.join(base, ampVecFile))
-    template = rd.readFits_data(os.path.join(base, templateFile))
-    modesVector = rd.readFits_data(os.path.join(base, modesVecFile))
-    indexList = rd.readFits_data(os.path.join(base, indexListFile))
-    registrationActs = rd.readFits_data(os.path.join(base, regisActFile))
-    with open(os.path.join(base, shuffleFile), "r", encoding="UTF-8") as shf:
+    base = _os.path.join(_ifFold, tn)
+    ampVector = _osu.load_fits(_os.path.join(base, ampVecFile))
+    template = _osu.load_fits(_os.path.join(base, templateFile))
+    modesVector = _osu.load_fits(_os.path.join(base, modesVecFile))
+    indexList = _osu.load_fits(_os.path.join(base, indexListFile))
+    registrationActs = _osu.load_fits(_os.path.join(base, regisActFile))
+    with open(_os.path.join(base, shuffleFile), "r", encoding="UTF-8") as shf:
         shuffle = int(shf.read())
     return ampVector, modesVector, template, indexList, registrationActs, shuffle
 
@@ -613,10 +618,10 @@ def _getAcqInfo(tn: str = None):
     infoIF : dict
         Information read about the IFFUNC option.
     """
-    path = os.path.join(ifFold, tn) if tn is not None else fn.CONFIGURATION_ROOT_FOLDER
-    infoT = read_iffconfig.getConfig("TRIGGER", bpath=path)
-    infoR = read_iffconfig.getConfig("REGISTRATION", bpath=path)
-    infoIF = read_iffconfig.getConfig("IFFUNC", bpath=path)
+    path = _os.path.join(_ifFold, tn) if tn is not None else fn.CONFIGURATION_ROOT_FOLDER
+    infoT = _rif.getConfig("TRIGGER", bpath=path)
+    infoR = _rif.getConfig("REGISTRATION", bpath=path)
+    infoIF = _rif.getConfig("IFFUNC", bpath=path)
     return infoT, infoR, infoIF
 
 
@@ -678,7 +683,7 @@ def __flag(tnlist, modesVectList, rebin, type:int):
     ]
     text = ""
     for i, tn in enumerate(tnlist):
-        if np.array_equal(modesVectList[i], np.arange(modesVectList[i][0], modesVectList[i][-1]+1, 1)):
+        if _np.array_equal(modesVectList[i], _np.arange(modesVectList[i][0], modesVectList[i][-1]+1, 1)):
             text += \
 f"""
 {tn}, modes {modesVectList[i][0]} to {modesVectList[i][-1]}"""
@@ -693,10 +698,10 @@ f"""
             "Source cubes": text,
         }
     }
-    config["Flag"] = {}
+    _config["Flag"] = {}
     for key, value in flag["Flag"].items():
-        config["Flag"][key] = value
-    return config
+        _config["Flag"][key] = value
+    return _config
 
 
 # TODO

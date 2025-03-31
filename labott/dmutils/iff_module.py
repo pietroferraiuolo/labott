@@ -12,13 +12,12 @@ This module contains the necessary high/user-leve functions to acquire the IFF d
 given a deformable mirror and an interferometer.
 """
 
-import os
-from m4.ground import read_data as rd, timestamp
-from m4.configuration import read_iffconfig as rif
-from m4.configuration import config_folder_names as fn
-from m4.dmutils import iff_acquisition_preparation as ifa
-
-_ts = timestamp.Timestamp()
+import os as _os
+import numpy as _np
+from labott.core.root import _folds as _fn
+from labott.core import read_iffconfig as _rif
+from . import iff_acquisition_preparation as _ifa
+from labott.ground.osutils import newtn as _ts, save_fits as _sf
 
 
 def iffDataAcquisition(
@@ -56,29 +55,31 @@ def iffDataAcquisition(
     tn: string
         The tracking number of the dataset acquired, saved in the OPDImages folder
     """
-    ifc = ifa.IFFCapturePreparation(dm)
+    ifc = _ifa.IFFCapturePreparation(dm)
     tch = ifc.createTimedCmdHistory(modesList, amplitude, template, shuffle)
     info = ifc.getInfoToSave()
     tn = _ts.now()
-    iffpath = os.path.join(fn.IFFUNCTIONS_ROOT_FOLDER, tn)
-    if not os.path.exists(iffpath):
-        os.mkdir(iffpath)
+    iffpath = _os.path.join(_fn.IFFUNCTIONS_ROOT_FOLDER, tn)
+    if not _os.path.exists(iffpath):
+        _os.mkdir(iffpath)
     try:
         for key, value in info.items():
+            if not isinstance(value, _np.ndarray):
+                value = _np.array(value)
             if key == "shuffle":
-                with open(os.path.join(iffpath, f"{key}.dat"), "w") as f:
+                with open(_os.path.join(iffpath, f"{key}.dat"), "w") as f:
                     f.write(str(value))
             else:
-                rd.saveFits_data(
-                    os.path.join(iffpath, f"{key}.fits"), value, overwrite=True
+                _sf(
+                    _os.path.join(iffpath, f"{key}.fits"), value, overwrite=True
                 )
     except KeyError as e:
         print(f"KeyError: {key}, {e}")
-    rif.copyConfingFile(tn)
+    _rif.copyConfingFile(tn)
     for param, value in zip(['modeid', 'modeamp', 'template'], [modesList, amplitude, template]):
         if value is not None:
-            rif.updateConfigFile('IFFUNC', param, value, bpath=iffpath)
-    delay = rif.getCmdDelay()
+            _rif.updateConfigFile('IFFUNC', param, value, bpath=iffpath)
+    delay = _rif.getCmdDelay()
     dm.uploadCmdHistory(tch)
     dm.runCmdHistory(interf, save=tn, delay=delay)
     return tn

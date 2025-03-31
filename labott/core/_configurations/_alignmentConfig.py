@@ -199,9 +199,6 @@ ccd_acquisition = [
     ]
 
 # Data paths
-base_read_data_path     = '/home/pietrof/git/M4/m4/data/M4Data/OPTData/AlignmentCalibration'
-base_write_data_path    = '/home/pietrof/git/M4/m4/data/M4Data/OPTData/AlignmentCalibration'
-log_path                = '/home/pietrof/git/M4/m4/data/M4Data/OPTData/AlignmentCalibration/alignment.log'
-logging_level           =  20
+data_path               = ''
 commandMatrix           = '/home/pietrof/git/M4/scripts/ottalign/cmdMat.fits'
 fitting_surface         = ''

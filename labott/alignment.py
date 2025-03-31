@@ -55,10 +55,12 @@ performed. This can be done through the `reload_calibrated_parabola` method.
 >>> align.reload_calibrated_parabola(tn_parabola) # load the calibrated parabola
 """
 
+import os as _os
 import numpy as _np
 from labott.core._configurations import _alignmentConfig as _sc
 from .ground import logger as _logger, zernike as _zern, geo as _geo
 from .ground.osutils import load_fits as _rfits, save_fits as _sfits, newtn as _ts
+from .core.root import folders as _fn
 
 
 class Alignment:
@@ -136,10 +138,10 @@ class Alignment:
         self._zvec2fit = _np.arange(1, 11)
         self._zvec2use = _sc.zernike_to_use
         self._template = _sc.push_pull_template
-        self._readPath = _sc.base_read_data_path
-        self._writePath = _sc.base_write_data_path
-        self._txt = _logger.txtLogger(_sc.log_path.strip(".log") + "Record.txt")
-        _logger.set_up_logger(_sc.log_path, _sc.logging_level)
+        self._dataPath = _fn.ALIGNMENT_ROOT_FOLDER if _sc.data_path is '' else _sc.data_path
+        self._logPath = _os.path.join(_fn.LOGGING_FILE_PATH, 'alignment.log')
+        self._txt = _logger.txtLogger(self._logPath.strip(".log") + "Record.txt")
+        _logger.set_up_logger(self._logPath, 20)
 
     def correct_alignment(
         self,
@@ -188,7 +190,7 @@ class Alignment:
         zernike_coeff = self._zern_routine(image)
         if tn is not None:
             intMat = _rfits(
-                self._readPath + f"/{tn}/InteractionMatrix.fits"
+                self._dataPath + f"/{tn}/InteractionMatrix.fits"
             )
             self.intMat = intMat
         else:
@@ -268,7 +270,7 @@ class Alignment:
         self.intMat = intMat
         if save:
             tn = _ts()
-            filename = os.path.join(self._writePath, tn, "InteractionMatrix.fits")
+            filename = os.path.join(self._dataPath, tn, "InteractionMatrix.fits")
             os.mkdir(filename.strip("InteractionMatrix.fits"))
             _sfits("intMat.fits", self.intMat, overwrite=True)
             _logger.log(f"{_sfits.__qualname__}")

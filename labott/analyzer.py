@@ -764,6 +764,26 @@ def modeRebinner(img, rebin):
     newImg = _rebin2DArray(img, new_shape)
     return newImg
 
+def cubeRebinner(cube, rebin):
+    """
+    Cube rebinner
+
+    Parameters
+    ----------
+    cube : ndarray
+        Cube to rebin.
+    rebin : int
+        Rebinning factor.
+    
+    Returns
+    -------
+    newCube : ndarray
+        Rebinned cube.
+    """
+    newCube = []
+    for i in range(cube.shape[-1]):
+        newCube.append(modeRebinner(cube[:,:,i], rebin))
+    return _np.ma.dstack(newCube)
 
 # From ARTE #
 def _rebin2DArray(a, new_shape, sample=False):

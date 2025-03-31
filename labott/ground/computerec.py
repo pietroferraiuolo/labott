@@ -7,12 +7,14 @@ Author(s):
 """
 import numpy as _np
 from . import logger as _log
+from . import osutils as _osu
 import matplotlib.pyplot as _plt
+from labott.core.root import folders as _fn
 
-imgFold     = fn.OPD_IMAGES_ROOT_FOLDER
-ifFold      = fn.IFFUNCTIONS_ROOT_FOLDER
-intMatFold  = fn.INTMAT_ROOT_FOLDER
-confFold    = fn.CONFIGURATION_ROOT_FOLDER
+_imgFold     = _fn.OPD_IMAGES_ROOT_FOLDER
+_ifFold      = _fn.IFFUNCTIONS_ROOT_FOLDER
+_intMatFold  = _fn.INTMAT_ROOT_FOLDER
+_confFold    = _fn.CONFIGURATION_ROOT_FOLDER
 
 
 class ComputeReconstructor:
@@ -128,8 +130,8 @@ class ComputeReconstructor:
         if intCube is not None:
             self._intMatCube = intCube
         elif tn is not None:
-            cube_path = os.path.join(intMatFold, tn, 'IMCube.fits')
-            self._intMatCube = rd.read_phasemap(cube_path)
+            cube_path = os.path.join(_intMatFold, tn, 'IMCube.fits')
+            self._intMatCube = _osu.read_phasemap(cube_path)
         else:
             raise KeyError("No cube or tracking number was provided.")
         self._computeIntMat()
