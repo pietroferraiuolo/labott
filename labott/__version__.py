@@ -5,8 +5,8 @@ Author
 ------
 Pietro Ferraiuolo
 """
-__title__ = 'gentle'
-__long_title__ = 'GENTLE : GENeral inTerferometer Laboratory intErface'
+__title__ = 'gentle2'
+__long_title__ = 'GENTLE2 : GENeral inTerferometer Laboratory intErface'
 __description__ = 'This package is thought to be a general interface for 4D interferometers for optical laboratories. This will include a client interface to the 4D pc and 4Sight software, as well as various data analysis tools, realized originally for the m4 software.'
 __version__ = '0.3.0'
 __author__ = 'Pietro Ferraiuolo'
