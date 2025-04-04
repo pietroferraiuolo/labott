@@ -244,7 +244,7 @@ def load_fits(filepath):
     return fit
 
 
-def save_fits(filepath, data):
+def save_fits(filepath, data, overwrite=True):
     """
     Saves a FITS file.
 
@@ -256,11 +256,11 @@ def save_fits(filepath, data):
         Data to be saved.
     """
     if isinstance(data, _masked_array):
-        _fits.writeto(filepath, data.data, overwrite=True)
+        _fits.writeto(filepath, data.data, overwrite=overwrite)
         if hasattr(data, "mask"):
             _fits.append(filepath, data.mask.astype(_uint8))
     else:
-        _fits.writeto(filepath, data, overwrite=True)
+        _fits.writeto(filepath, data, overwrite=overwrite)
 
 
 def newtn():

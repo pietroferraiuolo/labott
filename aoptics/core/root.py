@@ -6,15 +6,6 @@ _iconfig = _cp.ConfigParser()
 
 INTERF_CONFIGURATION_FILE = _os.path.dirname(_os.path.abspath(__file__)) + \
                                                 "/_configurations/interfConfig.ini"
-_cpfile = _os.path.expanduser("~") + "/interfConfig.ini"
-if not _os.path.exists(_cpfile):
-    _copy(INTERF_CONFIGURATION_FILE, _cpfile)
-    INTERF_CONFIGURATION_FILE = _cpfile
-    print(f"Created configuration file at `{_cpfile}`")
-else: 
-    INTERF_CONFIGURATION_FILE = _cpfile
-    print(f"Reading configuration file at `{_cpfile}`")
-
 
 _iconfig.read(INTERF_CONFIGURATION_FILE)
 _cc = _iconfig["PATHS"]
@@ -30,6 +21,7 @@ SETTINGS_CONF_FILE = str(_ci["settings"])
 CONFIGURATION_ROOT_FOLDER = _os.path.dirname(INTERF_CONFIGURATION_FILE)
 BASE_PATH = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
 BASE_DATA_PATH = str(_cc["data_path"])
+CONFIGURATION_FOLDER = _os.path.join(BASE_DATA_PATH, "SysConfigurations")
 OPD_IMAGES_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "OPDImages")
 OPD_SERIES_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "OPDSeries")
 IFFUNCTIONS_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "IFFunctions")
@@ -40,24 +32,42 @@ ALIGNMENT_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Alignment")
 
 # create the folders if they do not exist
 for p in [BASE_PATH, BASE_DATA_PATH, LOGGING_ROOT_FOLDER, IFFUNCTIONS_ROOT_FOLDER,
-          INTMAT_ROOT_FOLDER, MODALBASE_ROOT_FOLDER, ALIGNMENT_ROOT_FOLDER]:
+          INTMAT_ROOT_FOLDER, MODALBASE_ROOT_FOLDER, ALIGNMENT_ROOT_FOLDER,
+          OPD_IMAGES_ROOT_FOLDER, OPD_SERIES_ROOT_FOLDER, CONFIGURATION_FOLDER]:
     if not _os.path.exists(p):
         _os.makedirs(p)
 
+_cpIfile = _os.path.join(CONFIGURATION_FOLDER, "interfConfig.ini")
+_cpIFfile= _os.path.join(CONFIGURATION_FOLDER, "iffConfig.ini")
 
-def mount4D():
-    """
-    Mount the 4d and 4dConfig shared folders in the local machine.
-    """
-    try:
-        mount4d = _os.system("mount 4d")
-        if mount4d == 0:
-            print("4d mounted")
-        mount4dc= _os.system("mount 4dConfig")
-        if mount4dc == 0:
-            print("4dConfig mounted")
-    except Exception as e:
-        print(e)
+if not _os.path.exists(_cpIfile):
+    _copy(INTERF_CONFIGURATION_FILE, _cpIfile)
+    INTERF_CONFIGURATION_FILE = _cpIfile
+    print(f"Created interferometer configuration file at\n`{_cpIfile}`")
+else: 
+    INTERF_CONFIGURATION_FILE = _cpIfile
+    print(f"Reading interferometer configuration file at\n`{_cpIfile}`")
+
+if not _os.path.exists(_cpIFfile):
+    _copy(_os.path.join(CONFIGURATION_ROOT_FOLDER, "iffConfig.ini"), _cpIFfile)
+    print(f"Created IFF configuration file at\n`{_cpIFfile}`")
+else:
+    print(f"Reading IFF configuration file at\n`{_cpIFfile}`")
+
+
+# def mount4D():
+#     """
+#     Mount the 4d and 4dConfig shared folders in the local machine.
+#     """
+#     try:
+#         mount4d = _os.system("mount 4d")
+#         if mount4d == 0:
+#             print("4d mounted")
+#         mount4dc= _os.system("mount 4dConfig")
+#         if mount4dc == 0:
+#             print("4dConfig mounted")
+#     except Exception as e:
+#         print(e)
 
 
 class _folds():
@@ -79,10 +89,9 @@ class _folds():
         self.MODALBASE_ROOT_FOLDER = MODALBASE_ROOT_FOLDER
         self.INTMAT_ROOT_FOLDER = INTMAT_ROOT_FOLDER
         self.ALIGNMENT_ROOT_FOLDER = ALIGNMENT_ROOT_FOLDER
-
+        self.CONFIGURATION_FOLDER = CONFIGURATION_FOLDER
 
 folders = _folds()
-
 
 class ConfSettingReader4D:
     """

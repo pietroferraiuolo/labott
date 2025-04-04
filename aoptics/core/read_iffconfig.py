@@ -11,7 +11,7 @@ import json as _json
 import shutil as _sh
 import configparser as _cp
 from .root import (
-    CONFIGURATION_ROOT_FOLDER as _cfold,
+    CONFIGURATION_FOLDER as _cfold,
     IFFUNCTIONS_ROOT_FOLDER as _iffold,
 )
 
@@ -54,18 +54,19 @@ def getConfig(key, bpath=_cfold):
             - template
             - modalBase 
     """
+    np = _np
     fname = _os.path.join(bpath, iff_configFile)
     _config.read(fname)
     cc = _config[key]
     nzeros      = int(cc[_nzeroName])
     modeId_str  = cc[_modeIdName]
     try:
-        modeId = _np.array(_json.loads(modeId_str))
+        modeId = np.array(_json.loads(modeId_str))
     except _json.JSONDecodeError:
-        modeId = _np.array(eval(modeId_str))
+        modeId = np.array(eval(modeId_str))
     modeAmp     = float(cc[_modeAmpName])
     modalBase   = cc[_modalBaseName]
-    template    = _np.array(_json.loads(cc[_templateName]))
+    template    = np.array(_json.loads(cc[_templateName]))
     info = {'zeros': nzeros,
             'modes': modeId,
             'amplitude': modeAmp,
@@ -96,7 +97,7 @@ def copyConfingFile(tn, old_path=_cfold):
     fname = _os.path.join(old_path, iff_configFile)
     nfname= _os.path.join(_iffold, tn, iff_configFile)
     res = _sh.copy2(fname, nfname)
-    print(f"{iff_configFile} copied to {res}")
+    print(f"{iff_configFile} copied to {res.split('/iffConfig.ini')[0]}")
     return nfname
 
 
@@ -137,7 +138,7 @@ def updateConfigFile(key: str, item: str, value, bpath=_cfold):
     if not item in _items:
         raise KeyError(f"Item `{item}` not found in the configuration file")
     with open(fname, 'w') as configfile:
-        _config[key][item] = str(value)
+        _config[key][item] = str(value) if not isinstance(value, _np.ndarray) else value.tolist()
         _config.write(configfile)
 
 

@@ -14,7 +14,7 @@ given a deformable mirror and an interferometer.
 
 import os as _os
 import numpy as _np
-from aoptics.core.root import _folds as _fn
+from aoptics.core.root import folders as _fn
 from aoptics.core import read_iffconfig as _rif
 from . import iff_acquisition_preparation as _ifa
 from aoptics.ground.osutils import newtn as _ts, save_fits as _sf
@@ -58,7 +58,7 @@ def iffDataAcquisition(
     ifc = _ifa.IFFCapturePreparation(dm)
     tch = ifc.createTimedCmdHistory(modesList, amplitude, template, shuffle)
     info = ifc.getInfoToSave()
-    tn = _ts.now()
+    tn = _ts()
     iffpath = _os.path.join(_fn.IFFUNCTIONS_ROOT_FOLDER, tn)
     if not _os.path.exists(iffpath):
         _os.mkdir(iffpath)

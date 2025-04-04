@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 # Read version and other metadata from labott/__version__.py
 about = {}
-with open("labott/__version__.py") as f:
+with open("aoptics/__version__.py") as f:
     exec(f.read(), about)
 
 # Read dependencies from requirements.txt

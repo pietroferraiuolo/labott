@@ -52,12 +52,13 @@ import os as _os
 import numpy as _np
 import shutil as _sh
 import configparser as _cp
+from aoptics.core.root import _folds
 from aoptics.ground import osutils as _osu
 from aoptics.ground import zernike as _zern
-from aoptics.core.root import _folds as _fn
 from aoptics.core import read_iffconfig as _rif
-from scripts.misc.IFFPackage import actuator_identification_lib as _fa
+#from scripts.misc.IFFPackage import actuator_identification_lib as _fa
 
+_fn = _folds()
 _config          = _cp.ConfigParser()
 _imgFold         = _fn.OPD_IMAGES_ROOT_FOLDER
 _ifFold          = _fn.IFFUNCTIONS_ROOT_FOLDER
@@ -618,7 +619,7 @@ def _getAcqInfo(tn: str = None):
     infoIF : dict
         Information read about the IFFUNC option.
     """
-    path = _os.path.join(_ifFold, tn) if tn is not None else fn.CONFIGURATION_ROOT_FOLDER
+    path = _os.path.join(_ifFold, tn) if tn is not None else _fn.CONFIGURATION_ROOT_FOLDER
     infoT = _rif.getConfig("TRIGGER", bpath=path)
     infoR = _rif.getConfig("REGISTRATION", bpath=path)
     infoIF = _rif.getConfig("IFFUNC", bpath=path)
