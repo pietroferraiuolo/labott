@@ -9,7 +9,7 @@ import numpy as _np
 from . import logger as _log
 from . import osutils as _osu
 import matplotlib.pyplot as _plt
-from labott.core.root import folders as _fn
+from aoptics.core.root import folders as _fn
 
 _imgFold     = _fn.OPD_IMAGES_ROOT_FOLDER
 _ifFold      = _fn.IFFUNCTIONS_ROOT_FOLDER

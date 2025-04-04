@@ -5,7 +5,7 @@ from shutil import copy as _copy
 _iconfig = _cp.ConfigParser()
 
 INTERF_CONFIGURATION_FILE = _os.path.dirname(_os.path.abspath(__file__)) + \
-                                                "/configurations/interfConfig.ini"
+                                                "/_configurations/interfConfig.ini"
 _cpfile = _os.path.expanduser("~") + "/interfConfig.ini"
 if not _os.path.exists(_cpfile):
     _copy(INTERF_CONFIGURATION_FILE, _cpfile)

@@ -15,9 +15,9 @@ More information on its use can be found on the class documentation.
 
 import os as _os
 import numpy as _np
-from labott.ground import osutils as _osu
-from labott.core import read_iffconfig as _rif
-from labott.core.root import IFFUNCTIONS_ROOT_FOLDER as _iffold
+from aoptics.ground import osutils as _osu
+from aoptics.core import read_iffconfig as _rif
+from aoptics.core.root import IFFUNCTIONS_ROOT_FOLDER as _iffold
 from .iff_processing import _getAcqInfo
 
 
@@ -368,7 +368,7 @@ class IFFCapturePreparation:
             DESCRIPTION.
 
         """
-        from labott.core.root import MODALBASE_ROOT_FOLDER
+        from aoptics.core.root import MODALBASE_ROOT_FOLDER
         print("Reading modal base from tracknum: " + tracknum)
         modalBaseFileName = "Standard modal base file name"  # !!! RE-DEFINE THIS
         mbfile = _os.path.join(MODALBASE_ROOT_FOLDER, tracknum, modalBaseFileName)

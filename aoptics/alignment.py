@@ -57,7 +57,7 @@ performed. This can be done through the `reload_calibrated_parabola` method.
 
 import os as _os
 import numpy as _np
-from labott.core._configurations import _alignmentConfig as _sc
+from aoptics.core._configurations import _alignmentConfig as _sc
 from .ground import logger as _logger, zernike as _zern, geo as _geo
 from .ground.osutils import load_fits as _rfits, save_fits as _sfits, newtn as _ts
 from .core.root import folders as _fn

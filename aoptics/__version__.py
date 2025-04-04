@@ -5,9 +5,9 @@ Author
 ------
 Pietro Ferraiuolo
 """
-__title__ = 'gentle2'
-__long_title__ = 'GENTLE2 : GENeral inTerferometer Laboratory intErface'
-__description__ = 'This package is thought to be a general interface for 4D interferometers for optical laboratories. This will include a client interface to the 4D pc and 4Sight software, as well as various data analysis tools, realized originally for the m4 software.'
+__title__ = 'aoptics'
+__long_title__ = 'AOPTICs : Adaptice OPTICs package for dm calibrationS'
+__description__ = 'This package is a python interface for laboratory adaptive optics systems, with a focus on the calibration of deformable mirrors (DMs) and the acquisition of wavefront data using interferometers.'
 __version__ = '0.3.0'
 __author__ = 'Pietro Ferraiuolo'
 __author_email__ = 'pietro.ferraiuolo@inaf.it'

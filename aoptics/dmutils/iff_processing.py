@@ -52,10 +52,10 @@ import os as _os
 import numpy as _np
 import shutil as _sh
 import configparser as _cp
-from labott.ground import osutils as _osu
-from labott.ground import zernike as _zern
-from labott.core.root import _folds as _fn
-from labott.core import read_iffconfig as _rif
+from aoptics.ground import osutils as _osu
+from aoptics.ground import zernike as _zern
+from aoptics.core.root import _folds as _fn
+from aoptics.core import read_iffconfig as _rif
 from scripts.misc.IFFPackage import actuator_identification_lib as _fa
 
 _config          = _cp.ConfigParser()
@@ -144,7 +144,7 @@ def saveCube(tn, rebin, register=False):
     cube : masked_array
         Data cube of the images, with shape (npx, npx, nmodes).
     """
-    from labott.analyzer import cubeRebinner
+    from aoptics.analyzer import cubeRebinner
     old_fold = _os.path.join(_ifFold, tn)
     filelist = _osu.getFileList(fold=old_fold, key="mode_")
     cube = _osu.createCube(filelist, register=register)

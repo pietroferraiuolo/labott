@@ -1,0 +1,5 @@
+numpy<=1.26.4
+scipy
+scikit-learn
+astropy
+plico_dm

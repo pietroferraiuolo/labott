@@ -9,8 +9,8 @@ Description
 import os as _os
 import numpy as _np
 import time as _time
-from labott.core.root import OPD_IMAGES_ROOT_FOLDER as _opdi
-from labott.ground.osutils import newtn as _ts, save_fits as _sf
+from aoptics.core.root import OPD_IMAGES_ROOT_FOLDER as _opdi
+from aoptics.ground.osutils import newtn as _ts, save_fits as _sf
 
 class AlpaoDm():
     """

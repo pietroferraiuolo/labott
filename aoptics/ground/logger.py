@@ -43,7 +43,7 @@ def set_up_logger(filename, logging_level):
 >>> set_up_logger('/path/to/logfile.log', logging.DEBUG)
     """
     import os
-    from labott.core.root import LOGGING_ROOT_FOLDER
+    from aoptics.core.root import LOGGING_ROOT_FOLDER
     file_path = os.path.join(LOGGING_ROOT_FOLDER, filename)
     FORMAT = "%(asctime)s %(levelname)s %(name)s %(message)s"
     formato = _l.Formatter(fmt=FORMAT)

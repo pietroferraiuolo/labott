@@ -13,7 +13,7 @@ import os as _os
 import numpy as _np
 import jdcal as _jdcal
 import matplotlib.pyplot as _plt
-from .core import zernike as _zern
+from .ground import zernike as _zern
 from .ground import osutils as _osu
 from .core import root as _foldname
 from .ground.geo import qpupil as _qpupil

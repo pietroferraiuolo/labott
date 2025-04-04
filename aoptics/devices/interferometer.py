@@ -2,16 +2,19 @@ import os as _os
 import numpy as _np
 import time as _time
 import shutil as _sh
-from labott.ground import logger as _logger
-from labott.ground.osutils import (
+from aoptics.ground import logger as _logger
+from aoptics.ground.osutils import (
     newtn as _newtn,
     InterferometerConverter,
     rename4D,
 )
-from labott.core.root import folders as _folds
-from labott.analyzer import modeRebinner as _modeRebinner
+from aoptics.core.root import (
+    folders as _folds,
+    ConfSettingReader4D as _ConfSettingReader4D,
+)
+from aoptics.analyzer import modeRebinner as _modeRebinner
 
-_confReader = _folds.ConfSettingReader4D
+_confReader = _ConfSettingReader4D
 
 class PhaseCam():
     """
@@ -20,10 +23,10 @@ class PhaseCam():
 
     def __init__(self, ip: str = None, port: int = None):
         """The constructor"""
-        from labott.core.i4d import I4D
+        from aoptics.core.i4d import I4D
 
         if (ip and port) is None:
-            from labott.core.root import I4D_IP, I4D_PORT
+            from aoptics.core.root import I4D_IP, I4D_PORT
             ip = I4D_IP
             port = I4D_PORT
 
