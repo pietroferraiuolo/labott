@@ -65,13 +65,15 @@ def iffDataAcquisition(
     try:
         for key, value in info.items():
             if not isinstance(value, _np.ndarray):
-                value = _np.array(value)
+                tvalue = _np.array(value)
+            else:
+                tvalue = value
             if key == "shuffle":
                 with open(_os.path.join(iffpath, f"{key}.dat"), "w") as f:
                     f.write(str(value))
             else:
                 _sf(
-                    _os.path.join(iffpath, f"{key}.fits"), value, overwrite=True
+                    _os.path.join(iffpath, f"{key}.fits"), tvalue, overwrite=True
                 )
     except KeyError as e:
         print(f"KeyError: {key}, {e}")
