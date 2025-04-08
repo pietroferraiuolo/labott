@@ -67,6 +67,7 @@ PRODUCE_FOLDER_NAME_LOCAL_PC = str(_iconfig["Paths"]["produce"])
 ####################################
 # FOLDER TREE CREATION
 ####################################
+FLAT_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Flattening")
 INTMAT_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "IntMatrices")
 LOGGING_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Logs")
 CONFIGURATION_FOLDER = _os.path.join(BASE_DATA_PATH, "SysConfigurations")
@@ -86,6 +87,7 @@ for p in [
     OPD_IMAGES_ROOT_FOLDER,
     OPD_SERIES_ROOT_FOLDER,
     CONFIGURATION_FOLDER,
+    FLAT_ROOT_FOLDER,
 ]:
     if not _os.path.exists(p):
         _os.makedirs(p)
@@ -111,6 +113,8 @@ class _folds:
         self.MODALBASE_ROOT_FOLDER = MODALBASE_ROOT_FOLDER
         self.INTMAT_ROOT_FOLDER = INTMAT_ROOT_FOLDER
         self.ALIGNMENT_ROOT_FOLDER = ALIGNMENT_ROOT_FOLDER
+        self.CONFIGURATION_FILE = CONFIGURATION_FILE
+        self.FLAT_ROOT_FOLDER = FLAT_ROOT_FOLDER
 
     @property
     def print_all(self):
@@ -125,7 +129,8 @@ class _folds:
             ("Alignment folder", self.ALIGNMENT_ROOT_FOLDER),
             ("IFFunctions folder", self.IFFUNCTIONS_ROOT_FOLDER),
             ("Intmat folder", self.INTMAT_ROOT_FOLDER),
-            ("Logging file path", self.LOGGING_FILE_PATH),
+            ("Flattening folder", self.FLAT_ROOT_FOLDER),
+            ("Logging root folder", self.LOGGING_FILE_PATH),
             ("Interferometer settings file", self.SETTINGS_CONF_FILE),
             ("Produce folder name 4D PC", self.PRODUCE_FOLDER_NAME_4D_PC),
             ("Capture folder name 4D PC", self.CAPTURE_FOLDER_NAME_4D_PC),

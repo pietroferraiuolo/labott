@@ -41,7 +41,7 @@ import os as _os
 import numpy as _np
 from . import iff_processing as _ifp
 from aoptics.ground import osutils as _osu
-from aoptics.core.root import _folds as _fn
+from aoptics.core.root import folders as _fn
 from aoptics.ground import computerec as _crec
 
 _ts = _osu.newtn
@@ -69,7 +69,7 @@ class Flattening:
         self.flatCmd            = None
         self.rebin              = None
         self.filtered           = False
-        self._path              = _os.path.join(_ifp.intMatFold, self.tn)
+        self._path              = _os.path.join(_ifp._intMatFold, self.tn)
         self._oldtn             = tn
         self._intCube           = self._loadIntCube()
         self._cmdMat            = self._loadCmdMat()
@@ -117,7 +117,7 @@ class Flattening:
             "imgflat.fits",
         ]
         data = [cmd, deltacmd, imgstart, imgflat]
-        fold = _os.path.join(_fn.FLAT_ROOT_FOLD, new_tn)
+        fold = _os.path.join(_fn.FLAT_ROOT_FOLDER, new_tn)
         if not _os.path.exists(fold):
             _os.mkdir(fold)
         for f, d in zip(files, data):

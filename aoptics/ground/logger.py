@@ -56,6 +56,7 @@ def set_up_logger(filename, logging_level):
     handler.setLevel(logging_level)
     root_logger.addHandler(handler)
     handler.doRollover()
+    return root_logger
 
 
 def log(message, level: str = "INFO"):
