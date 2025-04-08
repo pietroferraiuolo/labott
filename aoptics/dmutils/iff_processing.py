@@ -157,7 +157,7 @@ def saveCube(tn, rebin, register=False):
     if not _os.path.exists(new_fold):
         _os.mkdir(new_fold)
     cube_path = _os.path.join(new_fold, cubeFile)
-    _osu.save_phasemap(cube_path, cube, overwrite=True)
+    _osu.save_fits(cube_path, cube, overwrite=True)
     # Copying the cmdMatrix and the ModesVector into the INTMAT Folder
     cmat = _osu.load_fits(_os.path.join(_ifFold, tn, "cmdMatrix.fits"))
     mvec = _osu.load_fits(_os.path.join(_ifFold, tn, "modesVector.fits"))
@@ -202,7 +202,7 @@ def stackCubes(tnlist):
     save_cube = _os.path.join(stacked_cube_fold, cubeFile)
     save_cmat = _os.path.join(stacked_cube_fold, "cmdMatrix.fits")
     save_mvec = _os.path.join(stacked_cube_fold, "modesVector.fits")
-    _osu.save_phasemap(save_cube, stacked_cube)
+    _osu.save_fits(save_cube, stacked_cube)
     _osu.save_fits(save_cmat, stacked_cmat)
     _osu.save_fits(save_mvec, stacked_mvec)
     with open(_os.path.join(stacked_cube_fold, flagFile), "w", encoding="UTF-8") as file:
@@ -244,7 +244,7 @@ def filterZernikeCube(tn, zern_modes: list = None, save: bool = True):
         fcube.append(filtered)
     ffcube = _np.ma.dstack(fcube)
     if save:
-        _osu.save_phasemap(newCube, ffcube)
+        _osu.save_fits(newCube, ffcube)
         _sh.copyfile(CmdMat, _os.path.join(new_tn, cmdMatFile))
         _sh.copyfile(ModesVec, _os.path.join(new_tn, modesVecFile))
         with open(ocFlag, "r", encoding="utf-8") as oflag:
@@ -286,7 +286,7 @@ def iffRedux(tn, fileMat, ampVect, modeList, template, shuffle=0):
         img = pushPullRedux(fileMat[i, :], template, shuffle)
         norm_img = img / (2 * ampVect[i])
         img_name = _os.path.join(fold, f"mode_{modeList[i]:04d}.fits")
-        _osu.save_phasemap(img_name, norm_img, overwrite=True)
+        _osu.save_fits(img_name, norm_img, overwrite=True)
 
 
 def pushPullRedux(fileVec, template, shuffle=0):
@@ -383,7 +383,7 @@ def registrationRedux(tn, fileMat):
         img = pushPullRedux(fileMat[i, :], template)
         imglist.append(img)
     cube = _np.ma.masked_array(imglist)
-    #_osu.save_phasemap(_os.path.join(_intMatFold, tn, "regActCube.fits"), cube)
+    #_osu.save_fits(_os.path.join(_intMatFold, tn, "regActCube.fits"), cube)
     return imglist
 
 

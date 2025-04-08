@@ -1,82 +1,104 @@
 import os as _os
+import yaml as _yml
 import configparser as _cp
 from shutil import copy as _copy
 
-_iconfig = _cp.ConfigParser()
+ROOT_CONFIGURATION_FILE = (
+    _os.path.dirname(_os.path.abspath(__file__)) + "/_configurations/configuration.yaml"
+)
+CONFIGURATION_ROOT_FOLDER = _os.path.dirname(ROOT_CONFIGURATION_FILE)
 
-INTERF_CONFIGURATION_FILE = _os.path.dirname(_os.path.abspath(__file__)) + \
-                                                "/_configurations/interfConfig.ini"
+with open(ROOT_CONFIGURATION_FILE, "r") as _f:
+    _root_config = _yml.safe_load(_f)
 
-_iconfig.read(INTERF_CONFIGURATION_FILE)
-_cc = _iconfig["PATHS"]
-_ci = _iconfig["INTERF"]
+BASE_DATA_PATH = _root_config["SYSTEM"]["data_path"]
+if not BASE_DATA_PATH == "":
+    _copied_config = _os.path.join(
+        BASE_DATA_PATH, "SysConfigurations", "configuration.yaml"
+    )
+    if not _os.path.exists(BASE_DATA_PATH):
+        res = input(
+            f"Base data path folder not found.\nCreate folder tree at {BASE_DATA_PATH}? (Y/n): "
+        )
+        if res.lower() == "y":
+            _os.makedirs(BASE_DATA_PATH)
+            _os.makedirs(_os.path.join(BASE_DATA_PATH, "SysConfigurations"))
+    try:
+        if not _os.path.exists(_copied_config):
+            _copy(ROOT_CONFIGURATION_FILE, _copied_config)
+            CONFIGURATION_FILE = _copied_config
+            _config = _root_config
+            print(f"Created configuration file at\n`{_copied_config}`")
+        else:
+            CONFIGURATION_FILE = _copied_config
+            with open(_copied_config, "r") as _f:
+                _config = _yml.safe_load(_f)
+            if BASE_DATA_PATH != _config["SYSTEM"]["data_path"]:
+                BASE_DATA_PATH = _config["SYSTEM"]["data_path"]
+            print(f"Reading configuration file at\n`{_copied_config}`")
+    except FileNotFoundError:
+        BASE_DATA_PATH = _os.path.join(_os.path.expanduser("~"), "aopticsData")
+        print(
+            f"Failed to copy configuration file and to create folder tree.\nUsing root configuration file\
+`{ROOT_CONFIGURATION_FILE}` and `{BASE_DATA_PATH}` as base data path\n"
+        )
+        CONFIGURATION_FILE = ROOT_CONFIGURATION_FILE
+        _config = _root_config
+else:
+    BASE_DATA_PATH = _os.path.join(_os.path.expanduser("~"), "aopticsData")
+    print(
+        f"Base data path not set in configuration file.\nUsing root configuration file\
+`{ROOT_CONFIGURATION_FILE}` and `{BASE_DATA_PATH}` as base data path\n"
+    )
+    CONFIGURATION_FILE = ROOT_CONFIGURATION_FILE
+    _config = _root_config
 
-I4D_IP = str(_ci["i4d_ip"])
-I4D_PORT = int(_ci["i4d_port"])
-CAPTURE_FOLDER_NAME_4D_PC = str(_cc["capture_4dpc"])
-PRODUCE_FOLDER_NAME_4D_PC = str(_cc["produce_4dpc"])
-PRODUCE_FOLDER_NAME_LOCAL_PC = str(_cc["produce"])
-SETTINGS_CONF_FILE = str(_ci["settings"])
+####################################
+# INTERFEROMETER SECTION READING
+####################################
+_iconfig = _config["INTERFEROMETER"]
+I4D_IP                       = str(_iconfig["i4d_ip"])
+I4D_PORT                     = int(_iconfig["i4d_port"])
+SETTINGS_CONF_FILE           = str(_iconfig["Paths"]["settings"])
+CAPTURE_FOLDER_NAME_4D_PC    = str(_iconfig["Paths"]["capture_4dpc"])
+PRODUCE_FOLDER_NAME_4D_PC    = str(_iconfig["Paths"]["produce_4dpc"])
+PRODUCE_FOLDER_NAME_LOCAL_PC = str(_iconfig["Paths"]["produce"])
 
-CONFIGURATION_ROOT_FOLDER = _os.path.dirname(INTERF_CONFIGURATION_FILE)
-BASE_PATH = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
-BASE_DATA_PATH = str(_cc["data_path"])
-CONFIGURATION_FOLDER = _os.path.join(BASE_DATA_PATH, "SysConfigurations")
-OPD_IMAGES_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "OPDImages")
-OPD_SERIES_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "OPDSeries")
-IFFUNCTIONS_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "IFFunctions")
+####################################
+# FOLDER TREE CREATION
+####################################
 INTMAT_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "IntMatrices")
 LOGGING_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Logs")
+CONFIGURATION_FOLDER = _os.path.join(BASE_DATA_PATH, "SysConfigurations")
 MODALBASE_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "ModalBases")
-ALIGNMENT_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Alignment")
+ALIGNMENT_ROOT_FOLDER  = _os.path.join(BASE_DATA_PATH, "Alignment")
+OPD_SERIES_ROOT_FOLDER  = _os.path.join(BASE_DATA_PATH, "OPDSeries")
+OPD_IMAGES_ROOT_FOLDER   = _os.path.join(BASE_DATA_PATH, "OPDImages")
+IFFUNCTIONS_ROOT_FOLDER   = _os.path.join(BASE_DATA_PATH, "IFFunctions")
 
-# create the folders if they do not exist
-for p in [BASE_PATH, BASE_DATA_PATH, LOGGING_ROOT_FOLDER, IFFUNCTIONS_ROOT_FOLDER,
-          INTMAT_ROOT_FOLDER, MODALBASE_ROOT_FOLDER, ALIGNMENT_ROOT_FOLDER,
-          OPD_IMAGES_ROOT_FOLDER, OPD_SERIES_ROOT_FOLDER, CONFIGURATION_FOLDER]:
+for p in [
+    BASE_DATA_PATH,
+    LOGGING_ROOT_FOLDER,
+    IFFUNCTIONS_ROOT_FOLDER,
+    INTMAT_ROOT_FOLDER,
+    MODALBASE_ROOT_FOLDER,
+    ALIGNMENT_ROOT_FOLDER,
+    OPD_IMAGES_ROOT_FOLDER,
+    OPD_SERIES_ROOT_FOLDER,
+    CONFIGURATION_FOLDER,
+]:
     if not _os.path.exists(p):
         _os.makedirs(p)
 
-_cpIfile = _os.path.join(CONFIGURATION_FOLDER, "interfConfig.ini")
-_cpIFfile= _os.path.join(CONFIGURATION_FOLDER, "iffConfig.ini")
 
-if not _os.path.exists(_cpIfile):
-    _copy(INTERF_CONFIGURATION_FILE, _cpIfile)
-    INTERF_CONFIGURATION_FILE = _cpIfile
-    print(f"Created interferometer configuration file at\n`{_cpIfile}`")
-else: 
-    INTERF_CONFIGURATION_FILE = _cpIfile
-    print(f"Reading interferometer configuration file at\n`{_cpIfile}`")
-
-if not _os.path.exists(_cpIFfile):
-    _copy(_os.path.join(CONFIGURATION_ROOT_FOLDER, "iffConfig.ini"), _cpIFfile)
-    print(f"Created IFF configuration file at\n`{_cpIFfile}`")
-else:
-    print(f"Reading IFF configuration file at\n`{_cpIFfile}`")
-
-
-# def mount4D():
-#     """
-#     Mount the 4d and 4dConfig shared folders in the local machine.
-#     """
-#     try:
-#         mount4d = _os.system("mount 4d")
-#         if mount4d == 0:
-#             print("4d mounted")
-#         mount4dc= _os.system("mount 4dConfig")
-#         if mount4dc == 0:
-#             print("4dConfig mounted")
-#     except Exception as e:
-#         print(e)
-
-
-class _folds():
+class _folds:
     """Wrapper class for the folder tree of the package"""
+
     def __init__(self):
         self.I4D_IP = I4D_IP
         self.I4D_PORT = I4D_PORT
-        self.BASE_PATH = BASE_PATH
         self.BASE_DATA_PATH = BASE_DATA_PATH
+        self.CONFIGURATION_FOLDER = CONFIGURATION_FOLDER
         self.SETTINGS_CONF_FILE = SETTINGS_CONF_FILE
         self.LOGGING_FILE_PATH = LOGGING_ROOT_FOLDER
         self.OPD_SERIES_ROOT_FOLDER = OPD_SERIES_ROOT_FOLDER
@@ -89,9 +111,34 @@ class _folds():
         self.MODALBASE_ROOT_FOLDER = MODALBASE_ROOT_FOLDER
         self.INTMAT_ROOT_FOLDER = INTMAT_ROOT_FOLDER
         self.ALIGNMENT_ROOT_FOLDER = ALIGNMENT_ROOT_FOLDER
-        self.CONFIGURATION_FOLDER = CONFIGURATION_FOLDER
+
+    @property
+    def print_all(self):
+        """Print all the folders"""
+        attributes = [
+            ("Read configuration file", CONFIGURATION_FILE),
+            ("Base data path", self.BASE_DATA_PATH),
+            ("Configuration folder", self.CONFIGURATION_FOLDER),
+            ("OPD series folder", self.OPD_SERIES_ROOT_FOLDER),
+            ("OPD images folder", self.OPD_IMAGES_ROOT_FOLDER),
+            ("Modal base root folder", self.MODALBASE_ROOT_FOLDER),
+            ("Alignment folder", self.ALIGNMENT_ROOT_FOLDER),
+            ("IFFunctions folder", self.IFFUNCTIONS_ROOT_FOLDER),
+            ("Intmat folder", self.INTMAT_ROOT_FOLDER),
+            ("Logging file path", self.LOGGING_FILE_PATH),
+            ("Interferometer settings file", self.SETTINGS_CONF_FILE),
+            ("Produce folder name 4D PC", self.PRODUCE_FOLDER_NAME_4D_PC),
+            ("Capture folder name 4D PC", self.CAPTURE_FOLDER_NAME_4D_PC),
+            ("Produce folder name local PC", self.PRODUCE_FOLDER_NAME_LOCAL_PC),
+            ("Interferometer IP", self.I4D_IP),
+            ("Interferometer port", self.I4D_PORT),
+        ]
+        for name, value in attributes:
+            print(f"{name}: {value}")
+
 
 folders = _folds()
+
 
 class ConfSettingReader4D:
     """

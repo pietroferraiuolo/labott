@@ -2,36 +2,54 @@
 Author(s)
     -P.Ferraiuolo
     -R.Briguglio
-    
-Written in 06/2024
+
+Written in 06/2024; updated to use YAML on 04/2025
 '''
 import os as _os
 import numpy as _np
 import json as _json
 import shutil as _sh
-import configparser as _cp
+import yaml
+
 from .root import (
     CONFIGURATION_FOLDER as _cfold,
     IFFUNCTIONS_ROOT_FOLDER as _iffold,
 )
 
+yaml_config_file = "configuration.yaml"
 
-_config          = _cp.ConfigParser()
-
-iff_configFile   = 'iffConfig.ini'
-_nzeroName       = 'numberofzeros'
-_modeIdName      = 'modeid'
-_modeAmpName     = 'modeamp'
-_templateName    = 'template'
-_modalBaseName   = 'modalbase'
+_nzeroName     = 'numberofzeros'
+_modeIdName    = 'modeid'
+_modeAmpName   = 'modeamp'
+_templateName  = 'template'
+_modalBaseName = 'modalbase'
 
 _items = [_nzeroName, _modeIdName, _modeAmpName, _templateName, _modalBaseName]
 
 
+def load_yaml_config(bpath=_cfold):
+    """
+    Loads the YAML configuration file.
+    """
+    fname = _os.path.join(bpath, yaml_config_file)
+    with open(fname, 'r') as f:
+        config = yaml.safe_load(f)
+    return config
+
+
+def dump_yaml_config(config, bpath=_cfold):
+    """
+    Writes the configuration dictionary back to the YAML file.
+    """
+    fname = _os.path.join(bpath, yaml_config_file)
+    with open(fname, 'w') as f:
+        yaml.dump(config, f)
+
+
 def getConfig(key, bpath=_cfold):
     """
-    Reads the configuration file for the IFF acquisition.
-    The key passed is the block of information retrieved
+    Reads the configuration from the YAML file for the IFF acquisition.
+    The key passed is the block of information retrieved within the INFLUENCE.FUNCTIONS section.
 
     Parameters
     ----------
@@ -40,172 +58,186 @@ def getConfig(key, bpath=_cfold):
             - 'TRIGGER'
             - 'REGISTRATION'
             - 'IFFUNC'
-    bpath : str, OPTIONAL
-        Base path of the file to read. Default points to the Configuration root
-        folder
+    bpath : str, optional
+        Base path of the file to read. Default points to the configuration root folder.
             
     Returns
     -------
     info : dict
-        A dictionary containing all the configuration file's info:
-            - nzeros
-            - modeId
-            - modeAmp 
+        A dictionary containing the configuration info:
+            - zeros
+            - modes
+            - amplitude
             - template
-            - modalBase 
+            - modalBase
     """
-    np = _np
-    fname = _os.path.join(bpath, iff_configFile)
-    _config.read(fname)
-    cc = _config[key]
-    nzeros      = int(cc[_nzeroName])
-    modeId_str  = cc[_modeIdName]
-    try:
-        modeId = np.array(_json.loads(modeId_str))
-    except _json.JSONDecodeError:
-        modeId = np.array(eval(modeId_str))
-    modeAmp     = float(cc[_modeAmpName])
-    modalBase   = cc[_modalBaseName]
-    template    = np.array(_json.loads(cc[_templateName]))
-    info = {'zeros': nzeros,
-            'modes': modeId,
-            'amplitude': modeAmp,
-            'template': template,
-            'modalBase': modalBase
-        }
+    config = load_yaml_config(bpath)
+    # The nested block is under INFLUENCE.FUNCTIONS
+    cc = config["INFLUENCE.FUNCTIONS"][key]
+    nzeros     = int(cc[_nzeroName])
+    modeId     = _parse_val(cc[_modeIdName])
+    modeAmp    = float(cc[_modeAmpName])
+    modalBase  = cc[_modalBaseName]
+    template   = _np.array(cc[_templateName])
+    info = {
+        'zeros': nzeros,
+        'modes': modeId,
+        'amplitude': modeAmp,
+        'template': template,
+        'modalBase': modalBase
+    }
     return info
 
 
-def copyConfingFile(tn, old_path=_cfold):
+def copyConfigFile(tn, old_path=_cfold):
     """
-    This function copies the configuration file to the new folder created for the
-    IFF data, to keep record of the configuration used on data acquisition.
+    Copies the YAML configuration file to the new folder for record keeping of the 
+    configuration used on data acquisition.
 
     Parameters
     ----------
     tn : str
-        Tracking number of the new data.
-    old_path : str, OPTIONAL
-        Base path of the file to read. Default points to the Configuration root
-        folder.
+        Tracking number for the new data.
+    old_path : str, optional
+        Base path where the YAML configuration file resides.
 
     Returns
     -------
     res : str
-        String containing the path where the file has been copied
+        Path where the file was copied.
     """
-    fname = _os.path.join(old_path, iff_configFile)
-    nfname= _os.path.join(_iffold, tn, iff_configFile)
-    res = _sh.copy2(fname, nfname)
-    print(f"{iff_configFile} copied to {res.split('/iffConfig.ini')[0]}")
+    config = load_yaml_config(old_path)
+    nfname = _os.path.join(_iffold, tn, 'iffConfig.yaml')
+    with open(nfname, 'w') as f:
+        yaml.dump(config['INFLUENCE.FUNCTIONS'], f)
+    print(f"IFF configuration copied to {nfname.rsplit('/' + yaml_config_file, 1)[0]}")
     return nfname
 
 
 def updateConfigFile(key: str, item: str, value, bpath=_cfold):
     """
-    Updates the configuration file for the IFF acquisition.
-    The key passed is the block of information to update
+    Updates the YAML configuration file for the IFF acquisition.
+    The key passed is within the INFLUENCE.FUNCTIONS section.
 
     Parameters
     ----------
     key : str
-        Key value of the block of information to update. Can be
-            - 'TRIGGER'
-            - 'REGISTRATION'
-            - 'IFFUNC'
+        Key of the block to update (e.g., 'TRIGGER', 'REGISTRATION', 'IFFUNC').
     item : str
-        A dictionary containing all the configuration file's info:
-            - nzeros
-            - modeId
-            - modeAmp 
-            - template
-            - modalBase 
+        The configuration item to update.
     value : any
-        Value to update in the configuration file.
-    bpath : str, OPTIONAL
-        Base path of the file to read. Default points to the Configuration root
-        folder
+        New value to update.
+    bpath : str, optional
+        Base path of the configuration file.
     """
-    if not iff_configFile in bpath:
-        fname = _os.path.join(bpath, iff_configFile)
-        # Create a backup of the original file if it is the one in the configuration root folder
+    if yaml_config_file not in bpath:
+        fname = _os.path.join(bpath, yaml_config_file)
+        # Create a backup if updating the master configuration
         if bpath == _cfold:
-            fnameBck = _os.path.join(bpath, 'iffConfig_backup.ini')
+            fnameBck = _os.path.join(bpath, 'configuration_backup.yaml')
             _sh.copyfile(fname, fnameBck)
     else:
         fname = bpath
-    content = getConfig(key, bpath)
-    if not item in _items:
+    config = load_yaml_config(bpath)
+    if key not in config["INFLUENCE.FUNCTIONS"]:
+        raise KeyError(f"Configuration section `{key}` not found in the YAML file")
+    if item not in _items:
         raise KeyError(f"Item `{item}` not found in the configuration file")
-    with open(fname, 'w') as configfile:
-        _config[key][item] = str(value) if not isinstance(value, _np.ndarray) else str(value.tolist())
-        _config.write(configfile)
+    # Update the value (convert np.ndarray to list if needed)
+    if isinstance(value, _np.ndarray):
+        vmax = _np.max(value)
+        vmin = _np.min(value)
+        if _np.array_equal(value, _np.arange(vmin, vmax + 1)):
+            config["INFLUENCE.FUNCTIONS"][key][item] = f"\"np.arange({vmin}, {vmax + 1})\""
+        else:
+            config["INFLUENCE.FUNCTIONS"][key][item] = str(value.tolist())
+    else:
+        config["INFLUENCE.FUNCTIONS"][key][item] = str(value)
+    dump_yaml_config(config, bpath)
 
 
 def getNActs_fromConf(bpath=_cfold):
     """
-    Retrieves the number of actuators from the iffConfig.ini file. 
-    DEPRECATED
+    Retrieves the number of actuators from the YAML configuration file.
 
     Parameters
     ----------
-    bpath : str, OPTIONAL
-        Base path of the file to read. Default points to the Configuration root\
-        folder
+    bpath : str, optional
+        Base path of the configuration file.
 
     Returns
     -------
     nacts : int
-        Number of DM's used actuators
-
+        Number of DM actuators.
     """
-    fname = _os.path.join(bpath, iff_configFile)
-    _config.read(fname)
-    cc = _config['DM']
-    nacts = int(cc['NActs'])
+    config = load_yaml_config(bpath)
+    dm_config = config["INFLUENCE.FUNCTIONS"]["DM"]
+    nacts = int(dm_config['nacts'])
     return nacts
 
 
 def getTiming(bpath=_cfold):
     """
-    Retrieves the timing information from the iffConfig.ini file
-    DEPRECATED??
+    Retrieves timing information from the YAML configuration file.
 
     Parameters
     ----------
-    bpath : str, OPTIONAL
-        Base path of the file to read. Default points to the Configuration root\
-        folder
+    bpath : str, optional
+        Base path of the configuration file.
 
     Returns
     -------
     timing : int
-        Timing for the synchronization with the mirrors working frequency
+        Timing used for synchronization.
     """
-    fname = _os.path.join(bpath, iff_configFile)
-    _config.read(fname)
-    cc = _config['DM']
-    timing = int(cc['Timing'])
+    config = load_yaml_config(bpath)
+    dm_config = config["INFLUENCE.FUNCTIONS"]["DM"]
+    timing = int(dm_config['timing'])
     return timing
 
 
 def getCmdDelay(bpath=_cfold):
     """
-    Retrieves the command delay information from the iffConfig.ini file.
+    Retrieves the command delay from the YAML configuration file.
 
     Parameters
     ----------
-    bpath : str, OPTIONAL
-        Base path of the file to read. Default points to the Configuration root\
-        folder
+    bpath : str, optional
+        Base path of the configuration file.
 
     Returns
     -------
-    cmdDelay : int
-        Command delay for the synchronization with the interferometer.
+    cmdDelay : float
+        Command delay for the interferometer synchronization.
     """
-    fname = _os.path.join(bpath, iff_configFile)
-    _config.read(fname)
-    cc = _config['DM']
-    cmdDelay = float(cc['delay'])
+    config = load_yaml_config(bpath)
+    dm_config = config["INFLUENCE.FUNCTIONS"]["DM"]
+    cmdDelay = float(dm_config['delay'])
     return cmdDelay
+
+
+def _parse_val(val):
+    """
+    Parses a value from the YAML configuration file.
+
+    Parameters
+    ----------
+    val : str
+        Value to parse.
+
+    Returns
+    -------
+    parsed_val : int or float
+        Parsed value, either as an integer or a float.
+    """
+    if isinstance(val, list):
+        return _np.array(val)
+    if isinstance(val, str):
+        if val.startswith("np.arange"):
+            return eval(val, {"np": _np})
+        else:
+            try:
+                return eval(val)
+            except Exception:
+                return val
+    return val

@@ -1,0 +1,40 @@
+SYSTEM:
+  data_path : "/media/pietrof/s820/aoptics_data/"
+  simulated.devices:
+    dm     : true
+    interf : true
+
+
+INTERFEROMETER:
+  i4d_ip   : "193.206.155.78"
+  i4d_port : 8011
+  Paths:
+    capture_4dpc : "D:/M4/Capture"
+    produce_4dpc : "D:/M4/Produced"
+    produce      : "/home/m4/4d/M4/Produced"
+    settings     : "/home/m4/4dConfig/AppSettings.ini"
+
+
+INFLUENCE.FUNCTIONS:
+  DM:
+    nacts         : 88
+    timing        : 1
+    delay         : 0.0
+  TRIGGER:
+    numberofzeros : 0
+    modeid        : []
+    modeamp       : 0.05
+    template      : []
+    modalbase     : hadamard
+  REGISTRATION:
+    numberofzeros : 0
+    modeid        : []
+    modeamp       : 0.1
+    template      : []
+    modalbase     : zonal
+  IFFUNC:
+    numberofzeros : 0
+    modeid        : "np.arange(0,88,1)"
+    modeamp       : 0.05
+    template      : [1, -1, 1]
+    modalbase     : hadamard

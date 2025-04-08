@@ -136,7 +136,7 @@ def saveAverage(tn, average_img=None, overwrite: bool = False, **kwargs):
             average_img = averageFrames(
                 tn, first=first, last=last, file_selector=fsel, thresh=thresh
             )
-        _osu.save_phasemap(fname, average_img, overwrite=overwrite)
+        _osu.save_fits(fname, average_img, overwrite=overwrite)
         print(f"Saved average at '{fname}'")
 
 
