@@ -145,10 +145,10 @@ def saveCube(tn, rebin, register=False):
     cube : masked_array
         Data cube of the images, with shape (npx, npx, nmodes).
     """
-    from aoptics.analyzer import cubeRebinner
+    from aoptics.analyzer import cubeRebinner, createCube
     old_fold = _os.path.join(_ifFold, tn)
     filelist = _osu.getFileList(fold=old_fold, key="mode_")
-    cube = _osu.createCube(filelist, register=register)
+    cube = createCube(filelist, register=register)
     # Rebinning the cube
     if rebin > 1:
         cube = cubeRebinner(cube, rebin)
@@ -619,7 +619,7 @@ def _getAcqInfo(tn: str = None):
     infoIF : dict
         Information read about the IFFUNC option.
     """
-    path = _os.path.join(_ifFold, tn) if tn is not None else _fn.CONFIGURATION_ROOT_FOLDER
+    path = _os.path.join(_ifFold, tn) if tn is not None else _fn.CONFIGURATION_FOLDER
     infoT = _rif.getConfig("TRIGGER", bpath=path)
     infoR = _rif.getConfig("REGISTRATION", bpath=path)
     infoIF = _rif.getConfig("IFFUNC", bpath=path)

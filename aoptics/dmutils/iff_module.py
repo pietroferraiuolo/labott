@@ -77,10 +77,10 @@ def iffDataAcquisition(
                 )
     except KeyError as e:
         print(f"KeyError: {key}, {e}")
-    _rif.copyConfingFile(tn)
+    _rif.copyConfigFile(tn)
     for param, value in zip(['modeid', 'modeamp', 'template'], [modesList, amplitude, template]):
         if value is not None:
-            _rif.updateConfigFile('IFFUNC', param, value, bpath=iffpath)
+            _rif.updateIffConfig(tn, param, value)
     delay = _rif.getCmdDelay()
     dm.uploadCmdHistory(tch)
     dm.runCmdHistory(interf, save=tn, delay=delay)

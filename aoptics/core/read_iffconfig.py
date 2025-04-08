@@ -17,6 +17,7 @@ from .root import (
 )
 
 yaml_config_file = "configuration.yaml"
+_iff_config_file = "iffConfig.yaml"
 
 _nzeroName     = 'numberofzeros'
 _modeIdName    = 'modeid'
@@ -27,21 +28,50 @@ _modalBaseName = 'modalbase'
 _items = [_nzeroName, _modeIdName, _modeAmpName, _templateName, _modalBaseName]
 
 
-def load_yaml_config(bpath=_cfold):
+def load_yaml_config(path: str = None):
     """
     Loads the YAML configuration file.
+
+    Parameters
+    ----------
+    bpath : str, optional
+        Base path of the file to read. Default points to the configuration root folder.
+
+    Returns
+    -------
+    config : dict
+        The configuration dictionary.
     """
-    fname = _os.path.join(bpath, yaml_config_file)
+    if path is None or path == _cfold:
+        fname = _os.path.join(_cfold, yaml_config_file)
+    else:
+        if _iff_config_file not in path:
+            fname = _os.path.join(path, _iff_config_file)
+        else:
+            fname = path
     with open(fname, 'r') as f:
         config = yaml.safe_load(f)
     return config
 
 
-def dump_yaml_config(config, bpath=_cfold):
+def dump_yaml_config(config, path: str = None):
     """
     Writes the configuration dictionary back to the YAML file.
+
+    Parameters
+    ----------
+    config : dict
+        The configuration dictionary to write.
+    bpath : str, optional
+        Base path of the file to write. Default points to the configuration root folder.
     """
-    fname = _os.path.join(bpath, yaml_config_file)
+    if path is None or path == _cfold:
+        fname = _os.path.join(_cfold, yaml_config_file)
+    else:
+        if _iff_config_file not in path:
+            fname = _os.path.join(path, _iff_config_file)
+        else:
+            fname = path
     with open(fname, 'w') as f:
         yaml.dump(config, f)
 
@@ -72,8 +102,14 @@ def getConfig(key, bpath=_cfold):
             - modalBase
     """
     config = load_yaml_config(bpath)
-    # The nested block is under INFLUENCE.FUNCTIONS
-    cc = config["INFLUENCE.FUNCTIONS"][key]
+    # The nested block is under INFLUENCE.FUNCTIONS in the 
+    # full configuration file
+    # but under INFLUENCE.FUNCTIONS/IFFUNC in the IFF copied 
+    # config file
+    try:
+        cc = config["INFLUENCE.FUNCTIONS"][key]
+    except KeyError:
+        cc = config[key]
     nzeros     = int(cc[_nzeroName])
     modeId     = _parse_val(cc[_modeIdName])
     modeAmp    = float(cc[_modeAmpName])
@@ -114,6 +150,36 @@ def copyConfigFile(tn, old_path=_cfold):
     return nfname
 
 
+def updateIffConfig(tn: str, item: str, value):
+    """
+    Updates the YAML configuration file for the IFF acquisition.
+    The item passed is within the INFLUENCE.FUNCTIONS/IFFUNC section.
+
+    Parameters
+    ----------
+    tn : str
+        Tracking number of the `iffConfig.yaml` copied from the original 
+        `configuration.yaml` file.
+    item : str
+        The configuration item to update.
+    value : any
+        New value to update.
+    """
+    key = 'IFFUNC'
+    file = _os.path.join(_iffold, tn, _iff_config_file)
+    config = load_yaml_config(file)
+    if isinstance(value, _np.ndarray):
+        vmax = _np.max(value)
+        vmin = _np.min(value)
+        if _np.array_equal(value, _np.arange(vmin, vmax + 1)):
+            config[key][item] = f"np.arange({vmin}, {vmax + 1})"
+        else:
+            config[key][item] = str(value.tolist())
+    else:
+        config[key][item] = str(value)
+    dump_yaml_config(config, file)
+
+
 def updateConfigFile(key: str, item: str, value, bpath=_cfold):
     """
     Updates the YAML configuration file for the IFF acquisition.
@@ -130,12 +196,14 @@ def updateConfigFile(key: str, item: str, value, bpath=_cfold):
     bpath : str, optional
         Base path of the configuration file.
     """
-    if yaml_config_file not in bpath:
-        fname = _os.path.join(bpath, yaml_config_file)
-        # Create a backup if updating the master configuration
-        if bpath == _cfold:
-            fnameBck = _os.path.join(bpath, 'configuration_backup.yaml')
-            _sh.copyfile(fname, fnameBck)
+    import warnings
+    warnings.warn(
+        "updateConfigFile is deprecated. Use updateIffConfig instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    if _iff_config_file not in bpath:
+        fname = _os.path.join(bpath, _iff_config_file)
     else:
         fname = bpath
     config = load_yaml_config(bpath)
