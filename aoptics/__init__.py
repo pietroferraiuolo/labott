@@ -17,19 +17,17 @@ How to Use:
 """
 
 from . import analyzer
-from .devices.interferometer import PhaseCam
+from . import devices
 from .ground import zernike as zern
 from .ground.osutils import (
     load_fits,
     save_fits,
     getFileList,
 )
-from .core.root import _folds
+from .core.root import folders
 
-folders = _folds()
 
 __all__ = [
-    'PhaseCam',
     'analyzer',
     'zern',
     'load_fits',

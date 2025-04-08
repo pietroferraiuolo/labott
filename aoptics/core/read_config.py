@@ -1,19 +1,20 @@
-'''
+"""
 Author(s)
-    -P.Ferraiuolo
-    -R.Briguglio
-
-Written in 06/2024; updated to use YAML on 04/2025
-'''
+--------
+- Pietro Ferraiuolo
+- Runa Briguglio
+"""
 import os as _os
 import numpy as _np
 import json as _json
 import shutil as _sh
 import yaml
+from .exceptions import DeviceNotFoundError
 
 from .root import (
     CONFIGURATION_FOLDER as _cfold,
     IFFUNCTIONS_ROOT_FOLDER as _iffold,
+    CONFIGURATION_FILE as _cfile,
 )
 
 yaml_config_file = "configuration.yaml"
@@ -76,7 +77,7 @@ def dump_yaml_config(config, path: str = None):
         yaml.dump(config, f)
 
 
-def getConfig(key, bpath=_cfold):
+def getIffConfig(key, bpath=_cfold):
     """
     Reads the configuration from the YAML file for the IFF acquisition.
     The key passed is the block of information retrieved within the INFLUENCE.FUNCTIONS section.
@@ -125,7 +126,7 @@ def getConfig(key, bpath=_cfold):
     return info
 
 
-def copyConfigFile(tn, old_path=_cfold):
+def copyIffConfigFile(tn, old_path=_cfold):
     """
     Copies the YAML configuration file to the new folder for record keeping of the 
     configuration used on data acquisition.
@@ -224,7 +225,7 @@ def updateConfigFile(key: str, item: str, value, bpath=_cfold):
     dump_yaml_config(config, bpath)
 
 
-def getNActs_fromConf(bpath=_cfold):
+def getNActs(bpath=_cfold):
     """
     Retrieves the number of actuators from the YAML configuration file.
 
@@ -309,3 +310,28 @@ def _parse_val(val):
             except Exception:
                 return val
     return val
+
+
+def getDmAddress(device_name: str):
+    """
+    Retrieves the DM address from the YAML configuration file.
+
+    Parameters
+    ----------
+    device_name : str
+        Name of the DM device.
+
+    Returns
+    -------
+    ip : str
+        DM ip address.
+    port : int
+        DM port.
+    """
+    try:
+        config = (load_yaml_config(_cfile))["DEFORMABLE.MIRRORS"][device_name]
+    except KeyError:
+        raise DeviceNotFoundError(device_name)
+    ip = config['ip']
+    port = config['port']
+    return ip, port

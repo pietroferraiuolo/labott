@@ -1,9 +1,8 @@
 SYSTEM:
-  data_path : "/media/pietrof/s820/aoptics_data/"
+  data_path: "/media/pietrof/s820/aoptics_data/"
   simulated.devices:
-    dm     : true
-    interf : true
-
+    dm     : false
+    interf : false
 
 INTERFEROMETER:
   i4d_ip   : "193.206.155.78"
@@ -14,6 +13,14 @@ INTERFEROMETER:
     produce      : "/home/m4/4d/M4/Produced"
     settings     : "/home/m4/4dConfig/AppSettings.ini"
 
+DEFORMABLE.MIRRORS:
+  AlpaoXXX:
+    ip : 
+    port : 
+
+  Splatt:
+    ip : '193.206.155.220'
+    port : 9090
 
 INFLUENCE.FUNCTIONS:
   DM:
@@ -34,7 +41,7 @@ INFLUENCE.FUNCTIONS:
     modalbase     : zonal
   IFFUNC:
     numberofzeros : 0
-    modeid        : "np.arange(0,88,1)"
+    modeid        : np.arange(0,88,1)
     modeamp       : 0.05
     template      : [1, -1, 1]
     modalbase     : hadamard

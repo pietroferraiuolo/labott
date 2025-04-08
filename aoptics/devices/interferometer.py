@@ -2,6 +2,7 @@ import os as _os
 import numpy as _np
 import time as _time
 import shutil as _sh
+from . import API as _api
 from aoptics.ground import logger as _logger
 from aoptics.ground.osutils import (
     newtn as _newtn,
@@ -23,14 +24,14 @@ class PhaseCam():
 
     def __init__(self, ip: str = None, port: int = None):
         """The constructor"""
-        from aoptics.core.i4d import I4D
+        from aoptics.devices.API.i4d import I4D
 
         if (ip and port) is None:
             from aoptics.core.root import I4D_IP, I4D_PORT
             ip = I4D_IP
             port = I4D_PORT
 
-        self._i4d = I4D(ip, port)
+        self._i4d = _api.I4D(ip, port)
         self._ic = InterferometerConverter()
         self._logger = _logger.set_up_logger(_folds.LOGGING_FILE_PATH, 20)
         self._ts = _newtn

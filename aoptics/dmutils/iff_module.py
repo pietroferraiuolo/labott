@@ -15,7 +15,7 @@ given a deformable mirror and an interferometer.
 import os as _os
 import numpy as _np
 from aoptics.core.root import folders as _fn
-from aoptics.core import read_iffconfig as _rif
+from aoptics.core import read_config as _rif
 from . import iff_acquisition_preparation as _ifa
 from aoptics.ground.osutils import newtn as _ts, save_fits as _sf
 
@@ -77,7 +77,7 @@ def iffDataAcquisition(
                 )
     except KeyError as e:
         print(f"KeyError: {key}, {e}")
-    _rif.copyConfigFile(tn)
+    _rif.copyIffConfigFile(tn)
     for param, value in zip(['modeid', 'modeamp', 'template'], [modesList, amplitude, template]):
         if value is not None:
             _rif.updateIffConfig(tn, param, value)

@@ -16,7 +16,7 @@ More information on its use can be found on the class documentation.
 import os as _os
 import numpy as _np
 from aoptics.ground import osutils as _osu
-from aoptics.core import read_iffconfig as _rif
+from aoptics.core import read_config as _rif
 from aoptics.core.root import IFFUNCTIONS_ROOT_FOLDER as _iffold
 from .iff_processing import _getAcqInfo
 
@@ -269,7 +269,7 @@ class IFFCapturePreparation:
             Registration pattern command history
 
         """
-        infoR = _rif.getConfig("REGISTRATION")
+        infoR = _rif.getIffConfig("REGISTRATION")
         if len(infoR["modes"]) == 0:
             self._regActs = infoR["modes"]
             return
@@ -301,7 +301,7 @@ class IFFCapturePreparation:
         triggHist : float | ArrayLike
             Trigger padding command history
         """
-        infoT = _rif.getConfig("TRIGGER")
+        infoT = _rif.getIffConfig("TRIGGER")
         if len(infoT["modes"]) == 0:
             return
         self._updateModalBase(infoT["modalBase"])
@@ -315,7 +315,7 @@ class IFFCapturePreparation:
         """
         Cuts the modal base according the given modes list
         """
-        infoIF = _rif.getConfig("IFFUNC")
+        infoIF = _rif.getIffConfig("IFFUNC")
         self._updateModalBase(infoIF["modalBase"])
         self._cmdMatrix = self._modalBase[:, mlist]
         return self._cmdMatrix
