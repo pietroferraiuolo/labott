@@ -335,3 +335,25 @@ def getDmAddress(device_name: str):
     ip = config['ip']
     port = config['port']
     return ip, port
+
+
+def getAlignmentConfig():
+    """
+    Reads the alignment settings in the configuration file.
+
+    Returns
+    -------
+    config : class
+        The alignment configuration as a class, for backwards compatibility.
+    """
+    config = (load_yaml_config(_cfile))['SYSTEM.ALIGNMENT']
+    config['slices'] = [slice(item["start"], item["stop"]) for item in config['slices']]
+    class alignmentConfig():
+        def __init__(self, config):
+            self._conf = config
+        def __getattr__(self, name):
+            if name in self._conf:
+                return self._conf[name]
+            else:
+                raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+    return alignmentConfig(config)

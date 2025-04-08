@@ -76,6 +76,7 @@ ALIGNMENT_ROOT_FOLDER  = _os.path.join(BASE_DATA_PATH, "Alignment")
 OPD_SERIES_ROOT_FOLDER  = _os.path.join(BASE_DATA_PATH, "OPDSeries")
 OPD_IMAGES_ROOT_FOLDER   = _os.path.join(BASE_DATA_PATH, "OPDImages")
 IFFUNCTIONS_ROOT_FOLDER   = _os.path.join(BASE_DATA_PATH, "IFFunctions")
+CONTROL_MATRIX_FOLDER   = _os.path.join(ALIGNMENT_ROOT_FOLDER, "ControlMatrices")
 
 for p in [
     BASE_DATA_PATH,
@@ -88,6 +89,7 @@ for p in [
     OPD_SERIES_ROOT_FOLDER,
     CONFIGURATION_FOLDER,
     FLAT_ROOT_FOLDER,
+    CONTROL_MATRIX_FOLDER,
 ]:
     if not _os.path.exists(p):
         _os.makedirs(p)
@@ -115,6 +117,7 @@ class _folds:
         self.ALIGNMENT_ROOT_FOLDER = ALIGNMENT_ROOT_FOLDER
         self.CONFIGURATION_FILE = CONFIGURATION_FILE
         self.FLAT_ROOT_FOLDER = FLAT_ROOT_FOLDER
+        self.CONTROL_MATRIX_FOLDER = CONTROL_MATRIX_FOLDER
 
     @property
     def print_all(self):
@@ -127,6 +130,7 @@ class _folds:
             ("OPD images folder", self.OPD_IMAGES_ROOT_FOLDER),
             ("Modal base root folder", self.MODALBASE_ROOT_FOLDER),
             ("Alignment folder", self.ALIGNMENT_ROOT_FOLDER),
+            ("Control matrix folder", self.CONTROL_MATRIX_FOLDER),
             ("IFFunctions folder", self.IFFUNCTIONS_ROOT_FOLDER),
             ("Intmat folder", self.INTMAT_ROOT_FOLDER),
             ("Flattening folder", self.FLAT_ROOT_FOLDER),
@@ -140,7 +144,6 @@ class _folds:
         ]
         for name, value in attributes:
             print(f"{name}: {value}")
-
 
 folders = _folds()
 

@@ -57,11 +57,12 @@ performed. This can be done through the `reload_calibrated_parabola` method.
 
 import os as _os
 import numpy as _np
-from aoptics.core._configurations import _alignmentConfig as _sc
+from .core.root import folders as _fn
+from .core.read_config import getAlignmentConfig as _gac
 from .ground import logger as _logger, zernike as _zern, geo as _geo
 from .ground.osutils import load_fits as _rfits, save_fits as _sfits, newtn as _ts
-from .core.root import folders as _fn
 
+_sc = _gac()
 
 class Alignment:
     """
@@ -113,7 +114,7 @@ class Alignment:
         """
         self.mdev = mechanical_devices
         self.ccd = acquisition_devices
-        self.cmdMat = _rfits(_sc.commandMatrix)
+        self.cmdMat = _rfits(_os.path.join(_fn.CONTROL_MATRIX_FOLDER, _sc.commandMatrix))
         self.intMat = None
         self.recMat = None
         self._cmdAmp = None
@@ -130,9 +131,9 @@ class Alignment:
             _np.array(dof) if not isinstance(dof, _np.ndarray) else dof for dof in _sc.dof
         ]
         self._dofTot = (
-            _sc.cmdDof
-            if isinstance(_sc.cmdDof, list)
-            else [_sc.cmdDof] * len(self._moveFnc)
+            _sc.devices_dof
+            if isinstance(_sc.devices_dof, list)
+            else [_sc.devices_dof] * len(self._moveFnc)
         )
         self._idx = _sc.slices
         self._zvec2fit = _np.arange(1, 11)
@@ -604,8 +605,6 @@ class Alignment:
 
 
 
-
-
 class _Command:
     """
     The _Command class represents a command with a vector and a flag indicating
@@ -692,7 +691,7 @@ class _Command:
             If the vectors of the commands are not numpy arrays.
         """
         if not isinstance(other, _Command):
-            return NotImplemented
+            return NotImplementedError
         if not isinstance(self.vect, _np.ndarray) and not isinstance(
             other.vect, _np.ndarray
         ):

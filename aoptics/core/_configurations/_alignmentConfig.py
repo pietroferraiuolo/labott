@@ -14,7 +14,7 @@ system and how to acces them through higher level calls.
 
 Variables Explanation
 ---------------------
-cmdDof : list of int | int
+devices_dof : list of int | int
     This variable represents the total degrees of freedom each device has, so
     it will be the length of the accepted command vector by the devices.
     Example:
@@ -72,23 +72,10 @@ ccd_acquisition : list of str
     This list contains the callables for the acquisition CCD/device. The first
     entry must be the acquisition method.
 
-base_read_data_path : str
-    Path to the data directory where the data is read.
-
-base_write_data_path : str
-    Path to the data directory where the produced data is stored.
-
-log_path : str
-    Path to the log file, file name included.
-
-logging_level : int
-    Logging level for the logger.
-    Warning = 30, Info = 20, Debug = 10, Notset = 0
-
 commandMatrix : str
     Path to the actuation command matrix file.
 
-calibration : str
+fitting_surface : str
     Path to the calibration fits file, whose mask will be use for zernike fitting
     purposes. If no mask is to be provided, leave it as an empty string.
 
@@ -113,52 +100,9 @@ the M4 Exapode can move in tip and tilt, so the DoF are 3 and 4.
 The command matrix (7x7) has a 7 element columns, which is the alignment command, 
 and these devices appear in the same order as i listed them above, so the ordering
 inside every list will be Parabola-ReferenceMirror-M4Exapode.
-
->>> # Variables
->>> cmdDof = 6                # Total DoF per device
->>>         # or []
->>>         # cmdDof.append(6)
->>>         # ...
->>> dof = []                  # Available Degrees of Freedom (DoF)
->>> dof.append([2, 3, 4])     # Parabola DoF
->>> dof.append([3, 4])        # Reference Mirror DoF
->>> dof.append([3, 4])        # M4 Exapode DoF
->>> slices = []               # Full cmd vector devices indices
->>> slices.append(slice(0,3)) # Parabola
->>> slices.append(slice(3,5)) # Reference Mirror
->>> slices.append(slice(5,7)) # M4 Exapode
->>> zernike_to_use = [1,2,3,6,7]
->>> push_pull_template = [+1,-2,+1]
->>> # Devices calls
->>> devices_move_calls = [
->>>     'parabola.setPosition',
->>>     'referenceMirror.setPosition',
->>>     'm4Exapode.setPosition'
->>>     ]
->>> devices_read_calls = [
->>>     'parabola.getPosition',
->>>     'referenceMirror.getPosition',
->>>     'm4Exapode.getPosition'
->>>     ]
->>> names = [
->>>     'Parabola',
->>>     'Reference Mirror',
->>>     'M4 Exapode'
->>>     ]
->>> ccd_acquisition = [
->>>     'acquire_phasemap'
->>>     ]
->>> # Data paths
->>> base_read_data_path     = '.../m4/data/M4Data/OPTData/AlignmentCalibration'
->>> base_write_data_path    = '.../m4/data/M4Data/OPTData/AlignmentCalibration'
->>> log_path                = '.../m4/data/M4Data/OPTData/AlignmentCalibration/alignment.log'
->>> logging_level           =  20
->>> commandMatrix           = '.../m4/data/M4Data/cmdMat.fits'
->>> calibrated_parabola     = ''
-
 """
 # Variables
-cmdDof = 6                # Total DoF per device
+devices_dof = 6                # Total DoF per device
         # or 
         # cmdDof = []
         # cmdDof.append(6)
@@ -199,6 +143,5 @@ ccd_acquisition = [
     ]
 
 # Data paths
-data_path               = ''
-commandMatrix           = '/home/pietrof/git/M4/scripts/ottalign/cmdMat.fits'
+commandMatrix           = 'cmdMat.fits'
 fitting_surface         = ''

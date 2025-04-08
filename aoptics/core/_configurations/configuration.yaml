@@ -14,6 +14,7 @@ INTERFEROMETER:
     settings     : "/home/m4/4dConfig/AppSettings.ini"
 
 DEFORMABLE.MIRRORS:
+
   AlpaoXXX:
     ip : 
     port : 
@@ -45,3 +46,45 @@ INFLUENCE.FUNCTIONS:
     modeamp       : 0.05
     template      : [1, -1, 1]
     modalbase     : hadamard
+
+# Filled, as example, with M4 OTT configuration
+SYSTEM.ALIGNMENT:
+  devices_dof: 6
+  dof:
+    - [2, 3, 4]      # Parabola DoF
+    - [3, 4]         # Reference Mirror DoF
+    - [3, 4]         # M4 Exapode DoF
+
+  slices:
+    # Parabola
+    - start : 0
+      stop  : 3
+    # Reference Mirror
+    - start : 3
+      stop  : 5
+    # M4 Exapode
+    - start : 5
+      stop  : 7
+
+  devices_move_calls:
+    - 'parabola.setPosition'
+    - 'referenceMirror.setPosition'
+    - 'm4Exapode.setPosition'
+
+  devices_read_calls:
+    - 'parabola.getPosition'
+    - 'referenceMirror.getPosition'
+    - 'm4Exapode.getPosition'
+
+  names:
+    - 'Parabola'
+    - 'Reference Mirror'
+    - 'M4 Exapode'
+
+  ccd_acquisition:
+    - 'acquire_phasemap'
+
+  zernike_to_use     : [1, 2, 3, 6, 7]
+  push_pull_template : [1, -2, 1]
+  commandMatrix      : cmdMat.fits
+  fitting_surface    : ''
