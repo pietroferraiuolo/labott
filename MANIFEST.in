@@ -1,3 +1,5 @@
 include README.md
 include requirements.txt
+include aoptics/core/_configurations/configurations.yaml
+include aoptics/core/_configurations/_alignmentConfig.py
 recursive-include labott *.py

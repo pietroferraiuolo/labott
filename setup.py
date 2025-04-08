@@ -1,9 +1,10 @@
+import os
 from setuptools import setup, find_packages
 
-# Read version and other metadata from labott/__version__.py
 about = {}
-with open("aoptics/__version__.py") as f:
-    exec(f.read(), about)
+here = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(here, 'aoptics', '__version__.py'), 'r') as _:
+    exec(_.read(), about)
 
 # Read dependencies from requirements.txt
 with open("requirements.txt") as f:
@@ -26,4 +27,6 @@ setup(
     ],
     python_requires=">=3.11",
     install_requires=requirements,
+    include_package_data=True,
+    package_data={'aoptics': ['core/_configurations/*.yaml']},
 )
