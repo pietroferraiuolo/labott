@@ -335,25 +335,21 @@ class IFFCapturePreparation:
 
         """
         if (mbasename is None) or (mbasename == "mirror"):
-            # print('Using mirror modes')
             self.modalBaseId = mbasename
             self._modalBase = self.mirrorModes
         elif mbasename == "zonal":
-            # print('Using zonal modes')
             self.modalBaseId = mbasename
             self._modalBase = self._createZonalMat()
         elif mbasename == "hadamard":
-            # print('Using Hadamard modes')
             self.modalBaseId = mbasename
             self._modalBase = self._createHadamardMat()
         else:
-            # print('Using user-defined modes')
             self.modalBaseId = mbasename
             self._modalBase = self._createUserMat(
                 mbasename
-            )  # this is expected to be a tracknum
+            )
 
-    def _createUserMat(self, tracknum: str = None):
+    def _createUserMat(self, name: str = None):
         """
 
 
@@ -369,10 +365,14 @@ class IFFCapturePreparation:
 
         """
         from aoptics.core.root import MODALBASE_ROOT_FOLDER
-        print("Reading modal base from tracknum: " + tracknum)
-        modalBaseFileName = "Standard modal base file name"  # !!! RE-DEFINE THIS
-        mbfile = _os.path.join(MODALBASE_ROOT_FOLDER, tracknum, modalBaseFileName)
-        cmdBase = _osu.load_fits(mbfile)
+        if '.fits' not in name:
+            name = name + '.fits'
+        try:
+            mbfile = _os.path.join(MODALBASE_ROOT_FOLDER, name)
+            cmdBase = _osu.load_fits(mbfile)
+        except FileNotFoundError as f:
+            raise f((f"'{name}' not found in {MODALBASE_ROOT_FOLDER}"))
+        print(f"Loaded user-defined modal base: `{name}`")
         return cmdBase
 
     def _createZonalMat(self):
