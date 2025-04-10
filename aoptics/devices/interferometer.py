@@ -20,7 +20,7 @@ class PhaseCam(_api.BaseInterferometer):
         """The constructor"""
         self.name = "PhaseCam"
         from aoptics.devices.API.i4d import I4D
-        super.__init__(self.name, ip, port)
+        super().__init__(self.name, ip, port)
         self._i4d = _api.I4D(ip, port)
         self._ic = InterferometerConverter()
 
