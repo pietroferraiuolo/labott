@@ -4,11 +4,11 @@ Author(s)
 - Pietro Ferraiuolo
 - Runa Briguglio
 """
+import yaml
 import os as _os
 import numpy as _np
 import json as _json
 import shutil as _sh
-import yaml
 from .exceptions import DeviceNotFoundError
 
 from .root import (
@@ -46,7 +46,7 @@ def load_yaml_config(path: str = None):
     if path is None or path == _cfold:
         fname = _os.path.join(_cfold, yaml_config_file)
     else:
-        if _iff_config_file not in path:
+        if _iffold in path and not _iff_config_file in path:
             fname = _os.path.join(path, _iff_config_file)
         else:
             fname = path
@@ -329,12 +329,30 @@ def getDmAddress(device_name: str):
         DM port.
     """
     try:
-        config = (load_yaml_config(_cfile))["DEFORMABLE.MIRRORS"][device_name]
+        config = (load_yaml_config(_cfile))['DEVICES']["DEFORMABLE.MIRRORS"][device_name]
     except KeyError:
         raise DeviceNotFoundError(device_name)
     ip = config['ip']
     port = config['port']
     return ip, port
+
+
+def getInterfConfig(device_name: str = 'PhaseCam'):
+    """
+    Retrieves the interferometer address from the YAML configuration file.
+
+    Returns
+    -------
+    ip : str
+        Interferometer ip address.
+    port : int
+        Interferometer port.
+    """
+    try:
+        config = (load_yaml_config(_cfile))['DEVICES']["INTERFEROMETER"][device_name]
+    except KeyError:
+        raise DeviceNotFoundError(device_name)
+    return config
 
 
 def getAlignmentConfig():

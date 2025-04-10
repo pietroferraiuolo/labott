@@ -3,38 +3,27 @@ import numpy as _np
 import time as _time
 import shutil as _sh
 from . import API as _api
-from aoptics.ground import logger as _logger
+from aoptics.analyzer import modeRebinner as _modeRebinner
 from aoptics.ground.osutils import (
-    newtn as _newtn,
     InterferometerConverter,
-    rename4D,
-)
+    rename4D)
 from aoptics.core.root import (
     folders as _folds,
-    ConfSettingReader4D as _ConfSettingReader4D,
-)
-from aoptics.analyzer import modeRebinner as _modeRebinner
+    ConfSettingReader4D as _confReader)
 
-_confReader = _ConfSettingReader4D
 
-class PhaseCam():
+class PhaseCam(_api.BaseInterferometer):
     """
     Class for the 4D Twyman-Green PhaseCam Laser Interferometer.
     """
-
     def __init__(self, ip: str = None, port: int = None):
         """The constructor"""
+        self.name = "PhaseCam"
         from aoptics.devices.API.i4d import I4D
-
-        if (ip and port) is None:
-            from aoptics.core.root import I4D_IP, I4D_PORT
-            ip = I4D_IP
-            port = I4D_PORT
-
+        super.__init__(self, self.name, ip, port)
         self._i4d = _api.I4D(ip, port)
         self._ic = InterferometerConverter()
-        self._logger = _logger.set_up_logger(_folds.LOGGING_FILE_PATH, 20)
-        self._ts = _newtn
+
 
     def acquire_map(self, nframes=1, delay=0, rebin: int = 1):
         """
@@ -104,11 +93,24 @@ class PhaseCam():
         return data2d
 
     def _fromDataArrayToMaskedArray(self, width, height, data_array):
-        # data = np.reshape(data_array, (width, height))
-        data = _np.reshape(
-            data_array, (height, width)
-        )  # mod20231002, rectangular frames were bad. now fixed
+        """
+        Converts the data array to a masked array.
 
+        Parameters
+        ----------
+        width: int
+            Width of the image.
+        height: int
+            Height of the image.
+        data_array: numpy array
+            Data array to be converted.
+
+        Returns
+        -------
+        masked_ima: numpy masked array
+            Masked image.
+        """
+        data = _np.reshape(data_array, (height, width))
         idx, idy = _np.where(_np.isnan(data))
         mask = _np.zeros((data.shape[0], data.shape[1]))
         mask[idx, idy] = 1
@@ -160,14 +162,24 @@ class PhaseCam():
         rename4D(folder_name)
 
     def loadConfiguration(self, conffile):
+        """
+        Read and loads the configuration file of the interferometer.
+
+        Parameters
+        ----------
+        conffile: string
+            name of the configuration file to load
+        """
         self._i4d.loadConfiguration(conffile)
 
     def getCameraSettings(self):
         """
+        Reads che actual interferometer settings from its configuration file.
+
         Return
-        ----------
+        ------
         output: list
-        the output is a 4 elements list with width_pixel, height_pixel, offset_x, offset_y, as read from the local copy of the 4D camera settings file
+        list of camera settings: [width_pixel, height_pixel, offset_x, offset_y]
         """
 
         file_path = _folds.SETTINGS_CONF_FILE
@@ -180,10 +192,12 @@ class PhaseCam():
 
     def getFrameRate(self):
         """
+        Reads the frame rate the interferometer is working at.
+
         Return
-        ----------
+        ------
         frame_rate: float
-        frame rate of the interferometer
+            Frame rate of the interferometer
         """
 
         file_path = _folds.SETTINGS_CONF_FILE
@@ -193,16 +207,19 @@ class PhaseCam():
 
     def intoFullFrame(self, img):
         """
-        The function fits the passed frame (expected cropped) into the full interferometer frame (2048x2048), after reading the cropping parameters.
+        The function fits the passed frame (expected cropped) into the
+        full interferometer frame (2048x2048), after reading the cropping
+        parameters.
 
         Parameters
         ----------
         img: masked_array
+            The image to be fitted into the full frame.
 
         Return
-        ----------
+        ------
         output: masked_array
-        the output is the interferometer full frame
+            The output image, in the interferometer full frame.
         """
         off = (self.getCameraSettings())[2:4]
         off = _np.flip(off)

@@ -23,7 +23,7 @@ def set_up_logger(filename, logging_level):
 
     Parameters
     ----------
-    file_path : str
+    filename : str
         The path to the log file where log messages will be written.
     logging_level : int
         The logging level to set for the logger. This should be one of the

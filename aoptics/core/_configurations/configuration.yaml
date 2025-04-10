@@ -4,23 +4,25 @@ SYSTEM:
     dm     : false
     interf : false
 
-INTERFEROMETER:
-  i4d_ip   : "193.206.155.78"
-  i4d_port : 8011
-  Paths:
-    capture_4dpc : "D:/M4/Capture"
-    produce_4dpc : "D:/M4/Produced"
-    produce      : "/home/m4/4d/M4/Produced"
-    settings     : "/home/m4/4dConfig/AppSettings.ini"
+DEVICES:
+  INTERFEROMETER:
+    PhaseCam:  
+      ip   : "193.206.155.78"
+      port : 8011
+      Paths:
+        capture_4dpc : "D:/M4/Capture"
+        produce_4dpc : "D:/M4/Produced"
+        produce      : "/home/m4/4d/M4/Produced"
+        settings     : "/home/m4/4dConfig/AppSettings.ini"
 
-DEFORMABLE.MIRRORS:
-  AlpaoXXX:
-    ip : 
-    port : 
+  DEFORMABLE.MIRRORS:
+    AlpaoXXX:
+      ip : 
+      port : 
 
-  Splatt:
-    ip : '193.206.155.220'
-    port : 9090
+    Splatt:
+      ip : '193.206.155.220'
+      port : 9090
 
 INFLUENCE.FUNCTIONS:
   DM:

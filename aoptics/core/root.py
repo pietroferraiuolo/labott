@@ -53,16 +53,17 @@ else:
     CONFIGURATION_FILE = ROOT_CONFIGURATION_FILE
     _config = _root_config
 
-####################################
-# INTERFEROMETER SECTION READING
-####################################
-_iconfig = _config["INTERFEROMETER"]
-I4D_IP                       = str(_iconfig["i4d_ip"])
-I4D_PORT                     = int(_iconfig["i4d_port"])
-SETTINGS_CONF_FILE           = str(_iconfig["Paths"]["settings"])
-CAPTURE_FOLDER_NAME_4D_PC    = str(_iconfig["Paths"]["capture_4dpc"])
-PRODUCE_FOLDER_NAME_4D_PC    = str(_iconfig["Paths"]["produce_4dpc"])
-PRODUCE_FOLDER_NAME_LOCAL_PC = str(_iconfig["Paths"]["produce"])
+######################################
+# INTERFEROMETER PATHS (INIT TO NONE)
+######################################
+global SETTINGS_CONF_FILE
+global CAPTURE_FOLDER_NAME_4D_PC
+global PRODUCE_FOLDER_NAME_4D_PC
+global PRODUCE_FOLDER_NAME_LOCAL_PC
+SETTINGS_CONF_FILE           = None
+CAPTURE_FOLDER_NAME_4D_PC    = None
+PRODUCE_FOLDER_NAME_4D_PC    = None
+PRODUCE_FOLDER_NAME_LOCAL_PC = None
 
 ####################################
 # FOLDER TREE CREATION
@@ -97,10 +98,7 @@ for p in [
 
 class _folds:
     """Wrapper class for the folder tree of the package"""
-
     def __init__(self):
-        self.I4D_IP = I4D_IP
-        self.I4D_PORT = I4D_PORT
         self.BASE_DATA_PATH = BASE_DATA_PATH
         self.CONFIGURATION_FOLDER = CONFIGURATION_FOLDER
         self.SETTINGS_CONF_FILE = SETTINGS_CONF_FILE
@@ -118,7 +116,6 @@ class _folds:
         self.CONFIGURATION_FILE = CONFIGURATION_FILE
         self.FLAT_ROOT_FOLDER = FLAT_ROOT_FOLDER
         self.CONTROL_MATRIX_FOLDER = CONTROL_MATRIX_FOLDER
-
     @property
     def print_all(self):
         """Print all the folders"""
@@ -139,14 +136,47 @@ class _folds:
             ("Produce folder name 4D PC", self.PRODUCE_FOLDER_NAME_4D_PC),
             ("Capture folder name 4D PC", self.CAPTURE_FOLDER_NAME_4D_PC),
             ("Produce folder name local PC", self.PRODUCE_FOLDER_NAME_LOCAL_PC),
-            ("Interferometer IP", self.I4D_IP),
-            ("Interferometer port", self.I4D_PORT),
         ]
         for name, value in attributes:
             print(f"{name}: {value}")
+    def _update_interf_paths(self):
+        """
+        Update the paths of the configuration file and the folders.
+
+        This function reads the configuration file and updates the paths of the
+        settings file and the folders used in the package.
+        """
+        global SETTINGS_CONF_FILE
+        global CAPTURE_FOLDER_NAME_4D_PC
+        global PRODUCE_FOLDER_NAME_4D_PC
+        global PRODUCE_FOLDER_NAME_LOCAL_PC
+
+        self.SETTINGS_CONF_FILE = SETTINGS_CONF_FILE
+        self.CAPTURE_FOLDER_NAME_4D_PC = CAPTURE_FOLDER_NAME_4D_PC
+        self.PRODUCE_FOLDER_NAME_4D_PC = PRODUCE_FOLDER_NAME_4D_PC
+        self.PRODUCE_FOLDER_NAME_LOCAL_PC = PRODUCE_FOLDER_NAME_LOCAL_PC
+
 
 folders = _folds()
 
+def _updateInterfPaths(paths: dict):
+    """
+    Update the path of the configuration file and the folders.
+
+    This function reads the configuration file and updates the paths of the
+    settings file and the folders used in the package.
+    """
+    global SETTINGS_CONF_FILE
+    global CAPTURE_FOLDER_NAME_4D_PC
+    global PRODUCE_FOLDER_NAME_4D_PC
+    global PRODUCE_FOLDER_NAME_LOCAL_PC
+
+    SETTINGS_CONF_FILE = paths["settings"]
+    CAPTURE_FOLDER_NAME_4D_PC = paths["capture_4dpc"]
+    PRODUCE_FOLDER_NAME_4D_PC = paths["produce_4dpc"]
+    PRODUCE_FOLDER_NAME_LOCAL_PC = paths["produce"]
+
+    folders._update_interf_paths()
 
 class ConfSettingReader4D:
     """

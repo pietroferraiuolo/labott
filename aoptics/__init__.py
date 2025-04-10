@@ -17,14 +17,13 @@ How to Use:
 """
 
 from . import analyzer
-from . import devices
-from .ground import zernike as zern
 from .ground.osutils import (
     load_fits,
     save_fits,
     getFileList,
 )
 from .core.root import folders
+from .core import read_config
 
 
 __all__ = [
