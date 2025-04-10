@@ -10,7 +10,7 @@ class BaseInterferometer(ABC):
     Base class for all interferometer devices.
     """
 
-    def __init__(self, name: str, ip: str, port: str):
+    def __init__(self, name: str, ip: str, port: int):
         """
         Initializes the interferometer with a name, in order to retrieve
         all the information from the configuration file.
