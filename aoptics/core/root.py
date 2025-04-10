@@ -2,6 +2,16 @@ import os as _os
 import yaml as _yml
 import configparser as _cp
 from shutil import copy as _copy
+from ruamel.yaml import YAML as _YAML
+
+_gyml = _YAML()
+_gyml.preserve_quotes = True
+
+def _create_folder(path):
+    if not _os.path.exists(path):
+        _os.makedirs(path)
+
+_default_data_path = _os.path.join(_os.path.expanduser("~"), "aopticsData")
 
 ROOT_CONFIGURATION_FILE = (
     _os.path.dirname(_os.path.abspath(__file__)) + "/_configurations/configuration.yaml"
@@ -9,49 +19,82 @@ ROOT_CONFIGURATION_FILE = (
 CONFIGURATION_ROOT_FOLDER = _os.path.dirname(ROOT_CONFIGURATION_FILE)
 
 with open(ROOT_CONFIGURATION_FILE, "r") as _f:
-    _root_config = _yml.safe_load(_f)
+    _root_config = _gyml.load(_f)
 
 BASE_DATA_PATH = _root_config["SYSTEM"]["data_path"]
-if not BASE_DATA_PATH == "":
-    _copied_config = _os.path.join(
-        BASE_DATA_PATH, "SysConfigurations", "configuration.yaml"
-    )
-    if not _os.path.exists(BASE_DATA_PATH):
-        res = input(
-            f"Base data path folder not found.\nCreate folder tree at {BASE_DATA_PATH}? (Y/n): "
-        )
-        if res.lower() == "y":
-            _os.makedirs(BASE_DATA_PATH)
-            _os.makedirs(_os.path.join(BASE_DATA_PATH, "SysConfigurations"))
-    try:
-        if not _os.path.exists(_copied_config):
-            _copy(ROOT_CONFIGURATION_FILE, _copied_config)
-            CONFIGURATION_FILE = _copied_config
-            _config = _root_config
-            print(f"Created configuration file at\n`{_copied_config}`")
-        else:
-            CONFIGURATION_FILE = _copied_config
-            with open(_copied_config, "r") as _f:
-                _config = _yml.safe_load(_f)
-            if BASE_DATA_PATH != _config["SYSTEM"]["data_path"]:
-                BASE_DATA_PATH = _config["SYSTEM"]["data_path"]
-            print(f"Reading configuration file at\n`{_copied_config}`")
-    except FileNotFoundError:
-        BASE_DATA_PATH = _os.path.join(_os.path.expanduser("~"), "aopticsData")
+
+if BASE_DATA_PATH == "":
+    res = input("Base data path not set in configuration file. Define it now? (Y/n): ")
+    if res.lower() == 'y':
+        res = input("Define the base data path: ")
+        try:
+            _os.makedirs(res)
+        except Exception as e:
+            print(f"Error: {e}")
+        retries = 0
+        while not _os.path.isdir(res):
+            if retries >= 3:
+                print("Maximum retries reached. Using default path.")
+                BASE_DATA_PATH = _default_data_path
+                break
+            res = input("Invalid path. Retry or quit (q): ")
+            if res.lower() == 'q':
+                BASE_DATA_PATH = _default_data_path
+                print("Ok... Using home folder instead")
+                break
+            try:
+                _os.makedirs(res)
+            except Exception as e:
+                print(f"Error: {e}")
+            retries += 1
+        BASE_DATA_PATH = res
+        _config = _root_config
+        _config['SYSTEM']['data_path'] = BASE_DATA_PATH
+        with open(ROOT_CONFIGURATION_FILE, "w") as _f:
+            _gyml.dump(_config, _f)
+    else:
+        BASE_DATA_PATH = _default_data_path
         print(
-            f"Failed to copy configuration file and to create folder tree.\nUsing root configuration file\
+            f"Base data path not set.\nUsing root configuration file\
 `{ROOT_CONFIGURATION_FILE}` and `{BASE_DATA_PATH}` as base data path\n"
         )
         CONFIGURATION_FILE = ROOT_CONFIGURATION_FILE
         _config = _root_config
-else:
-    BASE_DATA_PATH = _os.path.join(_os.path.expanduser("~"), "aopticsData")
-    print(
-        f"Base data path not set in configuration file.\nUsing root configuration file\
-`{ROOT_CONFIGURATION_FILE}` and `{BASE_DATA_PATH}` as base data path\n"
+        _config['SYSTEM']['data_path'] = BASE_DATA_PATH
+        with open(ROOT_CONFIGURATION_FILE, "w") as _f:
+            _gyml.dump(_config, _f)
+
+
+if BASE_DATA_PATH != '':
+    _copied_config = _os.path.join(
+        BASE_DATA_PATH, "SysConfigurations", "configuration.yaml"
     )
-    CONFIGURATION_FILE = ROOT_CONFIGURATION_FILE
-    _config = _root_config
+
+    if not _os.path.exists(BASE_DATA_PATH):
+        _create_folder(BASE_DATA_PATH)
+        _create_folder(_os.path.join(BASE_DATA_PATH, "SysConfigurations"))
+    try:
+        if not _os.path.exists(_copied_config):
+            _copy(ROOT_CONFIGURATION_FILE, _copied_config)
+            CONFIGURATION_FILE = _copied_config
+            print(f"Created configuration file at\n`{_copied_config}`")
+            print("Remember to update the data path in the copied configuration file")
+        else:
+            CONFIGURATION_FILE = _copied_config
+            with open(_copied_config, "r") as _f:
+                _nconfig = _yml.safe_load(_f)
+            if BASE_DATA_PATH != _nconfig["SYSTEM"]["data_path"]:
+                BASE_DATA_PATH = _nconfig["SYSTEM"]["data_path"]
+            print(f"Reading configuration file at\n`{_copied_config}`")
+            _config = _nconfig
+    except FileNotFoundError:
+        BASE_DATA_PATH = _default_data_path
+        print(
+            f"Failed to copy configuration file and to create folder tree.\nUsing root configuration file\
+'{ROOT_CONFIGURATION_FILE}' and '{BASE_DATA_PATH}' as base data path\n"
+        )
+        CONFIGURATION_FILE = ROOT_CONFIGURATION_FILE
+
 
 ######################################
 # INTERFEROMETER PATHS (INIT TO NONE)
@@ -92,8 +135,7 @@ for p in [
     FLAT_ROOT_FOLDER,
     CONTROL_MATRIX_FOLDER,
 ]:
-    if not _os.path.exists(p):
-        _os.makedirs(p)
+    _create_folder(p)
 
 
 class _folds:
