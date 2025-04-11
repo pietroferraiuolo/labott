@@ -317,4 +317,4 @@ class Flattening:
             New tracking number.
         """
         self.tn = tn
-        self._path = _os.path.join(_ifp.intMatFold, self.tn)
+        self._path = _os.path.join(_ifp._intMatFold, self.tn)
