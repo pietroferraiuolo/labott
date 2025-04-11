@@ -103,13 +103,13 @@ class Flattening:
             Number of modes to discard when computing the reconstruction matrix. Default is 3.
         """
         new_tn = _ts()
-        imgstart = interf.acquire_phasemap(nframes, rebin=self.rebin)
+        imgstart = interf.acquire_map(nframes, rebin=self.rebin)
         self.loadImage2Shape(imgstart)
         self.computeRecMat(modes2discard)
         deltacmd = self.computeFlatCmd(modes2flat)
         cmd = deltacmd + dm.get_shape()
         dm.set_shape(cmd)
-        imgflat = interf.acquire_phasemap(nframes, rebin=self.rebin)
+        imgflat = interf.acquire_map(nframes, rebin=self.rebin)
         files = [
             "flatCommand.fits",
             "flatDeltaCommand.fits",
