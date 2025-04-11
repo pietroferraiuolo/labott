@@ -8,7 +8,7 @@ Pietro Ferraiuolo
 __title__ = 'aoptics'
 __long_title__ = 'AOPTICS : Adaptice OPTICs package for dm calibrationS'
 __description__ = 'This package is a python interface for laboratory adaptive optics systems, with a focus on the calibration of deformable mirrors (DMs) and the acquisition of wavefront data using interferometers.'
-__version__ = '0.7.2'
+__version__ = '0.7.3'
 __author__ = 'Adaptive Optics Group - INAF - Osservatorio Astrofisico di Arcetri'
 __maintainer__ = 'Pietro Ferraiuolo'
 __author_email__ = 'pietro.ferraiuolo@inaf.it'
