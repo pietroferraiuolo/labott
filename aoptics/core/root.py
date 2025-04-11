@@ -13,9 +13,13 @@ global _config
 global _root_config
 global ROOT_CONFIGURATION_FILE
 
+###############################################################################
+# FUNCTIONS DEFINITIONS: IF STATEMENTS AND LOADING CONFIGURATION FILE
+###############################################################################
 def _create_folder(path):
     if not _os.path.exists(path):
         _os.makedirs(path)
+
 
 def _if_bp_empty():
     """
@@ -111,6 +115,27 @@ def _if_bp_notempty():
             )
             CONFIGURATION_FILE = ROOT_CONFIGURATION_FILE
 
+
+def _updateInterfPaths(paths: dict) -> None:
+    """
+    Update the path of the configuration file and the folders.
+
+    This function reads the configuration file and updates the paths of the
+    settings file and the folders used in the package.
+    """
+    global SETTINGS_CONF_FILE
+    global CAPTURE_FOLDER_NAME_4D_PC
+    global PRODUCE_FOLDER_NAME_4D_PC
+    global PRODUCE_FOLDER_NAME_LOCAL_PC
+
+    SETTINGS_CONF_FILE = paths["settings"]
+    CAPTURE_FOLDER_NAME_4D_PC = paths["capture_4dpc"]
+    PRODUCE_FOLDER_NAME_4D_PC = paths["produce_4dpc"]
+    PRODUCE_FOLDER_NAME_LOCAL_PC = paths["produce"]
+
+    folders._update_interf_paths()
+
+
 def load_configuration_file(file_path: str) -> None:
     """
     Load a configuration file and updates the folder tree.
@@ -138,6 +163,9 @@ def load_configuration_file(file_path: str) -> None:
     _if_bp_empty()
     _if_bp_notempty()
 
+###############################################################################
+# MAIN SCRIPT EXECUTION: THE FILE READING AND FOLDER TREE CREATION
+###############################################################################
 
 ROOT_CONFIGURATION_FILE = (
     _os.path.dirname(_os.path.abspath(__file__)) + "/_configurations/configuration.yaml"
@@ -152,9 +180,10 @@ BASE_DATA_PATH = _root_config["SYSTEM"]["data_path"]
 _if_bp_empty()
 _if_bp_notempty()
 
-######################################
+
+#############################################
 # INTERFEROMETER PATHS (INIT TO NONE)
-######################################
+#############################################
 global SETTINGS_CONF_FILE
 global CAPTURE_FOLDER_NAME_4D_PC
 global PRODUCE_FOLDER_NAME_4D_PC
@@ -164,9 +193,10 @@ CAPTURE_FOLDER_NAME_4D_PC    = None
 PRODUCE_FOLDER_NAME_4D_PC    = None
 PRODUCE_FOLDER_NAME_LOCAL_PC = None
 
-####################################
+
+#############################################
 # FOLDER TREE CREATION
-####################################
+#############################################
 FLAT_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Flattening")
 INTMAT_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "IntMatrices")
 LOGGING_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Logs")
@@ -194,6 +224,10 @@ for p in [
     _create_folder(p)
 
 
+###############################################################################
+# CLASSES DEFINITIONS: THE FOLDER TREE WRAPPER AND THE 4D CONFIGURATION READER
+###############################################################################
+
 class _folds:
     """Wrapper class for the folder tree of the package"""
     def __init__(self):
@@ -214,6 +248,7 @@ class _folds:
         self.CONFIGURATION_FILE = CONFIGURATION_FILE
         self.FLAT_ROOT_FOLDER = FLAT_ROOT_FOLDER
         self.CONTROL_MATRIX_FOLDER = CONTROL_MATRIX_FOLDER
+
     @property
     def print_all(self):
         """Print all the folders"""
@@ -237,6 +272,7 @@ class _folds:
         ]
         for name, value in attributes:
             print(f"{name}: {value}")
+
     def _update_interf_paths(self):
         """
         Update the paths of the configuration file and the folders.
@@ -257,24 +293,6 @@ class _folds:
 
 folders = _folds()
 
-def _updateInterfPaths(paths: dict):
-    """
-    Update the path of the configuration file and the folders.
-
-    This function reads the configuration file and updates the paths of the
-    settings file and the folders used in the package.
-    """
-    global SETTINGS_CONF_FILE
-    global CAPTURE_FOLDER_NAME_4D_PC
-    global PRODUCE_FOLDER_NAME_4D_PC
-    global PRODUCE_FOLDER_NAME_LOCAL_PC
-
-    SETTINGS_CONF_FILE = paths["settings"]
-    CAPTURE_FOLDER_NAME_4D_PC = paths["capture_4dpc"]
-    PRODUCE_FOLDER_NAME_4D_PC = paths["produce_4dpc"]
-    PRODUCE_FOLDER_NAME_LOCAL_PC = paths["produce"]
-
-    folders._update_interf_paths()
 
 class ConfSettingReader4D:
     """
