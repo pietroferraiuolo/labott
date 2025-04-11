@@ -107,8 +107,8 @@ class Flattening:
         self.loadImage2Shape(imgstart)
         self.computeRecMat(modes2discard)
         deltacmd = self.computeFlatCmd(modes2flat)
-        cmd = deltacmd + dm.get_shape()
-        dm.set_shape(cmd)
+        cmd = dm.get_shape()
+        dm.set_shape(deltacmd, differential = True)
         imgflat = interf.acquire_map(nframes, rebin=self.rebin)
         files = [
             "flatCommand.fits",
