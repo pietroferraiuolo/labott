@@ -113,7 +113,7 @@ def getIffConfig(key, bpath=_cfold):
         cc = config[key]
     nzeros     = int(cc[_nzeroName])
     modeId     = _parse_val(cc[_modeIdName])
-    modeAmp    = float(cc[_modeAmpName])
+    modeAmp    = _parse_val(cc[_modeAmpName])
     modalBase  = cc[_modalBaseName]
     template   = _np.array(cc[_templateName])
     info = {
@@ -309,6 +309,13 @@ def _parse_val(val):
                 return eval(val)
             except Exception:
                 return val
+    else:
+        if isinstance(val, float):
+            val = float(val)
+        elif isinstance(val, int):
+            val = int(val)
+        else:
+            raise ValueError(f"Value type {type(val)} could not be recognized.")
     return val
 
 
