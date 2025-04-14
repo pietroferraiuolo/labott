@@ -200,6 +200,7 @@ class Flattening:
             zern2fit = zernModes if zernModes is not None else [1, 2, 3]
             self._intCube, new_tn = _ifp.filterZernikeCube(self.tn, zern2fit)
             self.loadNewTn(new_tn)
+            self.filtered = True
         return self
 
     def loadNewTn(self, tn):
@@ -259,7 +260,7 @@ class Flattening:
         if " filtered " in flag:
             self.filtered = True
         else:
-            False
+            self.filtered = False
         self.rebin = rebin
         return intCube
 
