@@ -154,12 +154,12 @@ class PhaseCam(_api.BaseInterferometer):
             _os.path.join(_folds.PRODUCE_FOLDER_NAME_4D_PC, folder_name),
             _os.path.join(_folds.CAPTURE_FOLDER_NAME_4D_PC, folder_name),
         )
-
         _sh.move(
             _os.path.join(_folds.PRODUCE_FOLDER_NAME_LOCAL_PC, folder_name),
             _folds.OPD_IMAGES_ROOT_FOLDER,
         )
         rename4D(folder_name)
+        self.copy4DSettings(folder_name)
 
     def loadConfiguration(self, conffile):
         """
@@ -171,6 +171,15 @@ class PhaseCam(_api.BaseInterferometer):
             name of the configuration file to load
         """
         self._i4d.loadConfiguration(conffile)
+
+
+    def copy4DSettings(self, destination):
+        """"""
+        import shutil
+        shutil.copy(_folds.SETTINGS_CONF_FILE, destination)
+        shutil.move(_os.path.join(destination, 'AppSettings.ini'),
+                    _os.path.join(destination, '4DSettings.ini'))
+    
 
     def getCameraSettings(self):
         """
