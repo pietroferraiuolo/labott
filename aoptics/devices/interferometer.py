@@ -176,9 +176,10 @@ class PhaseCam(_api.BaseInterferometer):
     def copy4DSettings(self, destination):
         """"""
         import shutil
-        shutil.copy(_folds.SETTINGS_CONF_FILE, destination)
-        shutil.move(_os.path.join(destination, 'AppSettings.ini'),
-                    _os.path.join(destination, '4DSettings.ini'))
+        dest_fold = _os.path.join(_folds.OPD_IMAGES_ROOT_FOLDER, destination)
+        shutil.copy(_folds.SETTINGS_CONF_FILE, dest_fold)
+        shutil.move(_os.path.join(dest_fold, 'AppSettings.ini'),
+                    _os.path.join(dest_fold, '4DSettings.ini'))
     
 
     def getCameraSettings(self):

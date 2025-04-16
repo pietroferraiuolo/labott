@@ -309,7 +309,7 @@ def getCameraSettings(tn: str) -> list[int]:
         [width_pixel, height_pixel, offset_x, offset_y]
     """
     path = findTracknum(tn, complete_path=True)
-    file_path = _os.path.join(path, '4DSetting.ini')
+    file_path = _os.path.join(path, '4DSettings.ini')
     setting_reader = _fn.ConfSettingReader4D(file_path)
     width_pixel = setting_reader.getImageWidhtInPixels()
     height_pixel = setting_reader.getImageHeightInPixels()
@@ -327,7 +327,7 @@ def getFrameRate(tn: str) -> float:
         Frame rate of the interferometer
     """
     path = findTracknum(tn, complete_path=True)
-    file_path = _os.path.join(path, '4DSetting.ini')
+    file_path = _os.path.join(path, '4DSettings.ini')
     setting_reader = _fn.ConfSettingReader4D(file_path)
     frame_rate = setting_reader.getFrameRate()
     return frame_rate
