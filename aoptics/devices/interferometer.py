@@ -2,7 +2,7 @@ import os as _os
 import numpy as _np
 import time as _time
 import shutil as _sh
-from . import API as _api
+from . import _API as _api
 from aoptics.analyzer import modeRebinner as _modeRebinner
 from aoptics.ground.osutils import (
     InterferometerConverter,
@@ -19,7 +19,7 @@ class PhaseCam(_api.BaseInterferometer):
     def __init__(self, ip: str = None, port: int = None):
         """The constructor"""
         self.name = "PhaseCam"
-        from aoptics.devices.API.i4d import I4D
+        from aoptics.devices._API.i4d import I4D
         super().__init__(self.name, ip, port)
         self._i4d = _api.I4D(self.ip, self.port)
         self._ic = InterferometerConverter()

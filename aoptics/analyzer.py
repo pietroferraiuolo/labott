@@ -253,13 +253,13 @@ def spectrum(signal, dt=1, show=None):
     else:
         thedim = 1
     if _np.size(nsig) == 1:
-        spe = _np._fft.rfft(signal, norm="ortho")
+        spe = _np.fft.rfft(signal, norm="ortho")
         nn = _np.sqrt(spe.shape[thedim])  # modRB
     else:
-        spe = _np._fft.rfft(signal, axis=1, norm="ortho")
+        spe = _np.fft.rfft(signal, axis=1, norm="ortho")
         nn = _np.sqrt(spe.shape[thedim])  # modRB
     spe = (_np.abs(spe)) / nn
-    freq = _np._fft.rfftfreq(signal.shape[thedim], d=dt)
+    freq = _np.fft.rfftfreq(signal.shape[thedim], d=dt)
     if _np.size(nsig) == 1:
         spe[0] = 0
     else:
@@ -550,7 +550,7 @@ def comp_filtered_image(imgin, verbose=False, disp=False, d=1, freq2filter=None)
     img[mask == 0] = 0
     norm = "ortho"
     tf2d = _fft.fft2(img.data, norm=norm)
-    kfreq = _np._fft.fftfreq(sx, d=d)  # frequency in cicles
+    kfreq = _np.fft.fftfreq(sx, d=d)  # frequency in cicles
     kfreq2D = _np.meshgrid(kfreq, kfreq)  # frequency grid x,y
     knrm = _np.sqrt(kfreq2D[0] ** 2 + kfreq2D[1] ** 2)  # freq. grid distance
     # TODO optional mask to get the circle and not the square
@@ -670,7 +670,7 @@ def comp_psd(
     tf2d = _fft.fft2(img, norm=norm)
     tf2d[0, 0] = 0
     tf2d_power_spectrum = _np.abs(tf2d) ** 2
-    kfreq = _np._fft.fftfreq(sx, d=d)  # frequency in cicles
+    kfreq = _np.fft.fftfreq(sx, d=d)  # frequency in cicles
     kfreq2D = _np.meshgrid(kfreq, kfreq)  # freq. grid
     knrm = _np.sqrt(kfreq2D[0] ** 2 + kfreq2D[1] ** 2)  # freq. grid distance
     fmask = knrm < _np.max(kfreq)
@@ -714,7 +714,22 @@ def integrate_psd(y, img):
 
 
 def getDataFileList(tn):
-    pass
+    """
+    Returns a list of data files for the given tracking number.
+
+    Parameters
+    ----------
+    tn : str
+        Tracking number.
+
+    Returns
+    -------
+    filelist : list of str
+        List of file paths to the data files.
+    """
+    fold = osu.findTracknum(tn, complete_path=True)
+    filelist = osu.getFileList(tn, fold=fold)
+    return filelist
 
 
 def createCube(filelist, register=False):

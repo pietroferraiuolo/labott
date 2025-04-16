@@ -10,7 +10,6 @@ _gyml.preserve_quotes = True
 global BASE_DATA_PATH
 global CONFIGURATION_FILE
 global _config
-global _root_config
 global ROOT_CONFIGURATION_FILE
 global FLAT_ROOT_FOLDER
 global INTMAT_ROOT_FOLDER
@@ -22,112 +21,170 @@ global OPD_SERIES_ROOT_FOLDER
 global OPD_IMAGES_ROOT_FOLDER
 global IFFUNCTIONS_ROOT_FOLDER
 global CONTROL_MATRIX_FOLDER
+global OPT_DATA_ROOT_FOLDER
 global SETTINGS_CONF_FILE
+global COPIED_SETTINGS_CONF_FILE
 global CAPTURE_FOLDER_NAME_4D_PC
 global PRODUCE_FOLDER_NAME_4D_PC
 global PRODUCE_FOLDER_NAME_LOCAL_PC
 
-###############################################################################
-# FUNCTIONS DEFINITIONS: IF STATEMENTS AND LOADING CONFIGURATION FILE
-###############################################################################
+TEMPLATE_CONF_FILE: str = (
+    _os.path.dirname(_os.path.abspath(__file__)) + "/_configurations/configuration.yaml"
+)
+CONFIGURATION_ROOT_FOLDER: str = _os.path.dirname(TEMPLATE_CONF_FILE)
+
+BASE_DATA_PATH: str = None
+OPT_DATA_ROOT_FOLDER: str = None
+CONFIGURATION_FILE: str = None
+_config: dict = None
+FLAT_ROOT_FOLDER: str = None
+INTMAT_ROOT_FOLDER: str = None
+LOGGING_ROOT_FOLDER: str = None
+CONFIGURATION_FOLDER: str = None
+MODALBASE_ROOT_FOLDER: str = None
+ALIGNMENT_ROOT_FOLDER: str = None
+OPD_SERIES_ROOT_FOLDER: str = None
+OPD_IMAGES_ROOT_FOLDER: str = None
+IFFUNCTIONS_ROOT_FOLDER: str = None
+CONTROL_MATRIX_FOLDER: str = None
+########################
+# INTERFEROMETER PATHS #
+########################
+SETTINGS_CONF_FILE: str = None
+COPIED_SETTINGS_CONF_FILE: str = None
+CAPTURE_FOLDER_NAME_4D_PC: str = None
+PRODUCE_FOLDER_NAME_4D_PC: str = None
+PRODUCE_FOLDER_NAME_LOCAL_PC: str = None
+
+
+def create_configuration_file(
+    path: str = "", data_path: str | bool = False, load: bool = False
+) -> None:
+    """
+    Create a configuration file in the specified path.
+
+    Parameters
+    ----------
+    path : str
+        The path to the configuration file.
+    data_path : str | bool
+        The path to the data folder. If True, it will be set to the same
+        directory as the configuration file. If False, it will not be set.
+        If a string, a path must be provided, and the `data_path` will be
+        set to that path.
+    load : bool
+        If True, the configuration file will be loaded after creation, the folder
+        tree created (if not already) and all the paths updated.
+    """
+    global TEMPLATE_CONF_FILE
+    global CONFIGURATION_FILE
+    global _config
+    bp = _os.path.expanduser("~")
+    if not bp in path:
+        if "mnt" in path or "media" in path:
+            pass
+        else:
+            path = _os.path.join(bp, path)
+    if not ".yaml" in path:
+        file = _os.path.join(path, "configuration.yaml")
+        _create_folder(path)
+        if not _os.path.isdir(path):
+            raise OSError(f"Invalid Path: {path}")
+    else:
+        file = path
+        _create_folder(_os.path.dirname(path))
+    _copy(TEMPLATE_CONF_FILE, file)
+    if data_path is not False:
+        data_path = _os.path.dirname(file) if data_path is True else data_path
+        with open(file, "r") as _f:
+            config = _gyml.load(_f)
+        config["SYSTEM"]["data_path"] = data_path
+        with open(file, "w") as _f:
+            _gyml.dump(config, _f)
+    if load:
+        with open(file, "r") as _f:
+            _config = _gyml.load(_f)
+        CONFIGURATION_FILE = file
+        load_configuration_file(CONFIGURATION_FILE)
+
+
+def load_configuration_file(file_path: str) -> None:
+    """
+    Load a configuration file and updates the folder tree and system configuration.
+
+    Parameters
+    ----------
+    file_path : str
+        The FULL path to the configuration file, including the file name if a
+        custom name has been used upon creating it.
+    """
+    global BASE_DATA_PATH
+    global CONFIGURATION_FILE
+    global _config
+    bp = _os.path.expanduser("~")
+    if not bp in file_path:
+        if "/mnt" in file_path or "/media" in file_path:
+            pass
+        else:
+            file_path = _os.path.join(bp, file_path)
+    if not ".yaml" in file_path:
+        if not _os.path.isdir(file_path):
+            raise OSError(f"Invalid Path: {file_path}.")
+        file_path = _os.path.join(file_path, "configuration.yaml")
+    with open(file_path, "r") as _f:
+        _config = _gyml.load(_f)
+    CONFIGURATION_FILE = file_path
+    BASE_DATA_PATH = _config["SYSTEM"]["data_path"]
+    _create_folder_tree()
+
+
 def _create_folder(path):
     if not _os.path.exists(path):
         _os.makedirs(path)
 
 
-def _if_bp_empty():
+def _create_folder_tree() -> None:
     """
-    Check if the base data path is empty and prompt the user to define it.
-    If the user chooses not to define it, set the base data path to the default value.
-    """
-    global BASE_DATA_PATH
-    global CONFIGURATION_FILE
-    global _config
-    global _root_config
-    global ROOT_CONFIGURATION_FILE
-    _default_data_path = _os.path.join(_os.path.expanduser("~"), "aopticsData")
-
-    if BASE_DATA_PATH == "":
-        res = input("Base data path not set in configuration file. Define it now? (Y/n): ")
-        if res.lower() == 'y':
-            res = input("Define the base data path: ")
-            try:
-                _os.makedirs(res)
-            except OSError as e:
-                print(f"Error: {e}")
-            retries = 0
-            while not _os.path.isdir(res):
-                if retries >= 3:
-                    print("Maximum retries reached. Using default path.")
-                    BASE_DATA_PATH = _default_data_path
-                    break
-                res = input("Invalid path. Retry or quit (q): ")
-                if res.lower() == 'q':
-                    BASE_DATA_PATH = _default_data_path
-                    print("Ok... Using home folder instead")
-                    break
-                try:
-                    _os.makedirs(res)
-                except Exception as e:
-                    print(f"Error: {e}")
-                retries += 1
-            BASE_DATA_PATH = res
-            _config = _root_config
-            _config['SYSTEM']['data_path'] = BASE_DATA_PATH
-            with open(ROOT_CONFIGURATION_FILE, "w") as _f:
-                _gyml.dump(_config, _f)
-        else:
-            BASE_DATA_PATH = _default_data_path
-            print(
-                f"Base data path not set.\nUsing root configuration file\
-    `{ROOT_CONFIGURATION_FILE}` and `{BASE_DATA_PATH}` as base data path\n"
-            )
-            CONFIGURATION_FILE = ROOT_CONFIGURATION_FILE
-            _config = _root_config
-            _config['SYSTEM']['data_path'] = BASE_DATA_PATH
-            with open(ROOT_CONFIGURATION_FILE, "w") as _f:
-                _gyml.dump(_config, _f)
-
-def _if_bp_notempty():
-    """
-    Check if the base data path is not empty and prompt the user to define it.
-    If the user chooses not to define it, set the base data path to the default value.
+    Create the folder tree for the package.
     """
     global BASE_DATA_PATH
-    global CONFIGURATION_FILE
-    global _config
-    global _root_config
-    global ROOT_CONFIGURATION_FILE
-    _default_data_path = _os.path.join(_os.path.expanduser("~"), "aopticsData")
-    if BASE_DATA_PATH != '':
-        _copied_config = _os.path.join(
-            BASE_DATA_PATH, "SysConfigurations", "configuration.yaml"
-        )
-
-        if not _os.path.exists(BASE_DATA_PATH):
-            _create_folder(BASE_DATA_PATH)
-            _create_folder(_os.path.join(BASE_DATA_PATH, "SysConfigurations"))
-        try:
-            if not _os.path.exists(_copied_config):
-                _copy(ROOT_CONFIGURATION_FILE, _copied_config)
-                CONFIGURATION_FILE = _copied_config
-                print(f"Created configuration file at\n`{_copied_config}`")
-                print("Remember to update the data path in the copied configuration file")
-            else:
-                CONFIGURATION_FILE = _copied_config
-                with open(_copied_config, "r") as _f:
-                    _nconfig = _yml.safe_load(_f)
-                if BASE_DATA_PATH != _nconfig["SYSTEM"]["data_path"]:
-                    BASE_DATA_PATH = _nconfig["SYSTEM"]["data_path"]
-                print(f"Reading configuration file at\n`{_copied_config}`")
-                _config = _nconfig
-        except FileNotFoundError:
-            BASE_DATA_PATH = _default_data_path
-            print(
-                f"Failed to copy configuration file and to create folder tree.\nUsing root configuration file\
-    '{ROOT_CONFIGURATION_FILE}' and '{BASE_DATA_PATH}' as base data path\n"
-            )
-            CONFIGURATION_FILE = ROOT_CONFIGURATION_FILE
+    global OPT_DATA_ROOT_FOLDER
+    global LOGGING_ROOT_FOLDER
+    global CONFIGURATION_FOLDER
+    global FLAT_ROOT_FOLDER
+    global INTMAT_ROOT_FOLDER
+    global MODALBASE_ROOT_FOLDER
+    global OPD_SERIES_ROOT_FOLDER
+    global OPD_IMAGES_ROOT_FOLDER
+    global IFFUNCTIONS_ROOT_FOLDER
+    global ALIGNMENT_ROOT_FOLDER
+    global CONTROL_MATRIX_FOLDER
+    OPT_DATA_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "OPTData")
+    LOGGING_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Logging")
+    CONFIGURATION_FOLDER = _os.path.join(BASE_DATA_PATH, "SysConfig")
+    FLAT_ROOT_FOLDER = _os.path.join(OPT_DATA_ROOT_FOLDER, "Flattening")
+    INTMAT_ROOT_FOLDER = _os.path.join(OPT_DATA_ROOT_FOLDER, "IntMatrices")
+    MODALBASE_ROOT_FOLDER = _os.path.join(OPT_DATA_ROOT_FOLDER, "ModalBases")
+    OPD_SERIES_ROOT_FOLDER = _os.path.join(OPT_DATA_ROOT_FOLDER, "OPDSeries")
+    OPD_IMAGES_ROOT_FOLDER = _os.path.join(OPT_DATA_ROOT_FOLDER, "OPDImages")
+    IFFUNCTIONS_ROOT_FOLDER = _os.path.join(OPT_DATA_ROOT_FOLDER, "IFFunctions")
+    ALIGNMENT_ROOT_FOLDER = _os.path.join(OPT_DATA_ROOT_FOLDER, "Alignment")
+    CONTROL_MATRIX_FOLDER = _os.path.join(ALIGNMENT_ROOT_FOLDER, "ControlMatrices")
+    for p in [
+        BASE_DATA_PATH,
+        OPT_DATA_ROOT_FOLDER,
+        LOGGING_ROOT_FOLDER,
+        CONFIGURATION_FOLDER,
+        FLAT_ROOT_FOLDER,
+        INTMAT_ROOT_FOLDER,
+        MODALBASE_ROOT_FOLDER,
+        OPD_SERIES_ROOT_FOLDER,
+        OPD_IMAGES_ROOT_FOLDER,
+        IFFUNCTIONS_ROOT_FOLDER,
+        ALIGNMENT_ROOT_FOLDER,
+        CONTROL_MATRIX_FOLDER,
+    ]:
+        _create_folder(p)
 
 
 def _updateInterfPaths(paths: dict) -> None:
@@ -141,184 +198,163 @@ def _updateInterfPaths(paths: dict) -> None:
     global CAPTURE_FOLDER_NAME_4D_PC
     global PRODUCE_FOLDER_NAME_4D_PC
     global PRODUCE_FOLDER_NAME_LOCAL_PC
-
     SETTINGS_CONF_FILE = paths["settings"]
     CAPTURE_FOLDER_NAME_4D_PC = paths["capture_4dpc"]
     PRODUCE_FOLDER_NAME_4D_PC = paths["produce_4dpc"]
     PRODUCE_FOLDER_NAME_LOCAL_PC = paths["produce"]
-
-    folders._update_interf_paths()
-
-
-def load_configuration_file(file_path: str) -> None:
-    """
-    Load a configuration file and updates the folder tree.
-
-    Parameters
-    ----------
-    file_path : str
-        The path to the configuration file.
-
-    Returns
-    -------
-    dict
-        The content of the configuration file.
-    """
-    global BASE_DATA_PATH
-    global CONFIGURATION_FILE
-    global _config
-    global _root_config
-    global ROOT_CONFIGURATION_FILE
-
-    with open(file_path, "r") as _f:
-        config = _gyml.load(_f)
-    BASE_DATA_PATH = config["SYSTEM"]["data_path"]
-    CONFIGURATION_FILE = file_path
-    _if_bp_empty()
-    _if_bp_notempty()
-
-###############################################################################
-# MAIN SCRIPT EXECUTION: THE FILE READING AND FOLDER TREE CREATION
-###############################################################################
-
-ROOT_CONFIGURATION_FILE = (
-    _os.path.dirname(_os.path.abspath(__file__)) + "/_configurations/configuration.yaml"
-)
-CONFIGURATION_ROOT_FOLDER = _os.path.dirname(ROOT_CONFIGURATION_FILE)
-
-with open(ROOT_CONFIGURATION_FILE, "r") as _f:
-    _root_config = _gyml.load(_f)
-
-BASE_DATA_PATH = _root_config["SYSTEM"]["data_path"]
-
-_if_bp_empty()
-_if_bp_notempty()
-
-
-#############################################
-# INTERFEROMETER PATHS (INIT TO NONE)
-#############################################
-SETTINGS_CONF_FILE           = None
-CAPTURE_FOLDER_NAME_4D_PC    = None
-PRODUCE_FOLDER_NAME_4D_PC    = None
-PRODUCE_FOLDER_NAME_LOCAL_PC = None
-
-
-#############################################
-# FOLDER TREE CREATION
-#############################################
-def _create_folder_tree():
-    """
-    Create the folder tree for the package.
-    """
-    global BASE_DATA_PATH
-    global CONFIGURATION_FILE
-    global SETTINGS_CONF_FILE
-    global CAPTURE_FOLDER_NAME_4D_PC
-    global PRODUCE_FOLDER_NAME_4D_PC
-    global PRODUCE_FOLDER_NAME_LOCAL_PC
-    global FLAT_ROOT_FOLDER
-    global INTMAT_ROOT_FOLDER
-    global LOGGING_ROOT_FOLDER
-    global CONFIGURATION_FOLDER
-    global MODALBASE_ROOT_FOLDER
-    global ALIGNMENT_ROOT_FOLDER
-    global OPD_SERIES_ROOT_FOLDER
-    global OPD_IMAGES_ROOT_FOLDER
-    global IFFUNCTIONS_ROOT_FOLDER  
-    global CONTROL_MATRIX_FOLDER
-    FLAT_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Flattening")
-    INTMAT_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "IntMatrices")
-    LOGGING_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Logs")
-    CONFIGURATION_FOLDER = _os.path.join(BASE_DATA_PATH, "SysConfigurations")
-    MODALBASE_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "ModalBases")
-    ALIGNMENT_ROOT_FOLDER  = _os.path.join(BASE_DATA_PATH, "Alignment")
-    OPD_SERIES_ROOT_FOLDER  = _os.path.join(BASE_DATA_PATH, "OPDSeries")
-    OPD_IMAGES_ROOT_FOLDER   = _os.path.join(BASE_DATA_PATH, "OPDImages")
-    IFFUNCTIONS_ROOT_FOLDER   = _os.path.join(BASE_DATA_PATH, "IFFunctions")
-    CONTROL_MATRIX_FOLDER   = _os.path.join(ALIGNMENT_ROOT_FOLDER, "ControlMatrices")
-
-for p in [
-    BASE_DATA_PATH,
-    LOGGING_ROOT_FOLDER,
-    IFFUNCTIONS_ROOT_FOLDER,
-    INTMAT_ROOT_FOLDER,
-    MODALBASE_ROOT_FOLDER,
-    ALIGNMENT_ROOT_FOLDER,
-    OPD_IMAGES_ROOT_FOLDER,
-    OPD_SERIES_ROOT_FOLDER,
-    CONFIGURATION_FOLDER,
-    FLAT_ROOT_FOLDER,
-    CONTROL_MATRIX_FOLDER,
-]:
-    _create_folder(p)
 
 
 ###############################################################################
 # CLASSES DEFINITIONS: THE FOLDER TREE WRAPPER AND THE 4D CONFIGURATION READER
 ###############################################################################
 
+
 class _folds:
     """Wrapper class for the folder tree of the package"""
-    def __init__(self):
-        self.BASE_DATA_PATH = BASE_DATA_PATH
-        self.CONFIGURATION_FOLDER = CONFIGURATION_FOLDER
-        self.SETTINGS_CONF_FILE = SETTINGS_CONF_FILE
-        self.LOGGING_FILE_PATH = LOGGING_ROOT_FOLDER
-        self.OPD_SERIES_ROOT_FOLDER = OPD_SERIES_ROOT_FOLDER
-        self.OPD_IMAGES_ROOT_FOLDER = OPD_IMAGES_ROOT_FOLDER
-        self.IFFUNCTIONS_ROOT_FOLDER = IFFUNCTIONS_ROOT_FOLDER
-        self.PRODUCE_FOLDER_NAME_4D_PC = PRODUCE_FOLDER_NAME_4D_PC
-        self.CAPTURE_FOLDER_NAME_4D_PC = CAPTURE_FOLDER_NAME_4D_PC
-        self.PRODUCE_FOLDER_NAME_LOCAL_PC = PRODUCE_FOLDER_NAME_LOCAL_PC
-        self.CONFIGURATION_ROOT_FOLDER = CONFIGURATION_ROOT_FOLDER
-        self.MODALBASE_ROOT_FOLDER = MODALBASE_ROOT_FOLDER
-        self.INTMAT_ROOT_FOLDER = INTMAT_ROOT_FOLDER
-        self.ALIGNMENT_ROOT_FOLDER = ALIGNMENT_ROOT_FOLDER
-        self.CONFIGURATION_FILE = CONFIGURATION_FILE
-        self.FLAT_ROOT_FOLDER = FLAT_ROOT_FOLDER
-        self.CONTROL_MATRIX_FOLDER = CONTROL_MATRIX_FOLDER
 
     @property
-    def print_all(self):
-        """Print all the folders"""
-        attributes = [
-            ("Read configuration file", CONFIGURATION_FILE),
-            ("Base data path", self.BASE_DATA_PATH),
-            ("Configuration folder", self.CONFIGURATION_FOLDER),
-            ("OPD series folder", self.OPD_SERIES_ROOT_FOLDER),
-            ("OPD images folder", self.OPD_IMAGES_ROOT_FOLDER),
-            ("Modal base root folder", self.MODALBASE_ROOT_FOLDER),
-            ("Alignment folder", self.ALIGNMENT_ROOT_FOLDER),
-            ("Control matrix folder", self.CONTROL_MATRIX_FOLDER),
-            ("IFFunctions folder", self.IFFUNCTIONS_ROOT_FOLDER),
-            ("Intmat folder", self.INTMAT_ROOT_FOLDER),
-            ("Flattening folder", self.FLAT_ROOT_FOLDER),
-            ("Logging root folder", self.LOGGING_FILE_PATH),
-            ("Interferometer settings file", self.SETTINGS_CONF_FILE),
-            ("Produce folder name 4D PC", self.PRODUCE_FOLDER_NAME_4D_PC),
-            ("Capture folder name 4D PC", self.CAPTURE_FOLDER_NAME_4D_PC),
-            ("Produce folder name local PC", self.PRODUCE_FOLDER_NAME_LOCAL_PC),
-        ]
-        for name, value in attributes:
-            print(f"{name}: {value}")
-
-    def _update_interf_paths(self):
+    def BASE_DATA_PATH(self):
         """
-        Update the paths of the configuration file and the folders.
+        Returns the base data path.
+        """
+        global BASE_DATA_PATH
+        return BASE_DATA_PATH
 
-        This function reads the configuration file and updates the paths of the
-        settings file and the folders used in the package.
+    @property
+    def OPT_DATA_ROOT_FOLDER(self):
+        """
+        Returns the OPT data root folder.
+        """
+        global OPT_DATA_ROOT_FOLDER
+        return OPT_DATA_ROOT_FOLDER
+
+    @property
+    def CONFIGURATION_FILE(self):
+        """
+        Returns the configuration file path.
+        """
+        global CONFIGURATION_FILE
+        return CONFIGURATION_FILE
+
+    @property
+    def FLAT_ROOT_FOLDER(self):
+        """
+        Returns the flat root folder.
+        """
+        global FLAT_ROOT_FOLDER
+        return FLAT_ROOT_FOLDER
+
+    @property
+    def INTMAT_ROOT_FOLDER(self):
+        """
+        Returns the INTMAT root folder.
+        """
+        global INTMAT_ROOT_FOLDER
+        return INTMAT_ROOT_FOLDER
+
+    @property
+    def LOGGING_ROOT_FOLDER(self):
+        """
+        Returns the logging root folder.
+        """
+        global LOGGING_ROOT_FOLDER
+        return LOGGING_ROOT_FOLDER
+
+    @property
+    def CONFIGURATION_FOLDER(self):
+        """
+        Returns the configuration folder.
+        """
+        global CONFIGURATION_FOLDER
+        return CONFIGURATION_FOLDER
+
+    @property
+    def MODALBASE_ROOT_FOLDER(self):
+        """
+        Returns the modal base root folder.
+        """
+        global MODALBASE_ROOT_FOLDER
+        return MODALBASE_ROOT_FOLDER
+
+    @property
+    def ALIGNMENT_ROOT_FOLDER(self):
+        """
+        Returns the alignment root folder.
+        """
+        global ALIGNMENT_ROOT_FOLDER
+        return ALIGNMENT_ROOT_FOLDER
+
+    @property
+    def OPD_SERIES_ROOT_FOLDER(self):
+        """
+        Returns the OPD series root folder.
+        """
+        global OPD_SERIES_ROOT_FOLDER
+        return OPD_SERIES_ROOT_FOLDER
+
+    @property
+    def OPD_IMAGES_ROOT_FOLDER(self):
+        """
+        Returns the OPD images root folder.
+        """
+        global OPD_IMAGES_ROOT_FOLDER
+        return OPD_IMAGES_ROOT_FOLDER
+
+    @property
+    def IFFUNCTIONS_ROOT_FOLDER(self):
+        """
+        Returns the IFFunctions root folder.
+        """
+        global IFFUNCTIONS_ROOT_FOLDER
+        return IFFUNCTIONS_ROOT_FOLDER
+
+    @property
+    def CONTROL_MATRIX_FOLDER(self):
+        """
+        Returns the control matrix folder.
+        """
+        global CONTROL_MATRIX_FOLDER
+        return CONTROL_MATRIX_FOLDER
+
+    @property
+    def SETTINGS_CONF_FILE(self):
+        """
+        Returns the settings configuration file path.
         """
         global SETTINGS_CONF_FILE
-        global CAPTURE_FOLDER_NAME_4D_PC
-        global PRODUCE_FOLDER_NAME_4D_PC
-        global PRODUCE_FOLDER_NAME_LOCAL_PC
+        return SETTINGS_CONF_FILE
 
-        self.SETTINGS_CONF_FILE = SETTINGS_CONF_FILE
-        self.CAPTURE_FOLDER_NAME_4D_PC = CAPTURE_FOLDER_NAME_4D_PC
-        self.PRODUCE_FOLDER_NAME_4D_PC = PRODUCE_FOLDER_NAME_4D_PC
-        self.PRODUCE_FOLDER_NAME_LOCAL_PC = PRODUCE_FOLDER_NAME_LOCAL_PC
+    @property
+    def COPIED_SETTINGS_CONF_FILE(self):
+        """
+        Returns the copied settings configuration file path.
+        """
+        global COPIED_SETTINGS_CONF_FILE
+        return COPIED_SETTINGS_CONF_FILE
+
+    @property
+    def CAPTURE_FOLDER_NAME_4D_PC(self):
+        """
+        Returns the capture folder name for 4D PC.
+        """
+        global CAPTURE_FOLDER_NAME_4D_PC
+        return CAPTURE_FOLDER_NAME_4D_PC
+
+    @property
+    def PRODUCE_FOLDER_NAME_4D_PC(self):
+        """
+        Returns the produce folder name for 4D PC.
+        """
+        global PRODUCE_FOLDER_NAME_4D_PC
+        return PRODUCE_FOLDER_NAME_4D_PC
+
+    @property
+    def PRODUCE_FOLDER_NAME_LOCAL_PC(self):
+        """
+        Returns the produce folder name for the local PC.
+        """
+        global PRODUCE_FOLDER_NAME_LOCAL_PC
+        return PRODUCE_FOLDER_NAME_LOCAL_PC
 
 
 folders = _folds()
