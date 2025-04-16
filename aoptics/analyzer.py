@@ -13,8 +13,8 @@ import os as _os
 import numpy as _np
 import jdcal as _jdcal
 import matplotlib.pyplot as _plt
-from .ground import zernike as _zern
-from .ground import osutils as _osu
+from .ground import zernike as zern
+from .ground import osutils as osu
 from .core import root as _foldname
 from .ground.geo import qpupil as _qpupil
 from .ground.osutils import InterferometerConverter
@@ -57,7 +57,7 @@ def averageFrames(
         Final image of averaged frames.
 
     """
-    fileList = _osu.getFileList(tn, fold=_OPDSER, key="20")
+    fileList = osu.getFileList(tn, fold=_OPDSER, key="20")
     if first is not None and last is not None:
         fl = [
             fileList[x]
@@ -136,7 +136,7 @@ def saveAverage(tn, average_img=None, overwrite: bool = False, **kwargs):
             average_img = averageFrames(
                 tn, first=first, last=last, file_selector=fsel, thresh=thresh
             )
-        _osu.save_fits(fname, average_img, overwrite=overwrite)
+        osu.save_fits(fname, average_img, overwrite=overwrite)
         print(f"Saved average at '{fname}'")
 
 
@@ -162,7 +162,7 @@ def openAverage(tn):
     """
     fname = _os.path.join(_OPDSER, tn, "average.fits")
     try:
-        image = _osu.load_fits(fname)
+        image = osu.load_fits(fname)
         print(f"Average loaded: '{fname}'")
     except FileNotFoundError as err:
         raise FileNotFoundError(f"Average file '{fname}' does not exist!") from err
@@ -186,7 +186,7 @@ def runningDiff(tn, gap=2):
         DESCRIPTION.
 
     """
-    llist = _osu.getFileList(tn)
+    llist = osu.getFileList(tn)
     nfile = len(llist)
     npoints = int(nfile / gap) - 2
     slist = []
@@ -194,7 +194,7 @@ def runningDiff(tn, gap=2):
         q0 = frame(i * gap, llist)
         q1 = frame(i * gap + 1, llist)
         diff = q1 - q0
-        diff = _zern.removeZernike(diff)
+        diff = zern.removeZernike(diff)
         slist.append(diff.std())
     svec = _np.array(slist)
     return svec
@@ -219,7 +219,7 @@ def frame(idx, mylist):
     """
     mytype = type(mylist)
     if mytype is list:
-        img = _osu.read_phasemap(mylist[idx])
+        img = osu.read_phasemap(mylist[idx])
     if mytype is _np.ma.core.MaskedArray:
         img = mylist[idx]
     return img
@@ -326,8 +326,8 @@ def timevec(tn):
         DESCRIPTION.
 
     """
-    fold = _osu.findTracknum(tn)
-    flist = _osu.getFileList(tn)
+    fold = osu.findTracknum(tn)
+    flist = osu.getFileList(tn)
     nfile = len(flist)
     if "OPDImages" in fold:
         tspace = 1.0 / 28.57
@@ -441,9 +441,9 @@ def readTemperatures(tn):
         DESCRIPTION.
 
     """
-    fold = _osu.findTracknum(tn, complete_path=True)
+    fold = osu.findTracknum(tn, complete_path=True)
     fname = _os.path.join(fold, tn, "temperature.fits")
-    temperatures = _osu.load_fits(fname)
+    temperatures = osu.load_fits(fname)
     return temperatures
 
 
@@ -462,9 +462,9 @@ def readZernike(tn):
         DESCRIPTION.
 
     """
-    fold = _osu.findTracknum(tn, complete_path=True)
+    fold = osu.findTracknum(tn, complete_path=True)
     fname = _os.path.join(fold, tn, "zernike.fits")
-    zernikes = _osu.load_fits(fname)
+    zernikes = osu.load_fits(fname)
     return zernikes
 
 
@@ -491,9 +491,9 @@ def zernikePlot(mylist, modes=_np.array(range(1, 11))):
     if mytype is _np.ma.core.MaskedArray:
         imgcube = mylist
     zlist = []
-    for i in range(len(imgcube)):
+    for i in range(imgcube.shape[-1]):
         print(i)
-        coeff, _ = _zern.zernikeFit(imgcube[i], modes)
+        coeff, _ = zern.zernikeFit(imgcube[:,:,i], modes)
         zlist.append(coeff)
     zcoeff = _np.array(zlist)
     zcoeff = zcoeff.T
@@ -713,6 +713,10 @@ def integrate_psd(y, img):
     return yint
 
 
+def getDataFileList(tn):
+    pass
+
+
 def createCube(filelist, register=False):
     """
     Creates a cube of images from an images file list
@@ -733,7 +737,7 @@ def createCube(filelist, register=False):
     """
     cube_list = []
     for imgfits in filelist:
-        image = _osu.read_phasemap(imgfits)
+        image = osu.read_phasemap(imgfits)
         if register:
             image = _np.roll(image, register)
         cube_list.append(image)

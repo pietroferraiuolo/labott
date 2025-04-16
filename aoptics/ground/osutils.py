@@ -296,6 +296,42 @@ def rename4D(folder):
                 new_file = _os.path.join(fold, new_name)
                 _os.rename(old_file, new_file)
 
+# TODO
+# Add the COPIED_CONFIG_SETTINGS_FILE var in root to be read as default
+def getCameraSettings(tn: str) -> list[int]:
+    """
+    Reads the interferometer settings from a given configuration file.
+
+    Return
+    ------
+    output: list of int
+        List of camera settings:
+        [width_pixel, height_pixel, offset_x, offset_y]
+    """
+    path = findTracknum(tn, complete_path=True)
+    file_path = _os.path.join(path, '4DSetting.ini')
+    setting_reader = _fn.ConfSettingReader4D(file_path)
+    width_pixel = setting_reader.getImageWidhtInPixels()
+    height_pixel = setting_reader.getImageHeightInPixels()
+    offset_x = setting_reader.getOffsetX()
+    offset_y = setting_reader.getOffsetY()
+    return [width_pixel, height_pixel, offset_x, offset_y]
+
+def getFrameRate(tn: str) -> float:
+    """
+    Reads the frame rate of the camera from a given configuration file.
+
+    Return
+    ------
+    frame_rate: float
+        Frame rate of the interferometer
+    """
+    path = findTracknum(tn, complete_path=True)
+    file_path = _os.path.join(path, '4DSetting.ini')
+    setting_reader = _fn.ConfSettingReader4D(file_path)
+    frame_rate = setting_reader.getFrameRate()
+    return frame_rate
+
 
 class InterferometerConverter:
     """

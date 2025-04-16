@@ -1,5 +1,5 @@
 SYSTEM:
-  data_path: ''
+  data_path: '/mnt/libero/SPLATTData/Data'
   simulated.devices:
     dm: false
     interf: false
@@ -14,6 +14,7 @@ DEVICES:
         produce_4dpc: "D:/M4/Produced"
         produce: "/home/m4/4d/M4/Produced"
         settings: "/home/m4/4dConfig/AppSettings.ini"
+        copied_settings: '4DSettings.ini'
 
   DEFORMABLE.MIRRORS:
     AlpaoXXX:
