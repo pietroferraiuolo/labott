@@ -1,5 +1,5 @@
 SYSTEM:
-  data_path: '/mnt/libero/SPLATTData/Data'
+  data_path: ''
   simulated.devices:
     dm: false
     interf: false

@@ -12,6 +12,20 @@ global CONFIGURATION_FILE
 global _config
 global _root_config
 global ROOT_CONFIGURATION_FILE
+global FLAT_ROOT_FOLDER
+global INTMAT_ROOT_FOLDER
+global LOGGING_ROOT_FOLDER
+global CONFIGURATION_FOLDER
+global MODALBASE_ROOT_FOLDER
+global ALIGNMENT_ROOT_FOLDER
+global OPD_SERIES_ROOT_FOLDER
+global OPD_IMAGES_ROOT_FOLDER
+global IFFUNCTIONS_ROOT_FOLDER
+global CONTROL_MATRIX_FOLDER
+global SETTINGS_CONF_FILE
+global CAPTURE_FOLDER_NAME_4D_PC
+global PRODUCE_FOLDER_NAME_4D_PC
+global PRODUCE_FOLDER_NAME_LOCAL_PC
 
 ###############################################################################
 # FUNCTIONS DEFINITIONS: IF STATEMENTS AND LOADING CONFIGURATION FILE
@@ -184,10 +198,6 @@ _if_bp_notempty()
 #############################################
 # INTERFEROMETER PATHS (INIT TO NONE)
 #############################################
-global SETTINGS_CONF_FILE
-global CAPTURE_FOLDER_NAME_4D_PC
-global PRODUCE_FOLDER_NAME_4D_PC
-global PRODUCE_FOLDER_NAME_LOCAL_PC
 SETTINGS_CONF_FILE           = None
 CAPTURE_FOLDER_NAME_4D_PC    = None
 PRODUCE_FOLDER_NAME_4D_PC    = None
@@ -197,16 +207,36 @@ PRODUCE_FOLDER_NAME_LOCAL_PC = None
 #############################################
 # FOLDER TREE CREATION
 #############################################
-FLAT_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Flattening")
-INTMAT_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "IntMatrices")
-LOGGING_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Logs")
-CONFIGURATION_FOLDER = _os.path.join(BASE_DATA_PATH, "SysConfigurations")
-MODALBASE_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "ModalBases")
-ALIGNMENT_ROOT_FOLDER  = _os.path.join(BASE_DATA_PATH, "Alignment")
-OPD_SERIES_ROOT_FOLDER  = _os.path.join(BASE_DATA_PATH, "OPDSeries")
-OPD_IMAGES_ROOT_FOLDER   = _os.path.join(BASE_DATA_PATH, "OPDImages")
-IFFUNCTIONS_ROOT_FOLDER   = _os.path.join(BASE_DATA_PATH, "IFFunctions")
-CONTROL_MATRIX_FOLDER   = _os.path.join(ALIGNMENT_ROOT_FOLDER, "ControlMatrices")
+def _create_folder_tree():
+    """
+    Create the folder tree for the package.
+    """
+    global BASE_DATA_PATH
+    global CONFIGURATION_FILE
+    global SETTINGS_CONF_FILE
+    global CAPTURE_FOLDER_NAME_4D_PC
+    global PRODUCE_FOLDER_NAME_4D_PC
+    global PRODUCE_FOLDER_NAME_LOCAL_PC
+    global FLAT_ROOT_FOLDER
+    global INTMAT_ROOT_FOLDER
+    global LOGGING_ROOT_FOLDER
+    global CONFIGURATION_FOLDER
+    global MODALBASE_ROOT_FOLDER
+    global ALIGNMENT_ROOT_FOLDER
+    global OPD_SERIES_ROOT_FOLDER
+    global OPD_IMAGES_ROOT_FOLDER
+    global IFFUNCTIONS_ROOT_FOLDER  
+    global CONTROL_MATRIX_FOLDER
+    FLAT_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Flattening")
+    INTMAT_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "IntMatrices")
+    LOGGING_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "Logs")
+    CONFIGURATION_FOLDER = _os.path.join(BASE_DATA_PATH, "SysConfigurations")
+    MODALBASE_ROOT_FOLDER = _os.path.join(BASE_DATA_PATH, "ModalBases")
+    ALIGNMENT_ROOT_FOLDER  = _os.path.join(BASE_DATA_PATH, "Alignment")
+    OPD_SERIES_ROOT_FOLDER  = _os.path.join(BASE_DATA_PATH, "OPDSeries")
+    OPD_IMAGES_ROOT_FOLDER   = _os.path.join(BASE_DATA_PATH, "OPDImages")
+    IFFUNCTIONS_ROOT_FOLDER   = _os.path.join(BASE_DATA_PATH, "IFFunctions")
+    CONTROL_MATRIX_FOLDER   = _os.path.join(ALIGNMENT_ROOT_FOLDER, "ControlMatrices")
 
 for p in [
     BASE_DATA_PATH,
