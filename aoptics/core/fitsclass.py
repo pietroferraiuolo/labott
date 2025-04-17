@@ -1,11 +1,30 @@
 import numpy as _np
+from numpy.typing import ArrayLike
+from astropy.io.fits import Header
 
 class FitsArray(_np.ndarray):
-    def __new__(cls, data, header=None):
-        # Create the ndarray instance
+    """
+    A custom subclass of numpy.ma.MaskedArray that includes a FITS header.
+    This class is used to store data along with its associated FITS header,
+    allowing for easier manipulation and storage of FITS data.
+    The header can be a dictionary or an astropy.io.fits.Header object.
+
+    Parameters
+    ----------
+    data : list, numpy.ndarray, or numpy.ma.MaskedArray
+        The data to be stored in the array.
+    header : dict or astropy.io.fits.Header, optional
+        The FITS header associated with the data. If not provided, defaults to None.
+    """
+    def __new__(cls, data: list | ArrayLike, header: dict | Header = None):
+        # Handle masked arrays
+        # if isinstance(data, _np.ma.MaskedArray):
+        #     #obj = _np.asanyarray(data).view(cls)
+        #     obj  = _np.ma.masked_array(data.data, mask=data.mask).view(cls)
+        # elif isinstance(data, _np.ndarray):
         obj = _np.asarray(data).view(cls)
         # Add the header attribute
-        obj.header = header
+        obj.header = dict(header) if isinstance(header, Header) else header
         return obj
 
     def __array_finalize__(self, obj):
@@ -13,3 +32,5 @@ class FitsArray(_np.ndarray):
         if obj is None:
             return
         self.header = getattr(obj, 'header', None)
+        #self._mask = getattr(obj, '_mask', None)
+
