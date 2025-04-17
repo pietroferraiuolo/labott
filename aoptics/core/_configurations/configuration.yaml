@@ -6,7 +6,7 @@ SYSTEM:
 
 DEVICES:
   INTERFEROMETER:
-    PhaseCam:
+    PhaseCam4020:
       ip: "193.206.155.78"
       port: 8011
       Paths:
@@ -89,5 +89,5 @@ SYSTEM.ALIGNMENT:
 
   zernike_to_use: [1, 2, 3, 6, 7]
   push_pull_template: [1, -2, 1]
-  commandMatrix: cmdMat.fits
+  commandMatrix: ottCmdMat.fits
   fitting_surface: ''

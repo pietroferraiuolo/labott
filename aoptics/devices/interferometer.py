@@ -5,24 +5,24 @@ import shutil as _sh
 from . import _API as _api
 from aoptics.analyzer import modeRebinner as _modeRebinner
 from aoptics.ground.osutils import (
-    InterferometerConverter,
+    _InterferometerConverter,
     rename4D)
 from aoptics.core.root import (
     folders as _folds,
     ConfSettingReader4D as _confReader)
 
 
-class PhaseCam(_api.BaseInterferometer):
+class PhaseCam4020(_api.BaseInterferometer):
     """
     Class for the 4D Twyman-Green PhaseCam Laser Interferometer.
     """
     def __init__(self, ip: str = None, port: int = None):
         """The constructor"""
-        self.name = "PhaseCam"
+        self.name = "PhaseCam4020"
         from aoptics.devices._API.i4d import I4D
         super().__init__(self.name, ip, port)
         self._i4d = _api.I4D(self.ip, self.port)
-        self._ic = InterferometerConverter()
+        self._ic = _InterferometerConverter()
 
 
     def acquire_map(self, nframes=1, delay=0, rebin: int = 1):

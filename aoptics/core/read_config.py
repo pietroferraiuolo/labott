@@ -357,7 +357,7 @@ def getDmAddress(device_name: str):
     return ip, port
 
 
-def getInterfConfig(device_name: str = 'PhaseCam'):
+def getInterfConfig(device_name: str):
     """
     Retrieves the interferometer address from the YAML configuration file.
 

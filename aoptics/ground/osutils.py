@@ -216,11 +216,11 @@ def read_phasemap(file_path):
     if ext == "fits":
         image = load_fits(file_path)
     elif ext == "4D":
-        image = InterferometerConverter.fromPhaseCam6110(file_path)
+        image = _InterferometerConverter.fromPhaseCam6110(file_path)
     elif ext == "4Ds":
         image = load_fits(file_path)
     elif ext == "h5":
-        image = InterferometerConverter.fromPhaseCam4020(file_path)
+        image = _InterferometerConverter.fromPhaseCam4020(file_path)
     return image
 
 
@@ -345,7 +345,7 @@ def getFrameRate(tn: str) -> float:
     return frame_rate
 
 
-class InterferometerConverter:
+class _InterferometerConverter:
     """
     This class is crucial to convert H5 files into masked array
     """
