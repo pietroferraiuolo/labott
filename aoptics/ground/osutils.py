@@ -136,6 +136,8 @@ def getFileList(tn=None, fold=None, key: str = None):
             raise FileNotFoundError(
                 f"Invalid Path: no data found for tn '{tn}'"
             ) from exc
+    if len(fl) == 1:
+        fl = fl[0]
     if key is not None:
         try:
             selected_list = []

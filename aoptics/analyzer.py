@@ -253,13 +253,13 @@ def spectrum(signal, dt=1, show=None):
     else:
         thedim = 1
     if _np.size(nsig) == 1:
-        spe = _np._fft.rfft(signal, norm="ortho")
+        spe = _np.fft.rfft(signal, norm="ortho")
         nn = _np.sqrt(spe.shape[thedim])  # modRB
     else:
-        spe = _np._fft.rfft(signal, axis=1, norm="ortho")
+        spe = _np.fft.rfft(signal, axis=1, norm="ortho")
         nn = _np.sqrt(spe.shape[thedim])  # modRB
     spe = (_np.abs(spe)) / nn
-    freq = _np._fft.rfftfreq(signal.shape[thedim], d=dt)
+    freq = _np.fft.rfftfreq(signal.shape[thedim], d=dt)
     if _np.size(nsig) == 1:
         spe[0] = 0
     else:
