@@ -19,7 +19,7 @@ _OPTDATA = _fn.BASE_DATA_PATH
 _OPDIMG = _fn.OPD_IMAGES_ROOT_FOLDER
 
 
-def findTracknum(tn, complete_path: bool = False):
+def findTracknum(tn: str, complete_path: bool = False) -> str | list[str]:
     """
     Search for the tracking number given in input within all the data path subfolders.
 
@@ -53,7 +53,7 @@ def findTracknum(tn, complete_path: bool = False):
     return path_list
 
 
-def getFileList(tn=None, fold=None, key: str = None):
+def getFileList(tn: str = None, fold: str = None, key: str = None) -> list[str]:
     """
     Search for files in a given tracking number or complete path, sorts them and
     puts them into a list.
@@ -126,10 +126,14 @@ def getFileList(tn=None, fold=None, key: str = None):
                 if fold is None:
                     fl = []
                     fl.append(
-                        sorted([_os.path.join(path, file) for file in _os.listdir(path)])
+                        sorted(
+                            [_os.path.join(path, file) for file in _os.listdir(path)]
+                        )
                     )
                 elif fold in path.split("/")[-2]:
-                    fl = sorted([_os.path.join(path, file) for file in _os.listdir(path)])
+                    fl = sorted(
+                        [_os.path.join(path, file) for file in _os.listdir(path)]
+                    )
                 else:
                     raise Exception
         except Exception as exc:
@@ -152,7 +156,7 @@ def getFileList(tn=None, fold=None, key: str = None):
     return fl
 
 
-def tnRange(tn0, tn1):
+def tnRange(tn0: str, tn1: str) -> list[str]:
     """
     Returns the list of tracking numbers between tn0 and tn1, within the same
     folder, if they both exist in it.
@@ -171,7 +175,7 @@ def tnRange(tn0, tn1):
 
     Raises
     ------
-    Exception
+    FileNotFoundError
         An exception is raised if the two tracking numbers are not found in the same folder
     """
     tn0_fold = findTracknum(tn0)
@@ -193,11 +197,13 @@ def tnRange(tn0, tn1):
                 tn_folds = sorted(_os.listdir(fold_path))
                 id0 = tn_folds.index(tn0)
                 id1 = tn_folds.index(tn1)
-                tnMat.append([_os.path.join(fold_path, tn) for tn in tn_folds[id0 : id1 + 1]])
+                tnMat.append(
+                    [_os.path.join(fold_path, tn) for tn in tn_folds[id0 : id1 + 1]]
+                )
     return tnMat
 
 
-def read_phasemap(file_path):
+def read_phasemap(file_path: str) -> _np.ma.MaskedArray:
     """
     Function to read interferometric data, in the three possible formats
     (FITS, 4D, H5)
@@ -224,7 +230,7 @@ def read_phasemap(file_path):
     return image
 
 
-def load_fits(filepath):
+def load_fits(filepath: str) -> _np.ndarray | _np.ma.MaskedArray:
     """
     Loads a FITS file.
 
@@ -235,7 +241,7 @@ def load_fits(filepath):
 
     Returns
     -------
-    np.array
+    fit : np.ndarray or np.ma.MaskedArray
         FITS file data.
     """
     with _fits.open(filepath) as hdul:
@@ -246,7 +252,12 @@ def load_fits(filepath):
     return fit
 
 
-def save_fits(filepath, data, overwrite=True):
+def save_fits(
+    filepath: str,
+    data: _np.ndarray | _np.ma.MaskedArray,
+    overwrite: bool = True,
+    header: dict[str, any] | _fits.Header = None,
+) -> None:
     """
     Saves a FITS file.
 
@@ -256,16 +267,30 @@ def save_fits(filepath, data, overwrite=True):
         Path to the FITS file.
     data : np.array
         Data to be saved.
+    overwrite : bool, optional
+        Whether to overwrite an existing file. Default is True.
+    header : dict[str, any] | fits.Header, optional
+        Header information to include in the FITS file. Can be a dictionary or
+        a fits.Header object.
     """
+    # Prepare the header
+    if header is not None:
+        if isinstance(header, dict):
+            header = _fits.Header(header)
+        elif not isinstance(header, _fits.Header):
+            raise TypeError(
+                "'header' must be a dictionary or an astropy.io.fits.Header object"
+            )
+    # Save the FITS file
     if isinstance(data, _masked_array):
-        _fits.writeto(filepath, data.data, overwrite=overwrite)
+        _fits.writeto(filepath, data.data, header=header, overwrite=overwrite)
         if hasattr(data, "mask"):
             _fits.append(filepath, data.mask.astype(_uint8))
     else:
-        _fits.writeto(filepath, data, overwrite=overwrite)
+        _fits.writeto(filepath, data, header=header, overwrite=overwrite)
 
 
-def newtn():
+def newtn() -> str:
     """
     Returns a timestamp in a string of the format `YYYYMMDD_HHMMSS`.
 
@@ -277,7 +302,7 @@ def newtn():
     return _time.strftime("%Y%m%d_%H%M%S")
 
 
-def rename4D(folder):
+def rename4D(folder: str) -> None:
     """
     Renames the produced 'x.4D' files into '0000x.4D'
 
@@ -315,7 +340,7 @@ def getCameraSettings(tn: str) -> list[int]:
         setting_reader = _fn.ConfSettingReader4D(file_path)
     except Exception as e:
         print(f"Error: {e}")
-        file_path = _os.path.join(path, '4DSettings.ini')
+        file_path = _os.path.join(path, "4DSettings.ini")
         setting_reader = _fn.ConfSettingReader4D(file_path)
     width_pixel = setting_reader.getImageWidhtInPixels()
     height_pixel = setting_reader.getImageHeightInPixels()
@@ -339,7 +364,7 @@ def getFrameRate(tn: str) -> float:
         setting_reader = _fn.ConfSettingReader4D(file_path)
     except Exception as e:
         print(f"Error: {e}")
-        file_path = _os.path.join(path, '4DSettings.ini')
+        file_path = _os.path.join(path, "4DSettings.ini")
         setting_reader = _fn.ConfSettingReader4D(file_path)
     frame_rate = setting_reader.getFrameRate()
     return frame_rate

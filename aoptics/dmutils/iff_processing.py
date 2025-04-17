@@ -56,30 +56,34 @@ from aoptics.core.root import _folds
 from aoptics.ground import osutils as _osu
 from aoptics.ground import zernike as _zern
 from aoptics.core import read_config as _rif
-#from scripts.misc.IFFPackage import actuator_identification_lib as _fa
+from astropy.io.fits import Header as _header
+
+# from scripts.misc.IFFPackage import actuator_identification_lib as _fa
 
 _fn = _folds()
-_config          = _cp.ConfigParser()
-_imgFold         = _fn.OPD_IMAGES_ROOT_FOLDER
-_ifFold          = _fn.IFFUNCTIONS_ROOT_FOLDER
-_intMatFold      = _fn.INTMAT_ROOT_FOLDER
-_confFold        = _fn.CONFIGURATION_ROOT_FOLDER
-_frameCenter     = [200, 200]
+_config = _cp.ConfigParser()
+_imgFold = _fn.OPD_IMAGES_ROOT_FOLDER
+_ifFold = _fn.IFFUNCTIONS_ROOT_FOLDER
+_intMatFold = _fn.INTMAT_ROOT_FOLDER
+_confFold = _fn.CONFIGURATION_ROOT_FOLDER
+_frameCenter = [200, 200]
 _ts = _osu.newtn
 
-ampVecFile      = "ampVector.fits"
-modesVecFile    = "modesVector.fits"
-templateFile    = "template.fits"
-regisActFile    = "regActs.fits"
-shuffleFile     = "shuffle.dat"
-indexListFile   = "indexList.fits"
-coordfile       = ""  # TODO
-cmdMatFile      = "cmdMatrix.fits"
-cubeFile        = "IMCube.fits"
-flagFile        = "flag.txt"
+ampVecFile = "ampVector.fits"
+modesVecFile = "modesVector.fits"
+templateFile = "template.fits"
+regisActFile = "regActs.fits"
+shuffleFile = "shuffle.dat"
+indexListFile = "indexList.fits"
+coordfile = ""  # TODO
+cmdMatFile = "cmdMatrix.fits"
+cubeFile = "IMCube.fits"
+flagFile = "flag.txt"
 
 
-def process(tn, register: bool = False, save_and_rebin_cube = (False, 1)):
+def process(
+    tn: str, register: bool = False, save: bool = False, rebin: int = 1
+) -> None:
     """
     High level function with processes the data contained in the given tracking
     number OPDimages folder, performing the differential algorithm and saving
@@ -110,19 +114,11 @@ def process(tn, register: bool = False, save_and_rebin_cube = (False, 1)):
         dx = findFrameOffset(tn, actImgList, registrationActs)
     else:
         dx = register
-    if isinstance(save_and_rebin_cube, tuple):
-        save, rebin = save_and_rebin_cube
-    elif isinstance(save_and_rebin_cube, bool):
-        save = save_and_rebin_cube
-        rebin = 1
-    elif isinstance(save_and_rebin_cube, int):
-        save = True
-        rebin = save_and_rebin_cube
     if save:
         saveCube(tn, rebin=rebin, register=dx)
 
 
-def saveCube(tn, rebin, register=False):
+def saveCube(tn: str, rebin: int, register: bool = False) -> _np.ma.MaskedArray:
     """
     Creates and save a cube from the fits files contained in the tn folder,
     along with the command matrix and the modes vector fits.
@@ -146,6 +142,7 @@ def saveCube(tn, rebin, register=False):
         Data cube of the images, with shape (npx, npx, nmodes).
     """
     from aoptics.analyzer import cubeRebinner, createCube
+
     old_fold = _os.path.join(_ifFold, tn)
     filelist = _osu.getFileList(fold=old_fold, key="mode_")
     cube = createCube(filelist, register=register)
@@ -161,8 +158,12 @@ def saveCube(tn, rebin, register=False):
     # Copying the cmdMatrix and the ModesVector into the INTMAT Folder
     cmat = _osu.load_fits(_os.path.join(_ifFold, tn, "cmdMatrix.fits"))
     mvec = _osu.load_fits(_os.path.join(_ifFold, tn, "modesVector.fits"))
-    _osu.save_fits(_os.path.join(_intMatFold, tn, "cmdMatrix.fits"), cmat, overwrite=True)
-    _osu.save_fits(_os.path.join(_intMatFold, tn, "modesVector.fits"), mvec, overwrite=True)
+    _osu.save_fits(
+        _os.path.join(_intMatFold, tn, "cmdMatrix.fits"), cmat, overwrite=True
+    )
+    _osu.save_fits(
+        _os.path.join(_intMatFold, tn, "modesVector.fits"), mvec, overwrite=True
+    )
     # Creating the flag file
     with open(_os.path.join(_intMatFold, tn, flagFile), "w", encoding="utf-8") as f:
         f.write(
@@ -173,7 +174,7 @@ def saveCube(tn, rebin, register=False):
     return cube
 
 
-def stackCubes(tnlist):
+def stackCubes(tnlist: str) -> None:
     """
     Stack the cubes sontained in the corresponding tracking number folder, creating
     a new cube, along with stacked command matrix and modes vector.
@@ -205,12 +206,16 @@ def stackCubes(tnlist):
     _osu.save_fits(save_cube, stacked_cube)
     _osu.save_fits(save_cmat, stacked_cmat)
     _osu.save_fits(save_mvec, stacked_mvec)
-    with open(_os.path.join(stacked_cube_fold, flagFile), "w", encoding="UTF-8") as file:
+    with open(
+        _os.path.join(stacked_cube_fold, flagFile), "w", encoding="UTF-8"
+    ) as file:
         flag.write(file)
     print(f"Stacked cube and matrices saved in {new_tn}")
 
 
-def filterZernikeCube(tn, zern_modes: list = None, save: bool = True):
+def filterZernikeCube(
+    tn: str, zern_modes: list = None, save: bool = True
+) -> _np.ma.MaskedArray:
     """
     Function which filters out the desired zernike modes from a cube.
 
@@ -257,10 +262,21 @@ def filterZernikeCube(tn, zern_modes: list = None, save: bool = True):
     return ffcube, new_tn.split("/")[-1]
 
 
-def iffRedux(tn, fileMat, ampVect, modeList, template, shuffle=0):
+def iffRedux(
+    tn: str,
+    fileMat: list[list[str]],
+    ampVect: list | _np.ndarray,
+    modeList: list | _np.ndarray,
+    template: list | _np.ndarray,
+    shuffle: int = 0,
+) -> None:
     """
     Reduction function that performs the push-pull analysis on each mode, saving
-    out the final processed image for each mode.
+    out the final processed image for each mode.<br>
+    The differential algorithm for each mode is the sum over the push-pull
+    realizations of the images, and it is performed as follows:
+
+    > \sum_i \dfrac{I_i \cdot t_i - I_{i-1}\cdot t_{i-1}}{A\cdot(n-1)}
 
     Parameters
     ----------
@@ -286,17 +302,18 @@ def iffRedux(tn, fileMat, ampVect, modeList, template, shuffle=0):
         img = pushPullRedux(fileMat[i, :], template, shuffle)
         norm_img = img / (2 * ampVect[i])
         img_name = _os.path.join(fold, f"mode_{modeList[i]:04d}.fits")
-        _osu.save_fits(img_name, norm_img, overwrite=True)
+        header = _header()
+        header["MODEID"] = modeList[i]
+        header["AMPLITUDE"] = ampVect[i]
+        header["TEMPLATE"] = str(template)
+        _osu.save_fits(img_name, norm_img, header=header, overwrite=True)
 
 
-def pushPullRedux(fileVec, template, shuffle=0):
-    r"""
+def pushPullRedux(
+    fileVec: list[str], template: list[int] | _np.ndarray, shuffle: int = 0
+) -> _np.ma.MaskedArray:
+    """
     Performs the basic operation of processing PushPull data.
-
-    Packs all mode's push-pull into a list and then performs the differential
-    algorithm
-
-    > $\sum_i \dfrac{img_i \cdot template_i - img_{i-1}\cdot template_{i-1}}{}$
 
     Parameters
     ----------
@@ -329,8 +346,12 @@ def pushPullRedux(fileVec, template, shuffle=0):
             master_mask = image_list[0].mask
         else:
             for x in range(1, len(image_list)):
-                opd2add = image_list[x] * template[x] + image_list[x - 1] * template[x - 1]
-                master_mask2add = _np.ma.mask_or(image_list[x].mask, image_list[x - 1].mask)
+                opd2add = (
+                    image_list[x] * template[x] + image_list[x - 1] * template[x - 1]
+                )
+                master_mask2add = _np.ma.mask_or(
+                    image_list[x].mask, image_list[x - 1].mask
+                )
                 if x == 1:
                     master_mask = master_mask2add
                 else:
@@ -352,11 +373,13 @@ def pushPullRedux(fileVec, template, shuffle=0):
                 else:
                     master_mask = _np.na.mask_or(master_mask, master_mask2add)
                 image += opd2add
-    image = _np.ma.masked_array(image, mask=master_mask) / _np.max(((template.shape[0] - 1), 1))  #!!!
+    image = _np.ma.masked_array(image, mask=master_mask) / _np.max(
+        ((template.shape[0] - 1), 1)
+    )  #!!!
     return image
 
 
-def registrationRedux(tn, fileMat):
+def registrationRedux(tn: str, fileMat: list[str]) -> list[_np.ma.MaskedArray]:
     """
     Reduction function that performs the push-pull analysis on the registration
     data.
@@ -383,11 +406,13 @@ def registrationRedux(tn, fileMat):
         img = pushPullRedux(fileMat[i, :], template)
         imglist.append(img)
     cube = _np.ma.masked_array(imglist)
-    #_osu.save_fits(_os.path.join(_intMatFold, tn, "regActCube.fits"), cube)
+    # _osu.save_fits(_os.path.join(_intMatFold, tn, "regActCube.fits"), cube)
     return imglist
 
 
-def findFrameOffset(tn, imglist, actlist):
+def findFrameOffset(
+    tn: str, imglist: list[_np.ma.MaskedArray], actlist: int | _np.ndarray
+) -> float:
     """
     This function computes the position difference between the current frame and
     a reference one.
@@ -413,7 +438,7 @@ def findFrameOffset(tn, imglist, actlist):
     return dp
 
 
-def getTriggerFrame(tn, amplitude=None):
+def getTriggerFrame(tn: str, amplitude: int | float = None) -> int:
     """
     Analyze the tracking number's images list and search for the trigger frame.
 
@@ -421,7 +446,7 @@ def getTriggerFrame(tn, amplitude=None):
     ----------
     tn : str
         Tracking number of the data in the OPDImages folder.
-    amplitude : int os float, optional
+    amplitude : int or float, optional
         Amplitude of the commanded trigger mode, which serves as the check value
         for finding the frame. If no value is passed it is loaded from the iffConfig.ini
         file.
@@ -467,7 +492,7 @@ def getTriggerFrame(tn, amplitude=None):
     return trigFrame
 
 
-def getRegFileMatrix(tn):
+def getRegFileMatrix(tn: str) -> tuple[int, _np.ndarray]:
     """
     Search for the registration frames in the images file list, and creates the
     registration file matrix.
@@ -500,7 +525,7 @@ def getRegFileMatrix(tn):
     return regEnd, regMat
 
 
-def getIffFileMatrix(tn):
+def getIffFileMatrix(tn: str) -> _np.ndarray:
     """
     Creates the iffMat
 
@@ -524,7 +549,9 @@ def getIffFileMatrix(tn):
     return iffMat
 
 
-def _getCubeList(tnlist):
+def _getCubeList(
+    tnlist: str,
+) -> tuple[list[_np.ma.MaskedArray], list[_np.ndarray], list[_np.ndarray], int]:
     """
     Retireves the cubes from each tn in the tnlist.
 
@@ -564,7 +591,16 @@ def _getCubeList(tnlist):
     return cubeList, matrixList, modesVectList, rebin
 
 
-def _getAcqPar(tn):
+def _getAcqPar(
+    tn: str,
+) -> tuple[
+    _np.ndarray[float],
+    _np.ndarray[int],
+    _np.ndarray[int],
+    _np.ndarray[int],
+    _np.ndarray[int],
+    int,
+]:
     """
     Reads ad returns the acquisition parameters from fits files.
 
@@ -600,7 +636,7 @@ def _getAcqPar(tn):
     return ampVector, modesVector, template, indexList, registrationActs, shuffle
 
 
-def _getAcqInfo(tn: str = None):
+def _getAcqInfo(tn: str = None) -> tuple[dict, dict, dict]:
     """
     Returns the information read from the iffConfig.ini file.
 
@@ -626,7 +662,7 @@ def _getAcqInfo(tn: str = None):
     return infoT, infoR, infoIF
 
 
-def _checkStackedCubes(tnlist):
+def _checkStackedCubes(tnlist: str) -> dict:
     """
     Inspect the cubes to stack, to check whether there are shared modes, or not.
 
@@ -641,7 +677,7 @@ def _checkStackedCubes(tnlist):
         Dictionary containing the flagging information about the stacked cube,
         to be later dump into the 'flag.txt' file.
     """
-    _,_,modesVectList,rebin = _getCubeList(tnlist)
+    _, _, modesVectList, rebin = _getCubeList(tnlist)
     nmodes = len(modesVectList[0])
     nvects = len(modesVectList)
     for i in range(nvects):
@@ -657,7 +693,12 @@ def _checkStackedCubes(tnlist):
     return flag
 
 
-def __flag(tnlist, modesVectList, rebin, type:int):
+def __flag(
+    tnlist: list[str],
+    modesVectList: list[int] | _np.ndarray[int],
+    rebin: int,
+    type: int,
+) -> dict:
     """
     Creates the dictionary to dump into the 'flag.txt' file accordingly to
     sequentially stacked cubes with no repeated modes.
@@ -669,7 +710,7 @@ def __flag(tnlist, modesVectList, rebin, type:int):
     modesVectList : list of ndarray
         A list containing the modes vectors for each cube.
     type : int
-        Type of stacked cube created. 
+        Type of stacked cube created.
         0 for sequential, 1 for mean, 2 for shared modes.
 
     Returns
@@ -680,17 +721,18 @@ def __flag(tnlist, modesVectList, rebin, type:int):
     c_type = [
         "Sequentially stacked cubes",
         "Mean of cubes",
-        "!!!Warning: repeated modes in stacked cube"
+        "!!!Warning: repeated modes in stacked cube",
     ]
     text = ""
     for i, tn in enumerate(tnlist):
-        if _np.array_equal(modesVectList[i], _np.arange(modesVectList[i][0], modesVectList[i][-1]+1, 1)):
-            text += \
-f"""
+        if _np.array_equal(
+            modesVectList[i],
+            _np.arange(modesVectList[i][0], modesVectList[i][-1] + 1, 1),
+        ):
+            text += f"""
 {tn}, modes {modesVectList[i][0]} to {modesVectList[i][-1]}"""
         else:
-            text += \
-f"""
+            text += f"""
 {tn}, modes {list(modesVectList[i])}"""
     flag = {
         "Flag": {
