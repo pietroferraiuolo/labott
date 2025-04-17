@@ -65,7 +65,7 @@ class BaseAlpaoMirror():
             name = f"Alpao{nacts}"
             self.ip, self.port = getDmAddress(name)
         elif (ip, port, nacts) == (None, None, None):
-            raise ValueError("Either ip and port or nacts must be provided.")
+            raise ValueError("Either (ip, port) or nacts must be provided.")
         else:
             self.ip, self.port = ip, port
         return plico_dm.deformableMirror(self.ip, self.port)

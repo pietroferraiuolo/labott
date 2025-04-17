@@ -216,11 +216,11 @@ def read_phasemap(file_path):
     if ext == "fits":
         image = load_fits(file_path)
     elif ext == "4D":
-        image = InterferometerConverter.fromPhaseCam6110(file_path)
+        image = _InterferometerConverter.fromPhaseCam6110(file_path)
     elif ext == "4Ds":
         image = load_fits(file_path)
     elif ext == "h5":
-        image = InterferometerConverter.fromPhaseCam4020(file_path)
+        image = _InterferometerConverter.fromPhaseCam4020(file_path)
     return image
 
 
@@ -298,8 +298,7 @@ def rename4D(folder):
                 new_file = _os.path.join(fold, new_name)
                 _os.rename(old_file, new_file)
 
-# TODO
-# Add the COPIED_CONFIG_SETTINGS_FILE var in root to be read as default
+
 def getCameraSettings(tn: str) -> list[int]:
     """
     Reads the interferometer settings from a given configuration file.
@@ -311,13 +310,19 @@ def getCameraSettings(tn: str) -> list[int]:
         [width_pixel, height_pixel, offset_x, offset_y]
     """
     path = findTracknum(tn, complete_path=True)
-    file_path = _os.path.join(path, '4DSettings.ini')
-    setting_reader = _fn.ConfSettingReader4D(file_path)
+    try:
+        file_path = _os.path.join(path, _fn.COPIED_SETTINGS_CONF_FILE)
+        setting_reader = _fn.ConfSettingReader4D(file_path)
+    except Exception as e:
+        print(f"Error: {e}")
+        file_path = _os.path.join(path, '4DSettings.ini')
+        setting_reader = _fn.ConfSettingReader4D(file_path)
     width_pixel = setting_reader.getImageWidhtInPixels()
     height_pixel = setting_reader.getImageHeightInPixels()
     offset_x = setting_reader.getOffsetX()
     offset_y = setting_reader.getOffsetY()
     return [width_pixel, height_pixel, offset_x, offset_y]
+
 
 def getFrameRate(tn: str) -> float:
     """
@@ -329,13 +334,18 @@ def getFrameRate(tn: str) -> float:
         Frame rate of the interferometer
     """
     path = findTracknum(tn, complete_path=True)
-    file_path = _os.path.join(path, '4DSettings.ini')
-    setting_reader = _fn.ConfSettingReader4D(file_path)
+    try:
+        file_path = _os.path.join(path, _fn.COPIED_SETTINGS_CONF_FILE)
+        setting_reader = _fn.ConfSettingReader4D(file_path)
+    except Exception as e:
+        print(f"Error: {e}")
+        file_path = _os.path.join(path, '4DSettings.ini')
+        setting_reader = _fn.ConfSettingReader4D(file_path)
     frame_rate = setting_reader.getFrameRate()
     return frame_rate
 
 
-class InterferometerConverter:
+class _InterferometerConverter:
     """
     This class is crucial to convert H5 files into masked array
     """

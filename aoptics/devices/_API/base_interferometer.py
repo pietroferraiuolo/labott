@@ -16,13 +16,14 @@ class BaseInterferometer(ABC):
         all the information from the configuration file.
         """
         self.name = name
-        config = getInterfConfig(name)
         if (ip and port) is None:
+            config = getInterfConfig(name)
             ip = config["ip"]
             port = config["port"]
         self.ip = ip
         self.port = port
         self._logger = _logger.set_up_logger(f"{self.name}.log", 20)
+        self._logger.info(f"Interferometer {self.name} initialized on addess {self.ip}:{self.port}")
         self._ts = _newtn
         _updateInterfPaths(config['Paths'])
 
