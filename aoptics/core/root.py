@@ -118,6 +118,7 @@ def load_configuration_file(file_path: str) -> None:
         The FULL path to the configuration file, including the file name if a
         custom name has been used upon creating it.
     """
+    from .read_config import _update_imports
     global BASE_DATA_PATH
     global CONFIGURATION_FILE
     global _config
@@ -136,6 +137,8 @@ def load_configuration_file(file_path: str) -> None:
     CONFIGURATION_FILE = file_path
     BASE_DATA_PATH = _config["SYSTEM"]["data_path"]
     _create_folder_tree()
+    _update_imports()
+
 
 
 def _create_folder(path):

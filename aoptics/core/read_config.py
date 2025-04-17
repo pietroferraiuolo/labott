@@ -11,11 +11,24 @@ import json as _json
 import shutil as _sh
 from .exceptions import DeviceNotFoundError
 
-from .root import (
-    CONFIGURATION_FOLDER as _cfold,
-    IFFUNCTIONS_ROOT_FOLDER as _iffold,
-    CONFIGURATION_FILE as _cfile,
-)
+global _cfold
+global _iffold
+global _cfile
+
+def _update_imports():
+    global _cfold
+    global _iffold
+    global _cfile
+    from .root import (
+        CONFIGURATION_FOLDER,
+        IFFUNCTIONS_ROOT_FOLDER,
+        CONFIGURATION_FILE,
+    )
+    _cfold = CONFIGURATION_FOLDER
+    _iffold = IFFUNCTIONS_ROOT_FOLDER
+    _cfile = CONFIGURATION_FILE
+
+_update_imports()
 
 yaml_config_file = "configuration.yaml"
 _iff_config_file = "iffConfig.yaml"
