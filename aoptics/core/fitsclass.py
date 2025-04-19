@@ -17,11 +17,16 @@ class FitsArray(_np.ndarray):
         The FITS header associated with the data. If not provided, defaults to None.
     """
     def __new__(cls, data: list | ArrayLike, header: dict | Header = None):
-        # Handle masked arrays
-        # if isinstance(data, _np.ma.MaskedArray):
-        #     #obj = _np.asanyarray(data).view(cls)
-        #     obj  = _np.ma.masked_array(data.data, mask=data.mask).view(cls)
-        # elif isinstance(data, _np.ndarray):
+        """
+        Create a new instance of the FitsArray class.
+        
+        Parameters
+        ----------
+        data : list, numpy.ndarray
+            The data to be stored in the array.
+        header : dict or astropy.io.fits.Header, optional
+            The FITS header associated with the data. If not provided, defaults to None.
+        """
         obj = _np.asarray(data).view(cls)
         # Add the header attribute
         obj.header = dict(header) if isinstance(header, Header) else header
@@ -32,5 +37,47 @@ class FitsArray(_np.ndarray):
         if obj is None:
             return
         self.header = getattr(obj, 'header', None)
-        #self._mask = getattr(obj, '_mask', None)
 
+
+class FitsArrayMasked(FitsArray):
+    """
+    A custom subclass of numpy.ma.MaskedArray that includes a FITS header.
+    This class is used to store data along with its associated FITS header,
+    allowing for easier manipulation and storage of FITS data.
+    The header can be a dictionary or an astropy.io.fits.Header object.
+
+    Parameters
+    ----------
+    data : list, numpy.ndarray, or numpy.ma.MaskedArray
+        The data to be stored in the array.
+    mask : numpy.ndarray, optional
+        The mask to be applied to the data. If not provided, defaults to None.
+    header : dict or astropy.io.fits.Header, optional
+        The FITS header associated with the data. If not provided, defaults to None.
+    """
+    def __new__(cls, data: list | ArrayLike, mask: ArrayLike = None, header: dict | Header = None):
+        """
+        Create a new instance of the FitsArrayMasked class.
+        
+        Parameters
+        ----------
+        data : list, numpy.ndarray
+            The data to be stored in the array.
+        mask : numpy.ndarray, optional
+            The mask to be applied to the data. If not provided, defaults to None.
+        header : dict or astropy.io.fits.Header, optional
+            The FITS header associated with the data. If not provided, defaults to None.
+        """
+        obj = _np.ma.masked_array(data, mask)
+        obj.header = dict(header) if isinstance(header, Header) else header
+        return obj
+
+    def __repr__(self, obj):
+        """The representation"""
+        return obj.__repr__().replace('masked_array', 'FitsArrayMasked')
+    
+    def __array_finalize__(self, obj):
+        # This is called when the object is created or viewed as a subclass
+        if obj is None:
+            return
+        self.header = getattr(obj, 'header', None)
