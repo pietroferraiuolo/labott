@@ -15,7 +15,7 @@ from aoptics.core import root as _fn
 from astropy.io import fits as _fits
 from numpy.ma import masked_array as _masked_array
 
-_OPTDATA = _fn.BASE_DATA_PATH
+_OPTDATA = _fn.OPT_DATA_ROOT_FOLDER
 _OPDIMG = _fn.OPD_IMAGES_ROOT_FOLDER
 
 

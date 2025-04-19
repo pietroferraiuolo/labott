@@ -94,6 +94,7 @@ def create_configuration_file(
         file = path
         _create_folder(_os.path.dirname(path))
     _copy(TEMPLATE_CONF_FILE, file)
+    print(f"Configuration file created in {path}")
     if data_path is not False:
         data_path = _os.path.dirname(file) if data_path is True else data_path
         with open(file, "r") as _f:
@@ -106,6 +107,9 @@ def create_configuration_file(
             _config = _gyml.load(_f)
         CONFIGURATION_FILE = file
         load_configuration_file(CONFIGURATION_FILE)
+        from shutil import move
+        move(file, _os.path.join(CONFIGURATION_FOLDER, "configuration.yaml"))
+        print(f"Configuration file moved to {CONFIGURATION_FOLDER}")
 
 
 def load_configuration_file(file_path: str) -> None:
@@ -132,8 +136,13 @@ def load_configuration_file(file_path: str) -> None:
         if not _os.path.isdir(file_path):
             raise OSError(f"Invalid Path: {file_path}.")
         file_path = _os.path.join(file_path, "configuration.yaml")
-    with open(file_path, "r") as _f:
-        _config = _gyml.load(_f)
+    try:
+        with open(file_path, "r") as _f:
+            _config = _gyml.load(_f)
+    except FileNotFoundError:
+        nfile = _os.path.join(_os.path.dirname(file_path), 'SysConfig',"configuration.yaml")
+        with open(nfile, "r") as _f:
+            _config = _gyml.load(_f)
     CONFIGURATION_FILE = file_path
     BASE_DATA_PATH = _config["SYSTEM"]["data_path"]
     _create_folder_tree()
