@@ -17,11 +17,11 @@ How to Use:
 """
 
 from . import analyzer
-from .ground.osutils import (
-    load_fits,
-    save_fits,
-    getFileList,
-)
+# from .ground.osutils import (
+#     load_fits,
+#     save_fits,
+#     getFileList,
+# )
 from .core.root import (
     folders,
     create_configuration_file,
@@ -33,9 +33,9 @@ from .devices.deformable_mirrors import *
 
 __all__ = [
     'analyzer',
-    'load_fits',
-    'save_fits',
-    'getFileList',
+    # 'load_fits',
+    # 'save_fits',
+    # 'getFileList',
     'folders',
     'create_configuration_file',
     'load_configuration_file',
