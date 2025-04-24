@@ -68,7 +68,7 @@ no option : Initialize an ipython3 --pylab='qt' shell
     elif len(sys.argv) == 1:
         os.system("ipython3 --pylab='qt'")
     else: # Handle invalid arguments
-        print("Error: Invalid arguments provided. Use -h or --help for usage information.")
+        print("Error: Invalid use. Use -h or --help for usage information.")
         sys.exit(1)
 
 
