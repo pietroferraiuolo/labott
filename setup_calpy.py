@@ -67,6 +67,10 @@ no option : Initialize an ipython3 --pylab='qt' shell
             sys.exit(1)
     elif len(sys.argv) == 1:
         os.system("ipython3 --pylab='qt'")
+    else: # Handle invalid arguments
+        print("Error: Invalid arguments provided. Use -h or --help for usage information.")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
