@@ -22,7 +22,7 @@ from .ground.osutils import (
     save_fits,
     getFileList,
 )
-from .core.root_copy import (
+from .core.root import (
     folders,
     create_configuration_file,
 )

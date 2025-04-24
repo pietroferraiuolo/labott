@@ -1,5 +1,5 @@
 SYSTEM:
-  data_path: ''
+  data_path: '~/aoptics_data'
   simulated.devices:
     dm: false
     interf: false

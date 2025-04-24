@@ -35,6 +35,7 @@ Options:
     -h |--help : Shows this help message
 
         """)
+        sys.exit(0)
     elif len(sys.argv) > 2 and sys.argv[1] == '-f':
         config_path = sys.argv[2]
         if not any([config_path.startswith(home), config_path.startswith(mnt), config_path.startswith(media)]):
@@ -46,7 +47,7 @@ Options:
                 print(f"Error: {ose}")
                 sys.exit(1)
         if '--create' in sys.argv:
-            from aoptics.core.root import create_configuration_file
+            from .aoptics.core.root import create_configuration_file
             create_configuration_file(config_path, data_path=True)
         if not os.path.exists(config_path):
             print(f"Error: The file {sys.argv[2]} does not exist.")

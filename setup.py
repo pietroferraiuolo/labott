@@ -35,7 +35,7 @@ setup(
     package_data={'aoptics': ['core/_configurations/']},
     entry_points={
         'console_scripts': [
-            'calpy=aoptics.__main__:main',
+            'calpy=setup_calpy:main',
         ],
     },
 )
