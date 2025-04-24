@@ -59,7 +59,8 @@ CONFIGURATION_FILE: str = _os.getenv('AOCONF', TEMPLATE_CONF_FILE)
 with open(CONFIGURATION_FILE, "r") as _f:
     _config = _gyml.load(_f)
 
-BASE_DATA_PATH: str = _config["SYSTEM"].get("data_path", _os.path.join(_os.path.expanduser("~"), ".aopticsData_tmp"))
+_bdp = _config["SYSTEM"].get("data_path")
+BASE_DATA_PATH: str = _bdp if not _bdp == '' else _os.path.join(_os.path.expanduser("~"), ".tmp_aopticsData")
 
 OPT_DATA_ROOT_FOLDER    : str = _os.path.join(BASE_DATA_PATH, "OPTData")
 LOGGING_ROOT_FOLDER     : str = _os.path.join(BASE_DATA_PATH, "Logging")
