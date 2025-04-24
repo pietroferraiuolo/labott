@@ -23,36 +23,48 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help']:
         print("""
 CALPY DOCUMENTATION
-`calpy` is a command-line tool that calls an interactive Python shell (ipython3)
-with the option to pass the path to a configuration file for the `aoptics` package.
+`calpy` is a command-line tool that calls an interactive Python 
+shell (ipython3) with the option to pass the path to a configuration
+file for the `aoptics` package.
 
 Options:
-    no option  : Initialize an ipython3 --pylab='qt' shell
+--------
+no option : Initialize an ipython3 --pylab='qt' shell
 
-    -f <path>  : Pass the path to a configuration file for the automatically
-                imported `aoptics` package (e.g., '../aopticsConf/configuration.yaml')
+-f <path> : Option to pass the path to a configuration file to be read 
+            (e.g., '../aopticsConf/configuration.yaml'). Used to initiate
+            the aoptics package.
 
-    -h |--help : Shows this help message
+-f <path> --create : Create the configuration file in the specified path, 
+                     as well as the complete folder tree. The `data_path`
+                     variable in the created configuration file is autom-
+                     atically set to the path of the configuration file.
+
+-h |--help : Shows this help message
 
         """)
         sys.exit(0)
-    elif len(sys.argv) > 2 and sys.argv[1] == '-f':
+    elif len(sys.argv) > 2 and sys.argv[1] == '-f' and any([sys.argv[2] != '', sys.argv[2] != None]):
         config_path = sys.argv[2]
         if not any([config_path.startswith(home), config_path.startswith(mnt), config_path.startswith(media)]):
             config_path = os.path.join(home, config_path)
-        if not '.yaml' in config_path: # os.path.isfile(config_path):
+        if not '.yaml' in config_path:
             try:
                 config_path = check_dir(config_path)
             except OSError as ose:
                 print(f"Error: {ose}")
                 sys.exit(1)
         if '--create' in sys.argv:
-            from .aoptics.core.root import create_configuration_file
+            from aoptics.core.root import create_configuration_file
             create_configuration_file(config_path, data_path=True)
-        if not os.path.exists(config_path):
-            print(f"Error: The file {sys.argv[2]} does not exist.")
+        try:
+            if not os.path.exists(config_path):
+                config_path = os.path.join(os.path.dirname(config_path), 'SysConfig', 'configuration.yaml')
+            print("\n Initiating IPython Shell, importing Aoptics...\n")
+            os.system(f"export AOCONF={config_path} && ipython3 --pylab='qt' -i -c 'import aoptics'")
+        except OSError as ose:
+            print(f"Error: {ose}")
             sys.exit(1)
-        os.system(f"export AOCONF={config_path} && ipython3 --pylab='qt' -i -c 'import aoptics'")
     else:
         os.system("ipython3 --pylab='qt'")
 

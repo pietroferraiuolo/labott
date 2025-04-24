@@ -18,7 +18,7 @@ def _create_folder(path):
     if not _os.path.exists(path):
         _os.makedirs(path)
 
-def _create_folder_tree(BASE_DATA_PATH: str) -> None:
+def create_folder_tree(BASE_DATA_PATH: str) -> None:
     """
     Create the folder tree for the package.
     """
@@ -59,7 +59,7 @@ CONFIGURATION_FILE: str = _os.getenv('AOCONF', TEMPLATE_CONF_FILE)
 with open(CONFIGURATION_FILE, "r") as _f:
     _config = _gyml.load(_f)
 
-BASE_DATA_PATH: str = _config["SYSTEM"].get("data_path", _os.path.join(_os.path.expanduser("~"), "aoptics_data"))
+BASE_DATA_PATH: str = _config["SYSTEM"].get("data_path", _os.path.join(_os.path.expanduser("~"), ".aopticsData_tmp"))
 
 OPT_DATA_ROOT_FOLDER    : str = _os.path.join(BASE_DATA_PATH, "OPTData")
 LOGGING_ROOT_FOLDER     : str = _os.path.join(BASE_DATA_PATH, "Logging")
@@ -72,7 +72,6 @@ MODALBASE_ROOT_FOLDER   : str = _os.path.join(OPT_DATA_ROOT_FOLDER, "ModalBases"
 IFFUNCTIONS_ROOT_FOLDER : str = _os.path.join(OPT_DATA_ROOT_FOLDER, "IFFunctions")
 INTMAT_ROOT_FOLDER      : str = _os.path.join(OPT_DATA_ROOT_FOLDER, "IntMatrices")
 CONTROL_MATRIX_FOLDER   : str = _os.path.join(ALIGNMENT_ROOT_FOLDER, "ControlMatrices")
-#_create_folder_tree(BASE_DATA_PATH)
 
 ########################
 # INTERFEROMETER PATHS #
@@ -128,7 +127,7 @@ def create_configuration_file(
             _gyml.dump(config, _f)
         with open(file, "r") as _f:
             _config = _gyml.load(_f)
-        _create_folder_tree(data_path)
+        create_folder_tree(data_path)
         from shutil import move
         conf_folder = _os.path.join(data_path, 'SysConfig')
         move(file, _os.path.join(conf_folder, "configuration.yaml"))
