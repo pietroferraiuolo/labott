@@ -65,7 +65,7 @@ no option : Initialize an ipython3 --pylab='qt' shell
         except OSError as ose:
             print(f"Error: {ose}")
             sys.exit(1)
-    else:
+    elif len(sys.argv) == 1:
         os.system("ipython3 --pylab='qt'")
 
 if __name__ == "__main__":
