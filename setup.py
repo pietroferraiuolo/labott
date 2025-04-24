@@ -32,7 +32,7 @@ setup(
     python_requires=">=3.10",
     install_requires=requirements,
     include_package_data=True,
-    package_data={'aoptics': ['core/_configurations/']},
+    package_data={'aoptics': ['core/_configurations/configuration.yaml']},
     entry_points={
         'console_scripts': [
             'calpy=setup_calpy:main',
