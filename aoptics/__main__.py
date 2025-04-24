@@ -12,6 +12,9 @@ def check_dir(config_path):
     return config_path
 
 def main():
+    home = os.path.expanduser("~")
+    mnt = '/mnt/'
+    media = '/media/'
     # Check if ipython3 is installed
     if not shutil.which("ipython3"):
         print("Error: ipython3 is not installed or not in your PATH.")
@@ -34,6 +37,8 @@ Options:
         """)
     elif len(sys.argv) > 2 and sys.argv[1] == '-f':
         config_path = sys.argv[2]
+        if not any([config_path.startswith(home), config_path.startswith(mnt), config_path.startswith(media)]):
+            config_path = os.path.join(home, config_path)
         if not '.yaml' in config_path: # os.path.isfile(config_path):
             try:
                 config_path = check_dir(config_path)

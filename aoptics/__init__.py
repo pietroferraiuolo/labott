@@ -22,10 +22,9 @@ from .ground.osutils import (
     save_fits,
     getFileList,
 )
-from .core.root import (
+from .core.root_copy import (
     folders,
     create_configuration_file,
-    load_configuration_file
 )
 from .core import read_config
 from .devices.interferometer import *
@@ -33,9 +32,9 @@ from .devices.deformable_mirrors import *
 
 __all__ = [
     'analyzer',
-    # 'load_fits',
-    # 'save_fits',
-    # 'getFileList',
+    'load_fits',
+    'save_fits',
+    'getFileList',
     'folders',
     'create_configuration_file',
     'load_configuration_file',
