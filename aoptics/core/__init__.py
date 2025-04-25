@@ -1,1 +1,1 @@
-from fitsclass import FitsArray, FitsArrayMasked
+from .fitsclass import FitsArray, FitsArrayMasked
