@@ -61,14 +61,21 @@ class FitsArrayMasked(FitsArray):
         
         Parameters
         ----------
-        data : list, numpy.ndarray
-            The data to be stored in the array.
+        data : list, numpy.ndarray, numpy.ma.MaskedArray
+            The data to be stored in the array. Can be a masked array
         mask : numpy.ndarray, optional
-            The mask to be applied to the data. If not provided, defaults to None.
+            The mask to be applied to the data. If not provided and `data` is a 
+            masked array, then the mask is automatically set. Defaults to None.
         header : dict or astropy.io.fits.Header, optional
             The FITS header associated with the data. If not provided, defaults to None.
         """
-        obj = _np.ma.masked_array(data, mask)
+        if all(
+            [isinstance(data, _np.ma.MaskedArray), 
+             hasattr(data, 'mask')]
+        ):
+            obj = _np.ma.masked_array(data, data.mask)
+        else:
+            obj = _np.ma.masked_array(data, mask)
         obj.header = dict(header) if isinstance(header, Header) else header
         return obj
 

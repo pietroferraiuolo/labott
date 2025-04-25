@@ -1,0 +1,1 @@
+from fitsclass import FitsArray, FitsArrayMasked
