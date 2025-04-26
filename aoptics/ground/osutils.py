@@ -14,6 +14,7 @@ from numpy import uint8 as _uint8
 from aoptics.core import root as _fn
 from astropy.io import fits as _fits
 from numpy.ma import masked_array as _masked_array
+from aoptics.core.fitsclass import FitsArray as _FitsArray
 
 _OPTDATA = _fn.BASE_DATA_PATH
 _OPDIMG = _fn.OPD_IMAGES_ROOT_FOLDER
@@ -284,6 +285,10 @@ def save_fits(
     # Save the FITS file
     if isinstance(data, _masked_array):
         _fits.writeto(filepath, data.data, header=header, overwrite=overwrite)
+        if hasattr(data, "mask"):
+            _fits.append(filepath, data.mask.astype(_uint8))
+    elif isinstance(data, _FitsArray):
+        _fits.writeto(filepath, data, header=data.header, overwrite=overwrite)
         if hasattr(data, "mask"):
             _fits.append(filepath, data.mask.astype(_uint8))
     else:
