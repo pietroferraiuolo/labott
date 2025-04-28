@@ -12,14 +12,13 @@ from aoptics.core.root import (
     ConfSettingReader4D as _confReader)
 
 
-class PhaseCam4020(_api.BaseInterferometer):
+class PhaseCam(_api.BaseInterferometer):
     """
     Class for the 4D Twyman-Green PhaseCam Laser Interferometer.
     """
-    def __init__(self, ip: str = None, port: int = None):
+    def __init__(self, model: str | int = 4020, ip: str = None, port: int = None):
         """The constructor"""
-        self.name = "PhaseCam4020"
-        from aoptics.devices._API.i4d import I4D
+        self.name = "PhaseCam"+ str(model)
         super().__init__(self.name, ip, port)
         self._i4d = _api.I4D(self.ip, self.port)
         self._ic = _InterferometerConverter()

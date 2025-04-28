@@ -1,11 +1,11 @@
-from .interferometer import PhaseCam4020
+from .interferometer import PhaseCam
 from .deformable_mirrors import (
     SplattDm,
     AlpaoDm,
 )
 
 __all__ = [
-    'PhaseCam4020',
+    'PhaseCam',
     'SplattDm',
     'AlpaoDm'
 ]
