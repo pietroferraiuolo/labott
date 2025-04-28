@@ -18,7 +18,13 @@ class FitsArray(_np.ndarray):
         The FITS header associated with the data. If not provided, defaults to None.
     """
 
-    def __new__(cls, data: list | ArrayLike, *, mask : ArrayLike = None, header: dict | _fits.Header = None):
+    def __new__(
+        cls,
+        data: list | ArrayLike,
+        *,
+        mask: ArrayLike = None,
+        header: dict | _fits.Header = None
+    ):
         """
         Create a new instance of the FitsArray class.
 
@@ -39,7 +45,9 @@ class FitsArray(_np.ndarray):
         except AttributeError:
             if mask is not None:
                 obj.mask = obj._mask = _np.asarray(mask)
-                obj.fill_value = obj._fill_value = _np.ma.masked_array(data, mask=mask).get_fill_value()
+                obj.fill_value = obj._fill_value = _np.ma.masked_array(
+                    data, mask=mask
+                ).get_fill_value()
             else:
                 pass
         return obj
@@ -64,9 +72,9 @@ class FitsArray(_np.ndarray):
         overwrite : bool, optional
             If True, overwrite the file if it exists. Defaults to False.
         """
-        self.header["MASKED"] = (hasattr(self, 'mask'), 'is masked array')
+        self.header["MASKED"] = (hasattr(self, "mask"), "is masked array")
         hdu = _fits.PrimaryHDU(data=self, header=self.header)
-        if hasattr(self, 'mask'):
+        if hasattr(self, "mask"):
             mask_hdu = _fits.ImageHDU(data=self.mask.astype(_np.uint8))
             hdu_list = _fits.HDUList([hdu, mask_hdu])
         else:

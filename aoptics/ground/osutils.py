@@ -231,7 +231,9 @@ def read_phasemap(file_path: str) -> _np.ma.MaskedArray:
     return image
 
 
-def load_fits(filepath: str) -> _np.ndarray | _np.ma.MaskedArray:
+def load_fits(
+    filepath: str, as_fits: bool = False
+) -> _np.ndarray | _np.ma.MaskedArray | _FitsArray:
     """
     Loads a FITS file.
 
@@ -239,17 +241,29 @@ def load_fits(filepath: str) -> _np.ndarray | _np.ma.MaskedArray:
     ----------
     filepath : str
         Path to the FITS file.
+    as_fits : bool, optional
+        If True, returns the data as a `FitsArray` class, which is a numpy array
+        with the additional `header` information (check `aoptics.fitsclass.FitsArray`
+        docs). Default is False.
 
     Returns
     -------
-    fit : np.ndarray or np.ma.MaskedArray
+    fit : np.ndarray or np.ma.MaskedArray os `fitsclass.FitsArray`
         FITS file data.
     """
     with _fits.open(filepath) as hdul:
         fit = hdul[0].data
+        fit_header = hdul[0].header
         if len(hdul) > 1 and hasattr(hdul[1], "data"):
             mask = hdul[1].data.astype(bool)
             fit = _masked_array(fit, mask=mask)
+            if as_fits:
+                import warnings
+                warnings.warn(
+                    "\nFitsMaskedArray are not fully implemented yet. Operations with other masked objects might be compromised!"
+                , category=UserWarning)
+    if as_fits:
+        fit = _FitsArray(fit, header=fit_header)
     return fit
 
 
