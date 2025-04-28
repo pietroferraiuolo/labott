@@ -302,11 +302,11 @@ def iffRedux(
         img = pushPullRedux(fileMat[i, :], template, shuffle)
         norm_img = img / (2 * ampVect[i])
         img_name = _os.path.join(fold, f"mode_{modeList[i]:04d}.fits")
-        header = _header()
-        header["MODEID"] = modeList[i]
-        header["AMPLITUDE"] = ampVect[i]
-        header["TEMPLATE"] = str(template)
-        _osu.save_fits(img_name, norm_img, header=header, overwrite=True)
+        # header = _header()
+        # header["MODEID"] = modeList[i]
+        # header["AMP"] = (ampVect[i], 'mode amplitude')
+        # header["TEMPLATE"] = str(template)
+        _osu.save_fits(img_name, norm_img, overwrite=True)
 
 
 def pushPullRedux(
