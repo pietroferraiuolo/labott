@@ -36,7 +36,15 @@ class FitsArray(_np.ndarray):
             The FITS header associated with the data. If not provided, defaults to None.
         """
         obj = _np.asarray(data).view(cls)
-        obj.header = _fits.Header(header) if isinstance(header, dict) else header
+        if isinstance(header, dict):
+            # Convert dictionary to astropy.io.fits.Header
+            h = _fits.Header()
+            for key, value in header.items():
+                h[key] = value
+            obj.header = h
+        elif isinstance(header, _fits.Header):
+            # If header is already a Header object, assign it directly
+            obj.header = header
         # The following is a workaround for the issue with numpy 1.24.0
         # Trying to include a masked array. The upper part works fine
         try:
