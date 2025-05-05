@@ -5,7 +5,7 @@
 - Pietro Ferraiuolo : written in 2025 (pietro.ferraiuolo@inaf.it)
 
 ### General description
-The `configuration.yaml` is, as the name suggests, a configuration file for the optimal functioning of the `AOPTICS` python package, which, as of version `0.5.0`, includes four main sections:
+The `configuration.yaml` is, as the name suggests, a configuration file for the optimal functioning of the `OptiCalib` python package, which, as of version `0.5.0`, includes four main sections:
 
 - [System](#system-section)
 - [Devices](#devices-section)
@@ -26,7 +26,7 @@ In this first section of the configuration file, under the `SYSTEM` key, there a
     for future modifications there will be non need to touch the "root" configuration file.
     If left undefined, the package will automatically asign as base data path the home directory: 
 
-    `~/aoptics_data/`
+    `~/opticalib_data/`
 
 - **simulated.devices : bool**
 

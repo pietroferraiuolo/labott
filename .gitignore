@@ -1,5 +1,5 @@
-aoptics.egg-info/
-aoptics.core._configurations.configuration.yaml
+opticalib.egg-info/
+opticalib.core._configurations.configuration.yaml
 # Byte-compiled / optimized / DLL files
 **/__pycache__/
 *.py[cod]

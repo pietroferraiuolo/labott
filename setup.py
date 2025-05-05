@@ -4,7 +4,7 @@ from setuptools.command.install import install
 
 about = {}
 here = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(here, 'aoptics', '__version__.py'), 'r') as _:
+with open(os.path.join(here, 'opticalib', '__version__.py'), 'r') as _:
     exec(_.read(), about)
 
 # Read dependencies from requirements.txt
@@ -32,7 +32,7 @@ setup(
     python_requires=">=3.10",
     install_requires=requirements,
     include_package_data=True,
-    package_data={'aoptics': ['core/_configurations/configuration.yaml']},
+    package_data={'opticalib': ['core/_configurations/configuration.yaml']},
     entry_points={
         'console_scripts': [
             'calpy=setup_calpy:main',

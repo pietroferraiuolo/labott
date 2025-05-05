@@ -3,7 +3,7 @@ import os
 import sys
 import shutil
 
-def check_dir(config_path):
+def check_dir(config_path: str) -> str:
     if not os.path.exists(config_path):
         os.makedirs(config_path)
         if not os.path.isdir(config_path):
@@ -25,15 +25,15 @@ def main():
 CALPY DOCUMENTATION
 `calpy` is a command-line tool that calls an interactive Python 
 shell (ipython3) with the option to pass the path to a configuration
-file for the `aoptics` package.
+file for the `opticalib` package.
 
 Options:
 --------
 no option : Initialize an ipython3 --pylab='qt' shell
 
 -f <path> : Option to pass the path to a configuration file to be read 
-            (e.g., '../aopticsConf/configuration.yaml'). Used to initiate
-            the aoptics package.
+            (e.g., '../opticalibConf/configuration.yaml'). Used to initiate
+            the opticalib package.
 
 -f <path> --create : Create the configuration file in the specified path, 
                      as well as the complete folder tree. The `data_path`
@@ -60,8 +60,8 @@ no option : Initialize an ipython3 --pylab='qt' shell
         try:
             if not os.path.exists(config_path):
                 config_path = os.path.join(os.path.dirname(config_path), 'SysConfig', 'configuration.yaml')
-            print("\n Initiating IPython Shell, importing Aoptics...\n")
-            os.system(f"export AOCONF={config_path} && ipython3 --pylab='qt' -i -c 'import aoptics'")
+            print("\n Initiating IPython Shell, importing Opticalib...\n")
+            os.system(f"export AOCONF={config_path} && ipython3 --pylab='qt' -i -c 'import opticalib'")
         except OSError as ose:
             print(f"Error: {ose}")
             sys.exit(1)

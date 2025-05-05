@@ -5,13 +5,13 @@ Author(s)
 
 Description
 -----------
-`aoptics` is a package for the control of the 4D PhaseCam interferometer.
+`opticalib` is a package for the control of the 4D PhaseCam interferometer.
 
 How to Use:
 -----------
 ```python
-> import aoptics
-> interf = aoptics.PhaseCam('193.206.155.218', 8011)
+> import opticalib
+> interf = opticalib.PhaseCam('193.206.155.218', 8011)
 > img = interf.acquire_map()
 ```
 """

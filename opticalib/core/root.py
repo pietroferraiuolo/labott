@@ -60,7 +60,7 @@ with open(CONFIGURATION_FILE, "r") as _f:
     _config = _gyml.load(_f)
 
 _bdp = _config["SYSTEM"].get("data_path")
-BASE_DATA_PATH: str = _bdp if not _bdp == '' else _os.path.join(_os.path.expanduser("~"), ".tmp_aopticsData")
+BASE_DATA_PATH: str = _bdp if not _bdp == '' else _os.path.join(_os.path.expanduser("~"), ".tmp_opticalibData")
 
 OPT_DATA_ROOT_FOLDER    : str = _os.path.join(BASE_DATA_PATH, "OPTData")
 LOGGING_ROOT_FOLDER     : str = _os.path.join(BASE_DATA_PATH, "Logging")
