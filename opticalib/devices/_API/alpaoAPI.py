@@ -1,5 +1,5 @@
 import numpy as _np
-from aoptics.core.read_config import getDmAddress
+from opticalib.core.read_config import getDmAddress
 
 class BaseAlpaoMirror():
 

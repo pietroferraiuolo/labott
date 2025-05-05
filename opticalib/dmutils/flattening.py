@@ -40,9 +40,9 @@ dedicated folder in the flat root folder.
 import os as _os
 import numpy as _np
 from . import iff_processing as _ifp
-from aoptics.ground import osutils as _osu
-from aoptics.core.root import folders as _fn
-from aoptics.ground import computerec as _crec
+from opticalib.ground import osutils as _osu
+from opticalib.core.root import folders as _fn
+from opticalib.ground import computerec as _crec
 
 _ts = _osu.newtn
 

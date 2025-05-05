@@ -55,7 +55,7 @@ no option : Initialize an ipython3 --pylab='qt' shell
                 print(f"Error: {ose}")
                 sys.exit(1)
         if '--create' in sys.argv:
-            from aoptics.core.root import create_configuration_file
+            from opticalib.core.root import create_configuration_file
             create_configuration_file(config_path, data_path=True)
         try:
             if not os.path.exists(config_path):

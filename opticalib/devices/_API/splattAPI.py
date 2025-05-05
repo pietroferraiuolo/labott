@@ -1,6 +1,6 @@
 import Pyro4
 import numpy as np
-from aoptics.core.exceptions import DeviceNotFoundError
+from opticalib.core.exceptions import DeviceNotFoundError
 
 
 class SPLATTEngine():
@@ -87,7 +87,7 @@ class SPLATTEngine():
             print('Shell set variable is True, overwrite it if you wish to set again')
 
     def _get_address(self, ip, port):
-        from aoptics.core.read_config import getDmAddress
+        from opticalib.core.read_config import getDmAddress
         try:
             rip, rport = getDmAddress('Splatt')
             if (ip, port) == (None, None):

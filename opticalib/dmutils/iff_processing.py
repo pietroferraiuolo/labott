@@ -52,10 +52,10 @@ import os as _os
 import numpy as _np
 import shutil as _sh
 import configparser as _cp
-from aoptics.core.root import _folds
-from aoptics.ground import osutils as _osu
-from aoptics.ground import zernike as _zern
-from aoptics.core import read_config as _rif
+from opticalib.core.root import _folds
+from opticalib.ground import osutils as _osu
+from opticalib.ground import zernike as _zern
+from opticalib.core import read_config as _rif
 from astropy.io.fits import Header as _header
 
 # from scripts.misc.IFFPackage import actuator_identification_lib as _fa
@@ -141,7 +141,7 @@ def saveCube(tn: str, rebin: int, register: bool = False) -> _np.ma.MaskedArray:
     cube : masked_array
         Data cube of the images, with shape (npx, npx, nmodes).
     """
-    from aoptics.analyzer import cubeRebinner, createCube
+    from opticalib.analyzer import cubeRebinner, createCube
 
     old_fold = _os.path.join(_ifFold, tn)
     filelist = _osu.getFileList(fold=old_fold, key="mode_")

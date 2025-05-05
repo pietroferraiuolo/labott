@@ -3,11 +3,11 @@ import numpy as _np
 import time as _time
 import shutil as _sh
 from . import _API as _api
-from aoptics.analyzer import modeRebinner as _modeRebinner
-from aoptics.ground.osutils import (
+from opticalib.analyzer import modeRebinner as _modeRebinner
+from opticalib.ground.osutils import (
     _InterferometerConverter,
     rename4D)
-from aoptics.core.root import (
+from opticalib.core.root import (
     folders as _folds,
     ConfSettingReader4D as _confReader)
 

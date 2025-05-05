@@ -15,9 +15,9 @@ More information on its use can be found on the class documentation.
 
 import os as _os
 import numpy as _np
-from aoptics.ground import osutils as _osu
-from aoptics.core import read_config as _rif
-from aoptics.core.root import IFFUNCTIONS_ROOT_FOLDER as _iffold
+from opticalib.ground import osutils as _osu
+from opticalib.core import read_config as _rif
+from opticalib.core.root import IFFUNCTIONS_ROOT_FOLDER as _iffold
 from .iff_processing import _getAcqInfo
 
 
@@ -364,7 +364,7 @@ class IFFCapturePreparation:
             DESCRIPTION.
 
         """
-        from aoptics.core.root import MODALBASE_ROOT_FOLDER
+        from opticalib.core.root import MODALBASE_ROOT_FOLDER
         if '.fits' not in name:
             name = name + '.fits'
         try:

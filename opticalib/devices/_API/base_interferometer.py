@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
-from aoptics.ground import logger as _logger
-from aoptics.ground.osutils import newtn as _newtn
-from aoptics.core.read_config import getInterfConfig
-from aoptics.core.root import _updateInterfPaths, folders as _folds
+from opticalib.ground import logger as _logger
+from opticalib.ground.osutils import newtn as _newtn
+from opticalib.core.read_config import getInterfConfig
+from opticalib.core.root import _updateInterfPaths, folders as _folds
 
 
 class BaseInterferometer(ABC):

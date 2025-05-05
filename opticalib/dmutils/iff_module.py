@@ -14,10 +14,10 @@ given a deformable mirror and an interferometer.
 
 import os as _os
 import numpy as _np
-from aoptics.core.root import folders as _fn
-from aoptics.core import read_config as _rif
+from opticalib.core.root import folders as _fn
+from opticalib.core import read_config as _rif
 from . import iff_acquisition_preparation as _ifa
-from aoptics.ground.osutils import newtn as _ts, save_fits as _sf
+from opticalib.ground.osutils import newtn as _ts, save_fits as _sf
 
 
 def iffDataAcquisition(
