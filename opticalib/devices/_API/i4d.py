@@ -8,7 +8,7 @@ class I4D:
     Base low-level class for the Interferometer devices
     """
 
-    def __init__(self, IP, PORT):
+    def __init__(self, IP: str, PORT: int):
         """The constructor"""
         self._ip = IP
         self._port = PORT
@@ -386,7 +386,7 @@ class I4D:
         data = numberOfSamples
         self._readJsonData(url, data)
 
-    def loadConfiguration(self, configurationPath):
+    def loadConfiguration(self, configurationPath: str):
         """
         Parameters
         ---------

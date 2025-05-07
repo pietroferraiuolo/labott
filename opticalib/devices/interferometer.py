@@ -24,7 +24,7 @@ class PhaseCam(_api.BaseInterferometer):
         self._ic = _InterferometerConverter()
 
 
-    def acquire_map(self, nframes=1, delay=0, rebin: int = 1):
+    def acquire_map(self, nframes: int = 1, delay: int | float = 0, rebin: int = 1):
         """
         Acquires the interferometer image and returns it as a masked array.
 
@@ -62,19 +62,19 @@ class PhaseCam(_api.BaseInterferometer):
             masked_ima = _modeRebinner(masked_ima, rebin)
         return masked_ima
 
-    def acquire_detector(self, nframes=1, delay=0):
+    def acquire_detector(self, nframes: int = 1, delay: int|float = 0):
         """
         Parameters
         ----------
-            nframes: int
-                number of frames
-            delay: int [s]
-                delay between images
+        nframes: int
+            number of frames
+        delay: int | flaot [s]
+            delay between images
 
         Returns
         -------
-            data2d: numpy masked array
-                    detector interferometer image
+        data2d: numpy masked array
+                detector interferometer image
         """
         self.acquire_phasemap()
         if nframes == 1:
@@ -91,7 +91,7 @@ class PhaseCam(_api.BaseInterferometer):
             data2d = _np.ma.mean(images, 2)
         return data2d
 
-    def _fromDataArrayToMaskedArray(self, width, height, data_array):
+    def _fromDataArrayToMaskedArray(self, width: int, height: int, data_array: _np.typing.ArrayLike):
         """
         Converts the data array to a masked array.
 
@@ -116,7 +116,7 @@ class PhaseCam(_api.BaseInterferometer):
         masked_ima = _np.ma.masked_array(data, mask=mask.astype(bool))
         return masked_ima
 
-    def capture(self, numberOfFrames, folder_name=None):
+    def capture(self, numberOfFrames: int, folder_name: str = None):
         """
         Parameters
         ----------
@@ -142,7 +142,7 @@ class PhaseCam(_api.BaseInterferometer):
         )
         return folder_name
 
-    def produce(self, folder_name):
+    def produce(self, tn: str):
         """
         Parameters
         ----------
@@ -150,17 +150,17 @@ class PhaseCam(_api.BaseInterferometer):
             name of folder measurements to convert
         """
         self._i4d.convertRawFramesInDirectoryToMeasurementsInDestinationDirectory(
-            _os.path.join(_folds.PRODUCE_FOLDER_NAME_4D_PC, folder_name),
-            _os.path.join(_folds.CAPTURE_FOLDER_NAME_4D_PC, folder_name),
+            _os.path.join(_folds.PRODUCE_FOLDER_NAME_4D_PC, tn),
+            _os.path.join(_folds.CAPTURE_FOLDER_NAME_4D_PC, tn),
         )
         _sh.move(
-            _os.path.join(_folds.PRODUCE_FOLDER_NAME_LOCAL_PC, folder_name),
+            _os.path.join(_folds.PRODUCE_FOLDER_NAME_LOCAL_PC, tn),
             _folds.OPD_IMAGES_ROOT_FOLDER,
         )
-        rename4D(folder_name)
-        self.copy4DSettings(folder_name)
+        rename4D(tn)
+        self.copy4DSettings(tn)
 
-    def setTriggerMode(self, enable):
+    def setTriggerMode(self, enable: bool) -> None:
         """
         Parameters
         ----------
@@ -174,7 +174,7 @@ class PhaseCam(_api.BaseInterferometer):
         else:
             print('Triggered mode disabled')
  
-    def loadConfiguration(self, conffile):
+    def loadConfiguration(self, conffile: str):
         """
         Read and loads the configuration file of the interferometer.
 
@@ -186,8 +186,10 @@ class PhaseCam(_api.BaseInterferometer):
         self._i4d.loadConfiguration(conffile)
 
 
-    def copy4DSettings(self, destination):
-        """"""
+    def copy4DSettings(self, destination: str) -> None:
+        """
+        Copies the interferometer settings file to the specified destination.
+        """
         import shutil
         dest_fold = _os.path.join(_folds.OPD_IMAGES_ROOT_FOLDER, destination)
         shutil.copy(_folds.SETTINGS_CONF_FILE, dest_fold)
