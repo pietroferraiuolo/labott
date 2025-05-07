@@ -50,6 +50,31 @@ def create_folder_tree(BASE_DATA_PATH: str) -> None:
         _create_folder(p)
 
 
+def _updateInterfPaths(paths: dict[str,str]) -> None:
+    """
+    Update the path of the configuration file and the folders.
+
+    This function reads the configuration file and updates the paths of the
+    settings file and the folders used in the package.
+    """
+    print('è partita?')
+    global SETTINGS_CONF_FILE
+    global COPIED_SETTINGS_CONF_FILE
+    global CAPTURE_FOLDER_NAME_4D_PC
+    global PRODUCE_FOLDER_NAME_4D_PC
+    global PRODUCE_FOLDER_NAME_LOCAL_PC
+    SETTINGS_CONF_FILE = paths["settings"]
+    COPIED_SETTINGS_CONF_FILE = paths["copied_settings"]
+    CAPTURE_FOLDER_NAME_4D_PC = paths["capture_4dpc"]
+    PRODUCE_FOLDER_NAME_4D_PC = paths["produce_4dpc"]
+    PRODUCE_FOLDER_NAME_LOCAL_PC = paths["produce"]
+    print(f"Settings file: {SETTINGS_CONF_FILE}")
+    print(f"Copied settings file: {COPIED_SETTINGS_CONF_FILE}")
+    print(f"Capture folder name: {CAPTURE_FOLDER_NAME_4D_PC}")
+    print(f"Produce folder name: {PRODUCE_FOLDER_NAME_4D_PC}")
+    print(f"Produce folder name local PC: {PRODUCE_FOLDER_NAME_LOCAL_PC}")
+
+
 TEMPLATE_CONF_FILE: str = (
     _os.path.dirname(_os.path.abspath(__file__)) + "/_configurations/configuration.yaml"
 )
@@ -73,6 +98,8 @@ MODALBASE_ROOT_FOLDER   : str = _os.path.join(OPT_DATA_ROOT_FOLDER, "ModalBases"
 IFFUNCTIONS_ROOT_FOLDER : str = _os.path.join(OPT_DATA_ROOT_FOLDER, "IFFunctions")
 INTMAT_ROOT_FOLDER      : str = _os.path.join(OPT_DATA_ROOT_FOLDER, "IntMatrices")
 CONTROL_MATRIX_FOLDER   : str = _os.path.join(ALIGNMENT_ROOT_FOLDER, "ControlMatrices")
+
+create_folder_tree(BASE_DATA_PATH)
 
 ########################
 # INTERFEROMETER PATHS #
@@ -133,25 +160,6 @@ def create_configuration_file(
         conf_folder = _os.path.join(data_path, 'SysConfig')
         move(file, _os.path.join(conf_folder, "configuration.yaml"))
         print(f"Configuration file moved to {conf_folder}")
-
-
-def _updateInterfPaths(paths: dict) -> None:
-    """
-    Update the path of the configuration file and the folders.
-
-    This function reads the configuration file and updates the paths of the
-    settings file and the folders used in the package.
-    """
-    global SETTINGS_CONF_FILE
-    global COPIED_SETTINGS_CONF_FILE
-    global CAPTURE_FOLDER_NAME_4D_PC
-    global PRODUCE_FOLDER_NAME_4D_PC
-    global PRODUCE_FOLDER_NAME_LOCAL_PC
-    SETTINGS_CONF_FILE = paths["settings"]
-    COPIED_SETTINGS_CONF_FILE = paths["copied_settings"]
-    CAPTURE_FOLDER_NAME_4D_PC = paths["capture_4dpc"]
-    PRODUCE_FOLDER_NAME_4D_PC = paths["produce_4dpc"]
-    PRODUCE_FOLDER_NAME_LOCAL_PC = paths["produce"]
 
 
 ###############################################################################
@@ -219,7 +227,6 @@ PRODUCE_FOLDER_NAME_LOCAL_PC = {self.PRODUCE_FOLDER_NAME_LOCAL_PC}
         global CAPTURE_FOLDER_NAME_4D_PC
         global PRODUCE_FOLDER_NAME_4D_PC
         global PRODUCE_FOLDER_NAME_LOCAL_PC
-
         self.SETTINGS_CONF_FILE = SETTINGS_CONF_FILE
         self.COPIED_SETTINGS_CONF_FILE = COPIED_SETTINGS_CONF_FILE
         self.CAPTURE_FOLDER_NAME_4D_PC = CAPTURE_FOLDER_NAME_4D_PC

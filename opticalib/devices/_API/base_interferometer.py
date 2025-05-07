@@ -26,6 +26,7 @@ class BaseInterferometer(ABC):
         self._logger.info(f"Interferometer {self.name} initialized on addess {self.ip}:{self.port}")
         self._ts = _newtn
         _updateInterfPaths(config['Paths'])
+        _folds._update_interf_paths()
 
     @abstractmethod
     def acquire_map(self):

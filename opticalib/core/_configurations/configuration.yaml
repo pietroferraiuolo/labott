@@ -10,11 +10,11 @@ DEVICES:
       ip: "193.206.155.78"
       port: 8011
       Paths:
+        settings: "/home/m4/4dConfig/AppSettings.ini"
+        copied_settings: '4DSettings.ini'
         capture_4dpc: "D:/M4/Capture"
         produce_4dpc: "D:/M4/Produced"
         produce: "/home/m4/4d/M4/Produced"
-        settings: "/home/m4/4dConfig/AppSettings.ini"
-        copied_settings: '4DSettings.ini'
 
   DEFORMABLE.MIRRORS:
     AlpaoXXX:
