@@ -160,6 +160,20 @@ class PhaseCam(_api.BaseInterferometer):
         rename4D(folder_name)
         self.copy4DSettings(folder_name)
 
+    def setTriggerMode(self, enable):
+        """
+        Parameters
+        ----------
+        folder_name: string
+            name of folder measurements to convert
+        """
+        enable = 1 if enable is True else 0
+        self._i4d.setTriggerMode(enable)
+        if enable == 1:
+            print('Triggered mode enabled, waiting for TTL')
+        else:
+            print('Triggered mode disabled')
+ 
     def loadConfiguration(self, conffile):
         """
         Read and loads the configuration file of the interferometer.
