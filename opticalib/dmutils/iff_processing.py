@@ -57,6 +57,7 @@ from opticalib.ground import osutils as _osu
 from opticalib.ground import zernike as _zern
 from opticalib.core import read_config as _rif
 from astropy.io.fits import Header as _header
+from opticalib import typings as _ot
 
 # from scripts.misc.IFFPackage import actuator_identification_lib as _fa
 
