@@ -35,3 +35,41 @@ class BaseInterferometer(ABC):
         Must be implemented by subclasses.
         """
         pass
+
+
+class BaseDeformableMirror(ABC):
+    """
+    Base class for all deformable mirror devices.
+    """
+
+    @abstractmethod
+    def set_shape(self):
+        """
+        Abstract method to set the shape of the deformable mirror.
+        Must be implemented by subclasses.
+        """
+        pass
+
+    @abstractmethod
+    def get_shape(self):
+        """
+        Abstract method to get the shape of the deformable mirror.
+        Must be implemented by subclasses.
+        """
+        pass
+
+    @abstractmethod
+    def uploadCmdHistory(self):
+        """
+        Abstract method to upload the command history to the deformable mirror.
+        Must be implemented by subclasses.
+        """
+        pass
+
+    @abstractmethod
+    def runCmdHistory(self):
+        """
+        Abstract method to run the command history on the deformable mirror.
+        Must be implemented by subclasses.
+        """
+        pass

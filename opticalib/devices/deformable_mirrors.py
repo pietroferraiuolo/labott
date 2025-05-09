@@ -11,11 +11,12 @@ import os as _os
 import numpy as _np
 import time as _time
 from . import _API as _api
+from opticalib import typings as _ot
 from opticalib.core.root import OPD_IMAGES_ROOT_FOLDER as _opdi
 from opticalib.ground.osutils import newtn as _ts, save_fits as _sf
 
 
-class AlpaoDm(_api.BaseAlpaoMirror):
+class AlpaoDm(_api.BaseAlpaoMirror,_api.base_devices.BaseDeformableMirror):
     """
     Alpao Deformable Mirror interface.
     """
@@ -25,11 +26,11 @@ class AlpaoDm(_api.BaseAlpaoMirror):
         super.__init__(ip, port, nacts)
         self.baseDataPath   = _opdi
 
-    def get_shape(self):
+    def get_shape(self) -> _ot.ArrayLike:
         shape = self._dm.get_shape()
         return shape
     
-    def set_shape(self, cmd, differential:bool=False):
+    def set_shape(self, cmd: _ot.ArrayLike, differential:bool=False) -> None:
         if differential:
             shape = self._dm.get_shape()
             cmd = cmd + shape
@@ -40,10 +41,10 @@ class AlpaoDm(_api.BaseAlpaoMirror):
         zero = _np.zeros(self.nActs)
         self.set_shape(zero)
 
-    def uploadCmdHistory(self, cmdhist):
+    def uploadCmdHistory(self, cmdhist: _ot.MatrixLike) -> None:
         self.cmdHistory = cmdhist
 
-    def runCmdHistory(self, interf=None, delay=0.2, save:str=None, differential:bool=True):
+    def runCmdHistory(self, interf: _ot.InterferometerDevice = None, delay: int | float = 0.2, save: str = None, differential: bool=True) -> str:
         if self.cmdHistory is None:
             raise ValueError("No Command History to run!")
         else:
@@ -67,7 +68,7 @@ class AlpaoDm(_api.BaseAlpaoMirror):
         return tn
 
 
-class SplattDm():
+class SplattDm(_api.base_devices.BaseDeformableMirror):
     """
     SPLATT deformable mirror interface.
     """
