@@ -4,8 +4,4 @@ from .deformable_mirrors import (
     AlpaoDm,
 )
 
-__all__ = [
-    'PhaseCam',
-    'SplattDm',
-    'AlpaoDm'
-]
+__all__ = ["PhaseCam", "SplattDm", "AlpaoDm"]

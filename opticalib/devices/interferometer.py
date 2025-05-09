@@ -4,27 +4,26 @@ import time as _time
 import shutil as _sh
 from . import _API as _api
 from opticalib.analyzer import modeRebinner as _modeRebinner
-from opticalib.ground.osutils import (
-    _InterferometerConverter,
-    rename4D)
-from opticalib.core.root import (
-    folders as _folds,
-    ConfSettingReader4D as _confReader)
+from opticalib.ground.osutils import _InterferometerConverter, rename4D
+from opticalib.core.root import folders as _folds, ConfSettingReader4D as _confReader
+from opticalib import typings as _ot
 
 
 class PhaseCam(_api.BaseInterferometer):
     """
     Class for the 4D Twyman-Green PhaseCam Laser Interferometer.
     """
+
     def __init__(self, model: str | int = 4020, ip: str = None, port: int = None):
         """The constructor"""
-        self.name = "PhaseCam"+ str(model)
+        self.name = "PhaseCam" + str(model)
         super().__init__(self.name, ip, port)
         self._i4d = _api.I4D(self.ip, self.port)
         self._ic = _InterferometerConverter()
 
-
-    def acquire_map(self, nframes: int = 1, delay: int | float = 0, rebin: int = 1):
+    def acquire_map(
+        self, nframes: int = 1, delay: int | float = 0, rebin: int = 1
+    ) -> _ot.ImageData:
         """
         Acquires the interferometer image and returns it as a masked array.
 
@@ -39,7 +38,7 @@ class PhaseCam(_api.BaseInterferometer):
 
         Returns
         -------
-        masked_ima: numpy masked array
+        masked_ima: ImageData
             Interferometer image.
         """
         if nframes == 1:
@@ -50,7 +49,7 @@ class PhaseCam(_api.BaseInterferometer):
             masked_ima = _modeRebinner(masked_ima, rebin)
         else:
             image_list = []
-            for i in range(nframes):
+            for __ in range(nframes):
                 width, height, _, data_array = self._i4d.takeSingleMeasurement()
                 masked_ima = self._fromDataArrayToMaskedArray(
                     width, height, data_array * 632.8e-9
@@ -62,7 +61,9 @@ class PhaseCam(_api.BaseInterferometer):
             masked_ima = _modeRebinner(masked_ima, rebin)
         return masked_ima
 
-    def acquire_detector(self, nframes: int = 1, delay: int|float = 0):
+    def acquire_detector(
+        self, nframes: int = 1, delay: int | float = 0
+    ) -> _ot.ImageData:
         """
         Parameters
         ----------
@@ -82,7 +83,7 @@ class PhaseCam(_api.BaseInterferometer):
             data2d = _np.reshape(data, (width, height))
         else:
             image_list = []
-            for i in range(nframes):
+            for __ in range(nframes):
                 data, height, _, width = self._i4d.getFringeAmplitudeData()
                 data2d_t = _np.reshape(data, (width, height))
                 image_list.append(data2d_t)
@@ -91,7 +92,9 @@ class PhaseCam(_api.BaseInterferometer):
             data2d = _np.ma.mean(images, 2)
         return data2d
 
-    def _fromDataArrayToMaskedArray(self, width: int, height: int, data_array: _np.typing.ArrayLike):
+    def _fromDataArrayToMaskedArray(
+        self, width: int, height: int, data_array: _ot.MatrixLike
+    ) -> _ot.ImageData:
         """
         Converts the data array to a masked array.
 
@@ -101,12 +104,12 @@ class PhaseCam(_api.BaseInterferometer):
             Width of the image.
         height: int
             Height of the image.
-        data_array: numpy array
+        data_array: MatrixLike
             Data array to be converted.
 
         Returns
         -------
-        masked_ima: numpy masked array
+        masked_ima: ImageData
             Masked image.
         """
         data = _np.reshape(data_array, (height, width))
@@ -116,7 +119,7 @@ class PhaseCam(_api.BaseInterferometer):
         masked_ima = _np.ma.masked_array(data, mask=mask.astype(bool))
         return masked_ima
 
-    def capture(self, numberOfFrames: int, folder_name: str = None):
+    def capture(self, numberOfFrames: int, folder_name: str = None) -> str:
         """
         Parameters
         ----------
@@ -142,7 +145,7 @@ class PhaseCam(_api.BaseInterferometer):
         )
         return folder_name
 
-    def produce(self, tn: str):
+    def produce(self, tn: str) -> None:
         """
         Parameters
         ----------
@@ -170,11 +173,11 @@ class PhaseCam(_api.BaseInterferometer):
         enable = 1 if enable is True else 0
         self._i4d.setTriggerMode(enable)
         if enable == 1:
-            print('Triggered mode enabled, waiting for TTL')
+            print("Triggered mode enabled, waiting for TTL")
         else:
-            print('Triggered mode disabled')
- 
-    def loadConfiguration(self, conffile: str):
+            print("Triggered mode disabled")
+
+    def loadConfiguration(self, conffile: str) -> None:
         """
         Read and loads the configuration file of the interferometer.
 
@@ -185,19 +188,20 @@ class PhaseCam(_api.BaseInterferometer):
         """
         self._i4d.loadConfiguration(conffile)
 
-
     def copy4DSettings(self, destination: str) -> None:
         """
         Copies the interferometer settings file to the specified destination.
         """
         import shutil
+
         dest_fold = _os.path.join(_folds.OPD_IMAGES_ROOT_FOLDER, destination)
         shutil.copy(_folds.SETTINGS_CONF_FILE, dest_fold)
-        shutil.move(_os.path.join(dest_fold, 'AppSettings.ini'),
-                    _os.path.join(dest_fold, '4DSettings.ini'))
-    
+        shutil.move(
+            _os.path.join(dest_fold, "AppSettings.ini"),
+            _os.path.join(dest_fold, "4DSettings.ini"),
+        )
 
-    def getCameraSettings(self):
+    def getCameraSettings(self) -> list[int, int, int, int]:
         """
         Reads che actual interferometer settings from its configuration file.
 
@@ -215,7 +219,7 @@ class PhaseCam(_api.BaseInterferometer):
         offset_y = setting_reader.getOffsetY()
         return [width_pixel, height_pixel, offset_x, offset_y]
 
-    def getFrameRate(self):
+    def getFrameRate(self) -> float:
         """
         Reads the frame rate the interferometer is working at.
 
@@ -230,7 +234,7 @@ class PhaseCam(_api.BaseInterferometer):
         frame_rate = setting_reader.getFrameRate()
         return frame_rate
 
-    def intoFullFrame(self, img):
+    def intoFullFrame(self, img: _ot.ImageData) -> _ot.ImageData:
         """
         The function fits the passed frame (expected cropped) into the
         full interferometer frame (2048x2048), after reading the cropping
@@ -238,12 +242,12 @@ class PhaseCam(_api.BaseInterferometer):
 
         Parameters
         ----------
-        img: masked_array
+        img: ImageData
             The image to be fitted into the full frame.
 
         Return
         ------
-        output: masked_array
+        output: ImageData
             The output image, in the interferometer full frame.
         """
         off = (self.getCameraSettings())[2:4]

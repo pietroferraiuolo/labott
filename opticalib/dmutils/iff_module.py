@@ -18,11 +18,17 @@ from opticalib.core.root import folders as _fn
 from opticalib.core import read_config as _rif
 from . import iff_acquisition_preparation as _ifa
 from opticalib.ground.osutils import newtn as _ts, save_fits as _sf
+from opticalib import typings as _ot
 
 
 def iffDataAcquisition(
-    dm, interf, modesList=None, amplitude=None, template=None, shuffle=False
-):
+    dm: _ot.DeformableMirrorDevice,
+    interf: _ot.InterferometerDevice,
+    modesList: _ot.Optional[_ot.ArrayLike] = None,
+    amplitude: _ot.Optional[float | _ot.ArrayLike] = None,
+    template: _ot.Optional[_ot.ArrayLike] = None,
+    shuffle: bool = False,
+) -> str:
     """
     This is the user-lever function for the acquisition of the IFF data, given a
     deformable mirror and an interferometer.
@@ -32,27 +38,22 @@ def iffDataAcquisition(
 
     Parameters
     ----------
-    dm: object
+    dm: DeformableMirrorDevice
         The inizialized deformable mirror object
-    interf: object
+    interf: InterferometerDevice
         The initialized interferometer object to take measurements
-    modesList: int | list, array like , optional
+    modesList: ArrayLike , optional
         list of modes index to be measured, relative to the command matrix to be used
-    amplitude: float , optional
+    amplitude: float | ArrayLike, optional
         command amplitude
-    template: string , oprional
+    template: ArrayLike , oprional
         template file for the command matrix
-    modalBase: string , optional
-        identifier of the modal base to be used
     shuffle: bool , optional
         if True, shuffle the modes before acquisition
-    *dmargs: list
-        additional arguments to be passed to the deformable mirror's `runCmdHistory`
-        method.
 
     Returns
     -------
-    tn: string
+    tn: str
         The tracking number of the dataset acquired, saved in the OPDImages folder
     """
     ifc = _ifa.IFFCapturePreparation(dm)
@@ -72,13 +73,13 @@ def iffDataAcquisition(
                 with open(_os.path.join(iffpath, f"{key}.dat"), "w") as f:
                     f.write(str(value))
             else:
-                _sf(
-                    _os.path.join(iffpath, f"{key}.fits"), tvalue, overwrite=True
-                )
+                _sf(_os.path.join(iffpath, f"{key}.fits"), tvalue, overwrite=True)
     except KeyError as e:
         print(f"KeyError: {key}, {e}")
     _rif.copyIffConfigFile(tn)
-    for param, value in zip(['modeid', 'modeamp', 'template'], [modesList, amplitude, template]):
+    for param, value in zip(
+        ["modeid", "modeamp", "template"], [modesList, amplitude, template]
+    ):
         if value is not None:
             _rif.updateIffConfig(tn, param, value)
     delay = _rif.getCmdDelay()

@@ -119,7 +119,7 @@ def process(
         saveCube(tn, rebin=rebin, register=dx)
 
 
-def saveCube(tn: str, rebin: int, register: bool = False) -> _np.ma.MaskedArray:
+def saveCube(tn: str, rebin: int = 1, register: bool = False) -> _ot.CubeData:
     """
     Creates and save a cube from the fits files contained in the tn folder,
     along with the command matrix and the modes vector fits.
@@ -215,8 +215,8 @@ def stackCubes(tnlist: str) -> None:
 
 
 def filterZernikeCube(
-    tn: str, zern_modes: list = None, save: bool = True
-) -> _np.ma.MaskedArray:
+    tn: str, zern_modes: _ot.Optional[list[int]] = None, save: bool = True
+) -> tuple[_ot.CubeData, str]:
     """
     Function which filters out the desired zernike modes from a cube.
 
@@ -232,6 +232,8 @@ def filterZernikeCube(
     -------
     ffcube : masked array
         Filtered cube.
+    new_tn : str
+        Tracking Number of the new folder where the filtered cube is saved.
     """
     new_tn = _os.path.join(_intMatFold, _ts())
     _os.mkdir(new_tn)
@@ -266,9 +268,9 @@ def filterZernikeCube(
 def iffRedux(
     tn: str,
     fileMat: list[list[str]],
-    ampVect: list | _np.ndarray,
-    modeList: list | _np.ndarray,
-    template: list | _np.ndarray,
+    ampVect: _ot.ArrayLike,
+    modeList: _ot.ArrayLike,
+    template: _ot.ArrayLike,
     shuffle: int = 0,
 ) -> None:
     """
@@ -311,8 +313,8 @@ def iffRedux(
 
 
 def pushPullRedux(
-    fileVec: list[str], template: list[int] | _np.ndarray, shuffle: int = 0
-) -> _np.ma.MaskedArray:
+    fileVec: list[str], template: _ot.ArrayLike, shuffle: int = 0
+) -> _ot.ImageData:
     """
     Performs the basic operation of processing PushPull data.
 
@@ -380,7 +382,7 @@ def pushPullRedux(
     return image
 
 
-def registrationRedux(tn: str, fileMat: list[str]) -> list[_np.ma.MaskedArray]:
+def registrationRedux(tn: str, fileMat: list[str]) -> list[_ot.ImageData]:
     """
     Reduction function that performs the push-pull analysis on the registration
     data.
@@ -406,13 +408,13 @@ def registrationRedux(tn: str, fileMat: list[str]) -> list[_np.ma.MaskedArray]:
     for i in range(0, nActs - 1):
         img = pushPullRedux(fileMat[i, :], template)
         imglist.append(img)
-    cube = _np.ma.masked_array(imglist)
+    # cube = _np.ma.masked_array(imglist)
     # _osu.save_fits(_os.path.join(_intMatFold, tn, "regActCube.fits"), cube)
     return imglist
 
 
 def findFrameOffset(
-    tn: str, imglist: list[_np.ma.MaskedArray], actlist: int | _np.ndarray
+    tn: str, imglist: list[_ot.ImageData], actlist: _ot.ArrayLike
 ) -> float:
     """
     This function computes the position difference between the current frame and
@@ -493,7 +495,7 @@ def getTriggerFrame(tn: str, amplitude: int | float = None) -> int:
     return trigFrame
 
 
-def getRegFileMatrix(tn: str) -> tuple[int, _np.ndarray]:
+def getRegFileMatrix(tn: str) -> tuple[int, _ot.ArrayLike]:
     """
     Search for the registration frames in the images file list, and creates the
     registration file matrix.
@@ -526,7 +528,7 @@ def getRegFileMatrix(tn: str) -> tuple[int, _np.ndarray]:
     return regEnd, regMat
 
 
-def getIffFileMatrix(tn: str) -> _np.ndarray:
+def getIffFileMatrix(tn: str) -> _ot.ArrayLike:
     """
     Creates the iffMat
 
@@ -552,7 +554,7 @@ def getIffFileMatrix(tn: str) -> _np.ndarray:
 
 def _getCubeList(
     tnlist: str,
-) -> tuple[list[_np.ma.MaskedArray], list[_np.ndarray], list[_np.ndarray], int]:
+) -> tuple[_ot.CubeData, _ot.MatrixLike, _ot.ArrayLike, int]:
     """
     Retireves the cubes from each tn in the tnlist.
 
@@ -637,7 +639,9 @@ def _getAcqPar(
     return ampVector, modesVector, template, indexList, registrationActs, shuffle
 
 
-def _getAcqInfo(tn: str = None) -> tuple[dict, dict, dict]:
+def _getAcqInfo(
+    tn: str = None,
+) -> tuple[dict[str, _ot.Any], dict[str, _ot.Any], dict[str, _ot.Any]]:
     """
     Returns the information read from the iffConfig.ini file.
 
@@ -663,7 +667,7 @@ def _getAcqInfo(tn: str = None) -> tuple[dict, dict, dict]:
     return infoT, infoR, infoIF
 
 
-def _checkStackedCubes(tnlist: str) -> dict:
+def _checkStackedCubes(tnlist: str) -> dict[str, _ot.Any]:
     """
     Inspect the cubes to stack, to check whether there are shared modes, or not.
 
@@ -699,7 +703,7 @@ def __flag(
     modesVectList: list[int] | _np.ndarray[int],
     rebin: int,
     type: int,
-) -> dict:
+) -> dict[str, _ot.Any]:
     """
     Creates the dictionary to dump into the 'flag.txt' file accordingly to
     sequentially stacked cubes with no repeated modes.

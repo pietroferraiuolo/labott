@@ -143,7 +143,7 @@ def saveAverage(tn, average_img=None, overwrite: bool = False, **kwargs):
         print(f"Saved average at '{fname}'")
 
 
-def openAverage(tn):
+def openAverage(tn: str):
     """
     Loads an averaged frame from an 'average.fits' file, found inside the input
     tracking number

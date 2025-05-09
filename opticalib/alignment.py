@@ -61,6 +61,7 @@ from .core.root import folders as _fn
 from .core.read_config import getAlignmentConfig as _gac
 from .ground import logger as _logger, zernike as _zern, geo as _geo
 from .ground.osutils import load_fits as _rfits, save_fits as _sfits, newtn as _ts
+from . import typings as _ot
 
 _sc = _gac()
 
@@ -99,7 +100,7 @@ class Alignment:
 
     """
 
-    def __init__(self, mechanical_devices, acquisition_devices):
+    def __init__(self, mechanical_devices: _ot.GenericDevice|list[_ot.GenericDevice], acquisition_devices: _ot.InterferometerDevice|list[_ot.InterferometerDevice]):
         """
         Initializes the Alignment class with mechanical and acquisition devices.
 
@@ -146,12 +147,12 @@ class Alignment:
 
     def correct_alignment(
         self,
-        modes2correct,
-        zern2correct,
-        tn: str = None,
+        modes2correct: _ot.ArrayLike,
+        zern2correct : _ot.ArrayLike,
+        tn: _ot.Optional[str] = None,
         apply: bool = False,
         n_frames: int = 15,
-    ):
+    ) -> str | _ot.ArrayLike:
         """
         Corrects the alignment of the system based on Zernike coefficients.
 
@@ -226,18 +227,18 @@ class Alignment:
 
     def calibrate_alignment(
         self,
-        cmdAmp,
+        cmdAmp: int|float|_ot.ArrayLike,
         n_frames: int = 15,
-        template: list = None,
+        template: _ot.ArrayLike = None,
         n_repetitions: int = 1,
         save: bool = False,
-    ):
+    ) -> str:
         """
         Calibrate the alignment of the system using the provided command amplitude and template.
 
         Parameters
         ----------
-        cmdAmp : float
+        cmdAmp : int|float|arrayLike
             The command amplitude used for calibration.
         n_frames : int, optional
             The number of frames acquired and averaged for calibration. Default is 15.
@@ -277,13 +278,13 @@ class Alignment:
             _logger.log(f"{_sfits.__qualname__}")
         return "Ready for Alignment..."
 
-    def read_positions(self, show:bool=True):
+    def read_positions(self, show:bool=True) -> _ot.ArrayLike:
         """
         Reads the current positions of the devices.
 
         Returns
         -------
-        pos : list
+        pos : ArrayLike
             The list of current positions of the devices.
         """
         _logger.log(f"{self.read_positions.__qualname__}")
@@ -299,7 +300,7 @@ class Alignment:
             print(logMsg) 
         return pos
 
-    def load_fitting_surface(self, filepath):
+    def load_fitting_surface(self, filepath: str) -> str:
         """
         This function let you load the mask to use for zernike fitting. In the case of
         M$, for example, here the calibrated parabola is loaded, so that zernike modes are
@@ -320,20 +321,22 @@ class Alignment:
         self._surface = surf
         return f"Correctly loaded '{filepath}'"
 
-    def _images_production(self, template, n_frames, n_repetitions):
+    def _images_production(self, template: _ot.ArrayLike, n_frames: int, n_repetitions: int) -> _ot.CubeData:
         """
         Produces images based on the provided template and number of repetitions.
 
         Parameters
         ----------
-        template : list
+        template : ArrayLike
             The template used for image production.
+        n_frames : int
+            The number of frames acquired and averaged for image production.
         n_repetitions : int
             The number of repetitions for image production.
 
         Returns
         -------
-        n_results : list
+        n_results : CubeData
             The list of produced images.
         """
         results = []
@@ -355,18 +358,18 @@ class Alignment:
                 n_results = results
         return n_results
 
-    def _zern_routine(self, imglist):
+    def _zern_routine(self, imglist: _ot.CubeData) -> _ot.MatrixLike:
         """
         Creates the interaction matrix from the provided image list.
 
         Parameters
         ----------
-        imglist : list
+        imglist : CubeData
             The list of images used to create the interaction matrix.
 
         Returns
         -------
-        intMat : ndarray
+        intMat : MatrixLike
             The interaction matrix created from the images.
         """
         _logger.log(f"{self._zern_routine.__qualname__}")
@@ -391,14 +394,19 @@ class Alignment:
         intMat = _np.array(coefflist).T
         return intMat
 
-    def _create_rec_mat(self, intMat):
+    def _create_rec_mat(self, intMat: _ot.MatrixLike) -> _ot.MatrixLike:
         """
         Creates the reconstruction matrix off the inversion of the interaction
         matrix obtained in the alignment calibration procedure.
 
+        Parameters
+        ----------
+        intMat : MatrixLike
+            The interaction matrix used to create the reconstruction matrix.
+
         Returns
         -------
-        recMat : ndarray
+        recMat : MatrixLike
             Reconstruction matrix.
         """
         _logger.log(f"{self._create_rec_mat.__qualname__}")
@@ -406,7 +414,7 @@ class Alignment:
         self.recMat = recMat
         return recMat
 
-    def _apply_command(self, fullCmd):
+    def _apply_command(self, fullCmd: _ot.ArrayLike) -> None:
         """
         Applies the full command to the devices.
 
@@ -435,18 +443,18 @@ class Alignment:
         logMsg += "-" * 30
         print(logMsg)
 
-    def _extract_cmds_to_apply(self, fullCmd):
+    def _extract_cmds_to_apply(self, fullCmd: _ot.ArrayLike) -> _ot.ArrayLike:
         """
         Extracts the commands to be applied from the full command.
 
         Parameters
         ----------
-        fullCmd : list or ndarray
+        fullCmd : ArrayLike
             The full command from which individual device commands are extracted.
 
         Returns
         -------
-        device_commands : list
+        device_commands : ArrayLike
             The list of commands to be applied to each device.
         """
         _logger.log(f"{self._extract_cmds_to_apply.__qualname__}")
@@ -464,7 +472,7 @@ class Alignment:
             device_commands.append(res_cmd)
         return device_commands
 
-    def _img_acquisition(self, k, template, n_frames):
+    def _img_acquisition(self, k: int, template: _ot.ArrayLike, n_frames: int) -> _ot.CubeData:
         """
         Acquires images based on the given template.
 
@@ -474,10 +482,12 @@ class Alignment:
             The index of the command matrix column.
         template : list
             The template used for image acquisition.
+        n_frames : int
+            The number of frames to be acquired.
 
         Returns
         -------
-        imglist : list
+        imglist : CubeData
             The list of acquired images.
         """
         _logger.log(f"{self._img_acquisition.__qualname__}")
@@ -494,20 +504,20 @@ class Alignment:
             imglist.append(self._acquire[0](n_frames))
         return imglist
 
-    def _push_pull_redux(self, imglist, template):
+    def _push_pull_redux(self, imglist: _ot.CubeData, template: _ot.ArrayLike) -> _ot.ImageData:
         """
         Reduces the push-pull images based on the given template.
 
         Parameters
         ----------
-        imglist : list
+        imglist : ArrayLike
             The list of images to be reduced.
-        template : list
+        template : ArrayLike
             The template used for image reduction.
 
         Returns
         -------
-        image : _np.ndarray
+        image : ImageData
             The reduced image.
         """
         _logger.log(f"{self._push_pull_redux.__qualname__}")
@@ -525,7 +535,7 @@ class Alignment:
         template.pop(0)
         return image
 
-    def _write_correction_log(self, tn, initpos):
+    def _write_correction_log(self, tn: str, initpos: list[float]) -> None:
         """
         Writes the log of the allignment correction applied to the OTT devices.
 
@@ -550,7 +560,7 @@ class Alignment:
         return
     
     @staticmethod
-    def __get_callables(devices, callables):
+    def __get_callables(devices: _ot.GenericDevice|list[_ot.GenericDevice], callables: list[str]) -> list[_ot.Callable[...,_ot.Any]]:
         """
         Returns a list of callables for the instanced object, taken from the
         configuration.py file.
@@ -580,7 +590,7 @@ class Alignment:
         return functions
 
     @staticmethod
-    def __get_dev_names(names, ndev):
+    def __get_dev_names(names: list[str], ndev: int) -> list[str]:
         """
         Returns the names of the devices.
 
@@ -630,7 +640,7 @@ class _Command:
             Processes the command logic to determine the to_ignore flag.
     """
 
-    def __init__(self, vector=None, to_ignore: bool = None):
+    def __init__(self, vector: _ot.ArrayLike = None, to_ignore: _ot.Optional[bool] = None):
         """
         Initializes a new instance of the _Command class.
 
@@ -670,7 +680,7 @@ class _Command:
         """
         return self.vect.__str__()
 
-    def __add__(self, other):
+    def __add__(self, other: "_Command") -> "_Command":
         """
         Combines the current command with another _Command instance.
 
@@ -703,7 +713,7 @@ class _Command:
         return _Command(combined_vect, to_ignore)
 
     @property
-    def is_null(self):
+    def is_null(self) -> bool:
         """
         Determines whether the command is null, i.e., a sequence of zeros.
 
@@ -714,7 +724,7 @@ class _Command:
         """
         return _np.all(self.vect == 0)
 
-    def _process_command_logic(self, P, C, S):
+    def _process_command_logic(self, P: "_Command", C: "_Command", S: "_Command") -> bool:
         """
         Processes the command logic to determine the to_ignore flag.
 

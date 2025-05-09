@@ -18,6 +18,7 @@ import numpy as _np
 from opticalib.ground import osutils as _osu
 from opticalib.core import read_config as _rif
 from opticalib.core.root import IFFUNCTIONS_ROOT_FOLDER as _iffold
+from opticalib import typings as _ot
 from .iff_processing import _getAcqInfo
 
 
@@ -30,10 +31,10 @@ class IFFCapturePreparation:
     -------------------------
     Import the module and initialize the class with a deformable mirror object
 
-    >>> from m4.dmutils.iff_acquisition_preparation import IFFCapturePreparation
-    >>> from m4.devices import deformable_mirror as dm
-    >>> m4u = dm.M4AU()
-    >>> ifa = IFFCapturePreparation(m4u)
+    >>> from opticalib.dmutils.iff_acquisition_preparation import IFFCapturePreparation
+    >>> from opticalib.devices import AlpaoDm
+    >>> dm = AlpaoDm(88)
+    >>> ifa = IFFCapturePreparation(dm)
 
     Methods
     -------
@@ -66,29 +67,15 @@ class IFFCapturePreparation:
         to save, such as the command matrix used, the used mode list, the indexing
         the amplitudes, the used tamplate and the shuffle option.
 
-    Notes
-    -----
-    In order for the module to work properly, the tower initialization must be
-    run, so that the folder names configuration file is populated.
-    From the IPython console
-
-    >>> run '/path/to/m4/initOTT.py'
-    >>> from m4.dmutils import iff_acquisition_preparation
-
-    At this point you can either use the dm instance already present in the ran
-    file, most likely making the IFFCapturePreparation class to use a FakeDM to
-    initialize (might not work), or define a second dm instance
-
-    >>> from m4.devices import deformable_mirror as dfm
-    >>> ifa = iff_acquisition_preparation.IFFCapturePreparation(dfm.M4AU())
-
-    Upon developing the deformable_mirror module, the initialization issue will
-    be addressed.
     """
 
-    def __init__(self, dm):
+    def __init__(self, dm: _ot.DeformableMirrorDevice):
         """The Constructor"""
         # DM information
+        if not _ot.isinstance_(dm, "DeformableMirrorDevice"):
+            from opticalib.core.exceptions import DeviceError
+
+            raise DeviceError(dm, "DeformableMirrorDevice")
         self.mirrorModes = dm.mirrorModes
         self._NActs = dm.nActs
         # IFF info
@@ -109,8 +96,12 @@ class IFFCapturePreparation:
         self.regPadCmdHist = None
 
     def createTimedCmdHistory(
-        self, modesList=None, modesAmp=None, template=None, shuffle=False
-    ):
+        self,
+        modesList: _ot.Optional[_ot.ArrayLike] = None,
+        modesAmp: _ot.Optional[float | _ot.ArrayLike] = None,
+        template: _ot.Optional[_ot.ArrayLike] = None,
+        shuffle: bool = False,
+    ) -> _ot.MatrixLike:
         """
         Function that creates the final timed command history to be applied
 
@@ -146,7 +137,7 @@ class IFFCapturePreparation:
         self.timedCmdHistory = timedCmdHist
         return timedCmdHist
 
-    def getInfoToSave(self):
+    def getInfoToSave(self) -> dict[str, _ot.Any]:
         """
         Return the data to save as fits files, arranged in a dictionary
 
@@ -167,26 +158,32 @@ class IFFCapturePreparation:
         return info
 
     def createCmdMatrixHistory(
-        self, mlist=None, modesAmp=None, template=None, shuffle=False
-    ):
+        self,
+        mlist: _ot.Optional[_ot.ArrayLike] = None,
+        modesAmp: _ot.Optional[float | _ot.ArrayLike] = None,
+        template: _ot.Optional[_ot.ArrayLike] = None,
+        shuffle: bool = False,
+    ) -> _ot.MatrixLike:
         """
         Creates the command matrix history for the IFF acquisition.
 
         Parameters
         ----------
-        modesAmp : float
+        mlist : ArrayLike
+            List of selected modes to use. If no argument is passed, it will
+        modesAmp : float | ArrayLike
             Amplitude of the modes to be commanded. If no argument is passed,
             it will be loaded from the configuration file iffConfig.ini
-        template : int | ArrayLike
+        template : ArrayLike
             Template for the push-pull application of the modes. If no argument
             is passed, it will be loaded from the configuration file iffConfig.ini
-        shuffle : boolean
+        shuffle : bool
             Decides to wether shuffle or not the order in which the modes are
             applied. Default is False
 
         Returns
         -------
-        cmd_matrixHistory : float | ArrayLike
+        cmd_matrixHistory : MatrixLike
             Command matrix history to be applied, with the correct push-pull
             application, following the desired template.
         """
@@ -232,7 +229,7 @@ class IFFCapturePreparation:
         self.cmdMatHistory = cmd_matrixHistory
         return cmd_matrixHistory
 
-    def createAuxCmdHistory(self):
+    def createAuxCmdHistory(self) -> _ot.MatrixLike:
         """
         Creates the initial part of the final command history matrix that will
         be passed to M4. This includes the Trigger Frame, the first frame to
@@ -241,8 +238,10 @@ class IFFCapturePreparation:
 
         Result
         ------
-        aus_cmdHistory : float | ArrayLike
-
+        aus_cmdHistory : MatrixLike
+            The auxiliary command history, which includes the trigger padding
+            and the registration pattern. This matrix is used to create the
+            final command history to be passed to the DM.
         """
         self._createTriggerPadding()
         self._createRegistrationPattern()
@@ -257,7 +256,7 @@ class IFFCapturePreparation:
         self.auxCmdHistory = aux_cmdHistory
         return aux_cmdHistory
 
-    def _createRegistrationPattern(self):
+    def _createRegistrationPattern(self) -> _ot.MatrixLike:
         """
         Creates the registration pattern to apply after the triggering and before
         the commands to apply for the IFF acquisition. The information about number
@@ -265,7 +264,7 @@ class IFFCapturePreparation:
 
         Returns
         -------
-        regHist : float | ArrayLike
+        regHist : MatrixLike
             Registration pattern command history
 
         """
@@ -290,7 +289,7 @@ class IFFCapturePreparation:
         self.regPadCmdHist = regHist
         return regHist
 
-    def _createTriggerPadding(self):
+    def _createTriggerPadding(self) -> _ot.MatrixLike:
         """
         Function that creates the trigger padding scheme to apply before the
         registration padding scheme. The information about number of zeros,
@@ -298,7 +297,7 @@ class IFFCapturePreparation:
 
         Returns
         -------
-        triggHist : float | ArrayLike
+        triggHist : MatrixLike
             Trigger padding command history
         """
         infoT = _rif.getIffConfig("TRIGGER")
@@ -311,7 +310,7 @@ class IFFCapturePreparation:
         self.triggPadCmdHist = triggHist
         return triggHist
 
-    def _createCmdMatrix(self, mlist):
+    def _createCmdMatrix(self, mlist: int | _ot.ArrayLike) -> _ot.MatrixLike:
         """
         Cuts the modal base according the given modes list
         """
@@ -320,19 +319,17 @@ class IFFCapturePreparation:
         self._cmdMatrix = self._modalBase[:, mlist]
         return self._cmdMatrix
 
-    def _updateModalBase(self, mbasename: str = None):
+    def _updateModalBase(self, mbasename: _ot.Optional[str] = None) -> None:
         """
         Updates the used modal base
 
         Parameters
         ----------
         mbasename : str, optional
-            DESCRIPTION. The default is None.
-
-        Returns
-        -------
-        None.
-
+            Modal base name to be used. The default is None, which means
+            the default `mirror` modal base is used. The other options are 'zonal',
+            'hadamard' and a user-defined modal base, which must be a .fits file
+            in the IFFUNCTIONS_ROOT_FOLDER folder.
         """
         if (mbasename is None) or (mbasename == "mirror"):
             self.modalBaseId = mbasename
@@ -345,28 +342,30 @@ class IFFCapturePreparation:
             self._modalBase = self._createHadamardMat()
         else:
             self.modalBaseId = mbasename
-            self._modalBase = self._createUserMat(
-                mbasename
-            )
+            self._modalBase = self._createUserMat(mbasename)
 
-    def _createUserMat(self, name: str = None):
+    def _createUserMat(self, name: str = None) -> _ot.MatrixLike:
         """
-
+        Create a user-defined modal base, given the name of the file.
+        The file must be a .fits file, and it must be in the
+        IFFUNCTIONS_ROOT_FOLDER folder.
 
         Parameters
         ----------
-        tracknum : str, optional
-            DESCRIPTION. The default is None.
+        name : str
+            Name of the file to be used as modal base. The file must be a .fits
+            file, and it must be in the IFFUNCTIONS_ROOT_FOLDER folder.
 
         Returns
         -------
-        cmdBase : TYPE
-            DESCRIPTION.
+        cmdBase : MatrixLike
+            The command matrix to be used as modal base.
 
         """
         from opticalib.core.root import MODALBASE_ROOT_FOLDER
-        if '.fits' not in name:
-            name = name + '.fits'
+
+        if ".fits" not in name:
+            name = name + ".fits"
         try:
             mbfile = _os.path.join(MODALBASE_ROOT_FOLDER, name)
             cmdBase = _osu.load_fits(mbfile)
@@ -375,28 +374,29 @@ class IFFCapturePreparation:
         print(f"Loaded user-defined modal base: `{name}`")
         return cmdBase
 
-    def _createZonalMat(self):
+    def _createZonalMat(self) -> _ot.MatrixLike:
         """
-
+        Create the zonal matrix to use as modal base, with size (nacts, nacts).
 
         Returns
         -------
-        cmdBase : TYPE
-            DESCRIPTION.
+        cmdBase : MatrixLike
+            The zonal matrix, with size (nacts, nacts).
 
         """
         cmdBase = _np.eye(self._NActs)
         return cmdBase
 
-    def _createHadamardMat(self):
+    def _createHadamardMat(self) -> _ot.MatrixLike:
         """
         Create the hadamard matrix to use as modal base, with size
         (nacts, nacts), removed of piston mode.
 
         Returns
         -------
-        cmdBase : ndarray
-            The Hadamard matrix.
+        cmdBase : MatrixLike
+            The Hadamard matrix, with size (nacts, nacts), removed of
+            the piston mode.
         """
         from scipy.linalg import hadamard
         import math

@@ -10,6 +10,7 @@ from . import logger as _log
 from . import osutils as _osu
 import matplotlib.pyplot as _plt
 from opticalib.core.root import folders as _fn
+from opticalib import typings as _ot
 
 _imgFold     = _fn.OPD_IMAGES_ROOT_FOLDER
 _ifFold      = _fn.IFFUNCTIONS_ROOT_FOLDER
@@ -37,7 +38,7 @@ class ComputeReconstructor:
         shape [pixels, pixels, n_images]
     """
 
-    def __init__(self, interaction_matrix_cube, mask2intersect=None):
+    def __init__(self, interaction_matrix_cube: _ot.MatrixLike, mask2intersect: _ot.Optional[_ot.MatrixLike] = None):
         """The constructor"""
         self._logger        = _log.set_up_logger('computerec.log', 20)
         self._intMatCube    = interaction_matrix_cube
@@ -52,21 +53,25 @@ class ComputeReconstructor:
         self._filtered_sv   = None
 
 
-    def run(self, Interactive=False, sv_threshold=None):
+    def run(self, Interactive: bool = False, sv_threshold: int|float = None) -> _ot.MatrixLike:
         """
         Compute the reconstruction matrix from the interaction matrix and the image
         to flatten.
 
         Parameters
         ----------
-        Interactive : TYPE, optional
-            DESCRIPTION. The default is False.
-        sv_threshold : TYPE, optional
-            DESCRIPTION. The default is None.
+        Interactive : bool, optional
+            If True, the function will show an interactive plot to choose the
+            threshold for the singular values. Default is False.
+        sv_threshold : int | float, optional
+            The threshold for the singular values. If None, the function will
+            compute the pseudo-inverse of the interaction matrix. If an integer
+            is provided, it will be used as the threshold. If a float is provided,
+            it will be used as the threshold. Default is None.
 
         Returns
         -------
-        recMat : ndarray
+        recMat : MatrixLike
             Reconstruction matrix.
         """
         self._logger.info("Computing reconstructor")
@@ -97,21 +102,21 @@ class ComputeReconstructor:
         self._logger.info("Assembling reconstructor")
         return self._intMat_Vt.T @ _np.diag(sv_inv_threshold) @ self._intMat_U.T
 
-    def loadShape2Flat(self, img):
+    def loadShape2Flat(self, img:_ot.ImageData) -> "ComputeReconstructor":
         """
         Function intended as a reloader for the image mask to intersect, in order
         to create a new recontructor matrix.
 
         Parameters
         ----------
-        img : MaskedArray
-            The new image to compute the new recontructor.
+        img : ImageData
+            The image to compute the new recontructor.
         """
         self._shape2flat = img
         self._imgMask = img.mask
         return self
 
-    def loadInteractionCube(self, intCube=None, tn=None):
+    def loadInteractionCube(self, intCube: _ot.Optional[_ot.MatrixLike] = None, tn: str = None) -> "ComputeReconstructor":
         """
         Function intended as a reloader for the interaction matrix cube, to use
         a different IFF for recontructor creation.
@@ -174,7 +179,7 @@ class ComputeReconstructor:
             raise e
         self._analysisMask = analysisMask
 
-    def _mask2intersect(self, img_or_mask):
+    def _mask2intersect(self, img_or_mask: _ot.Optional[_ot.MatrixLike|_ot.ImageData] = None) -> _ot.Optional[_ot.MatrixLike]:
         """
         Returns the mask from the input image or mask.
 
@@ -197,13 +202,13 @@ class ComputeReconstructor:
             mask = None
         return mask
 
-    def _intersectCubeMask(self):
+    def _intersectCubeMask(self) -> _ot.MatrixLike:
         """
         Creates the cube's mask by intersecating the masks of each frame.
 
         Returns
         -------
-        cube_mask : ndarray
+        cube_mask : MatrixLike
             the intersection mask for the cube.
         """
         mask = self._intMatCube[:, :, 0].mask

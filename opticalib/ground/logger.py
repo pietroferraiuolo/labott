@@ -14,7 +14,7 @@ import logging as _l
 import logging.handlers as _lh
 
 
-def set_up_logger(filename, logging_level):
+def set_up_logger(filename: str, logging_level: int = _l.DEBUG) -> _l.Logger:
     """
     Set up a rotating file logger.
     This function configures a logger to write log messages to a file with
@@ -59,7 +59,7 @@ def set_up_logger(filename, logging_level):
     return root_logger
 
 
-def log(message, level: str = "INFO"):
+def log(message: str, level: str = "INFO") -> None:
     """
     Log a message at the specified level.
 
@@ -111,7 +111,7 @@ class txtLogger:
             Writes a log message to the file.
     """
 
-    def __init__(self, file_path):
+    def __init__(self, file_path: str):
         """
         Initializes the txtLogger with the specified file path.
 
@@ -120,7 +120,7 @@ class txtLogger:
         """
         self.file_path = file_path
 
-    def log(self, message):
+    def log(self, message: str) -> None:
         """
         Writes a log message to the file.
 

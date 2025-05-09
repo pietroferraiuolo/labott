@@ -43,8 +43,10 @@ from . import iff_processing as _ifp
 from opticalib.ground import osutils as _osu
 from opticalib.core.root import folders as _fn
 from opticalib.ground import computerec as _crec
+from opticalib import typings as _ot
 
 _ts = _osu.newtn
+
 
 class Flattening:
     """
@@ -62,40 +64,45 @@ class Flattening:
         reconstructor will be automatically computed for it.
     """
 
-    def __init__(self, tn):
+    def __init__(self, tn: str):
         """The Constructor"""
-        self.tn                 = tn
-        self.shape2flat         = None
-        self.flatCmd            = None
-        self.rebin              = None
-        self.filtered           = False
-        self._path              = _os.path.join(_ifp._intMatFold, self.tn)
-        self._oldtn             = tn
-        self._intCube           = self._loadIntCube()
-        self._cmdMat            = self._loadCmdMat()
-        self._rec               = self._loadReconstructor()
-        self._recMat            = None
-        self._frameCenter       = None
-        self._flatOffset        = None
-        self._cavityOffset      = None
-        self._synthFlat         = None
-        self._flatResidue       = None
-        self._flatteningModes   = None
+        self.tn = tn
+        self.shape2flat = None
+        self.flatCmd = None
+        self.rebin = None
+        self.filtered = False
+        self._path = _os.path.join(_ifp._intMatFold, self.tn)
+        self._oldtn = tn
+        self._intCube = self._loadIntCube()
+        self._cmdMat = self._loadCmdMat()
+        self._rec = self._loadReconstructor()
+        self._recMat = None
+        self._frameCenter = None
+        self._flatOffset = None
+        self._cavityOffset = None
+        self._synthFlat = None
+        self._flatResidue = None
+        self._flatteningModes = None
 
     def applyFlatCommand(
-        self, dm, interf, modes2flat, nframes: int = 5, modes2discard=None
-    ):
+        self,
+        dm: _ot.DeformableMirrorDevice,
+        interf: _ot.InterferometerDevice,
+        modes2flat: int | _ot.ArrayLike,
+        nframes: int = 5,
+        modes2discard: _ot.Optional[int] = None,
+    ) -> None:
         f"""
         Computes, applies and saves the computed flat command to the DM, given
         the {self.tn} calibration.
 
         Parameters
         ----------
-        dm : object
+        dm : DeformableMirrorDevice
             Deformable mirror object.
-        interf : object
+        interf : InterferometerDevice
             Interferometer object to acquire phasemaps.
-        modes2flat : int or list
+        modes2flat : int | ArrayLike
             Modes to flatten.
         nframes : int, optional
             Number of frames to average for phasemap acquisition. Default is 5.
@@ -108,7 +115,7 @@ class Flattening:
         self.computeRecMat(modes2discard)
         deltacmd = self.computeFlatCmd(modes2flat)
         cmd = dm.get_shape()
-        dm.set_shape(deltacmd, differential = True)
+        dm.set_shape(deltacmd, differential=True)
         imgflat = interf.acquire_map(nframes, rebin=self.rebin)
         files = [
             "flatCommand.fits",
@@ -130,9 +137,16 @@ class Flattening:
             info.write(f"Flattened with `{self.tn}` data")
         print(f"Flat command saved in {'/'.join(fold.split('/')[-2:])}")
 
-    def computeFlatCmd(self, n_modes):
+    def computeFlatCmd(self, n_modes: int | _ot.ArrayLike) -> _ot.ArrayLike:
         """
         Compute the command to apply to flatten the input shape.
+
+        Parameters
+        ----------
+        n_modes : int | ArrayLike
+            Number of modes used to compute the flat command. If int, it will
+            compute the first n_modes of the command matrix. If list, it will
+            compute the flat command for the given modes.
 
         Returns
         -------
@@ -155,37 +169,49 @@ class Flattening:
         self.flatCmd = flat_cmd
         return flat_cmd
 
-    def loadImage2Shape(self, img, compute: int = None):
+    def loadImage2Shape(
+        self, img: _ot.ImageData, compute: _ot.Optional[int | float] = None
+    ) -> None:
         """
         (Re)Loader for the image to flatten.
 
         Parameters
         ----------
-        img : MaskedArray
+        img : ImageData
             Image to flatten.
-        compute_rec : bool, optional
-            Wether to direclty compute the reconstructor with the imput image or
-            not. The default is True.
+        compute : int | float, optional
+            If not None, it can be either the number of modes to discard from the
+            reconstruction matrix computation (int) or the threshold value to discard
+            computed eigenvalues for the reconstruction (float). Default is None.
         """
         self.shape2flat = img
         self._rec = self._rec.loadShape2Flat(img)
         if compute is not None:
             self.computeRecMat(compute)
 
-    def computeRecMat(self, threshold=None):
+    def computeRecMat(self, threshold: _ot.Optional[int | float] = None):
         """
         Compute the reconstruction matrix for the loaded image.
+
+        Parameters
+        ----------
+        threshold : int | float, optional
+            If not None, it can be either the number of modes to discard from the
+            reconstruction matrix computation (int) or the threshold value to discard
+            computed eigenvalues for the reconstruction (float). Default is None.
         """
         print("Computing recontruction matrix...")
         self._recMat = self._rec.run(sv_threshold=threshold)
 
-    def filterIntCube(self, zernModes: list = None):
+    def filterIntCube(
+        self, zernModes: _ot.Optional[list[int] | _ot.ArrayLike] = None
+    ) -> "Flattening":
         """
         Filter the interaction cube with the given zernike modes
 
         Parameters
         ----------
-        zernModes : list
+        zernModes : list of int | ArrayLike, optional
             Zernike modes to filter out this cube (if it's not already filtered).
             Default modes are [1,2,3] -> piston/tip/tilt.
         """
@@ -203,7 +229,7 @@ class Flattening:
             self.filtered = True
         return self
 
-    def loadNewTn(self, tn):
+    def loadNewTn(self, tn: str) -> None:
         """
         Load a new tracking number for the flattening.
 
@@ -215,8 +241,7 @@ class Flattening:
         self.__update_tn(tn)
         self._reloadClass(tn)
 
-
-    def _reloadClass(self, tn):
+    def _reloadClass(self, tn: str) -> None:
         """
         Reload function for the interaction cube
 
@@ -231,8 +256,7 @@ class Flattening:
         self._cmdMat = self._loadCmdMat()
         self._rec = self._rec.loadInteractionCube(tn=tn)
 
-
-    def _getMasterMask(self):
+    def _getMasterMask(self) -> _ot.ImageData:
         """
         Creates the intersection mask of the interaction cube.
         """
@@ -240,15 +264,14 @@ class Flattening:
         master_mask = _np.zeros(cubeMask.shape, dtype=_np.bool_)
         master_mask[_np.where(cubeMask > 0)] = True
         return master_mask
-    
 
-    def _loadIntCube(self):
+    def _loadIntCube(self) -> _ot.CubeData:
         """
         Interaction cube loader
 
         Return
         ------
-        intCube : ndarray
+        intCube : CubeData
             The interaction cube data array.
         """
         intCube = _osu.read_phasemap(_os.path.join(self._path, _ifp.cubeFile))
@@ -264,26 +287,26 @@ class Flattening:
         self.rebin = rebin
         return intCube
 
-    def _loadCmdMat(self):
+    def _loadCmdMat(self) -> _ot.MatrixLike:
         """
         Command matrix loader. It loads the saved command matrix of the loaded
         cube.
 
         Returns
         -------
-        cmdMat : ndarray
+        cmdMat : MatrixLike
             Command matrix of the cube, saved in the tn path.
         """
         cmdMat = _osu.load_fits(_os.path.join(self._path, _ifp.cmdMatFile))
         return cmdMat
 
-    def _loadReconstructor(self):
+    def _loadReconstructor(self) -> _ot.Reconstructor:
         """
         Builds the reconstructor object off the input cube
 
         Returns
         -------
-        rec : object
+        rec : Reconstructor
             Reconstructor class.
         """
         rec = _crec.ComputeReconstructor(self._intCube)
@@ -308,7 +331,7 @@ class Flattening:
         # cannot work. we should create a dedicated function, not necessarily linked to IFF or flattening
         return dp
 
-    def __update_tn(self, tn):
+    def __update_tn(self, tn: str) -> None:
         """
         Updates the tn and cube path if the tn is to change
 

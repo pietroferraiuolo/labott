@@ -13,9 +13,11 @@ import collections.abc
 import numpy as _np
 from numpy.typing import ArrayLike
 
-# if TYPE_CHECKING:
-#     from .devices import AlpaoDm, SplattDm, PhaseCam
+if TYPE_CHECKING:
+    from .devices import AlpaoDm, SplattDm, PhaseCam
+    from .ground.computerec import ComputeReconstructor
 
+Reconstructor: TypeAlias = Union["ComputeReconstructor", None]
 
 @runtime_checkable
 class _MatrixProtocol(Protocol):
@@ -68,7 +70,7 @@ class _DMProtocol(Protocol):
 
 DeformableMirrorDevice = TypeVar("DeformableMirrorDevice", bound=_DMProtocol)
 
-
+GenericDevice = TypeVar("GenericDevice")
 ################################
 ## Custom `isinstance` checks ##
 ################################

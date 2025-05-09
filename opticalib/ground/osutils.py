@@ -14,6 +14,7 @@ from numpy import uint8 as _uint8
 from opticalib.core import root as _fn
 from astropy.io import fits as _fits
 from numpy.ma import masked_array as _masked_array
+from opticalib import typings as _ot
 
 _OPTDATA = _fn.OPT_DATA_ROOT_FOLDER
 _OPDIMG = _fn.OPD_IMAGES_ROOT_FOLDER
@@ -203,7 +204,7 @@ def tnRange(tn0: str, tn1: str) -> list[str]:
     return tnMat
 
 
-def read_phasemap(file_path: str) -> _np.ma.MaskedArray:
+def read_phasemap(file_path: str) -> _ot.ImageData:
     """
     Function to read interferometric data, in the three possible formats
     (FITS, 4D, H5)
@@ -215,7 +216,7 @@ def read_phasemap(file_path: str) -> _np.ma.MaskedArray:
 
     Returns
     -------
-    image: numpy masked array
+    image: ImageData
         Image as a masked array.
     """
     ext = file_path.split(".")[-1]
@@ -230,7 +231,7 @@ def read_phasemap(file_path: str) -> _np.ma.MaskedArray:
     return image
 
 
-def load_fits(filepath: str) -> _np.ndarray | _np.ma.MaskedArray:
+def load_fits(filepath: str) -> _ot.ImageData | _ot._CubeData | _ot.MatrixLike | _ot.ArrayLike | _ot.Any:
     """
     Loads a FITS file.
 
@@ -254,7 +255,7 @@ def load_fits(filepath: str) -> _np.ndarray | _np.ma.MaskedArray:
 
 def save_fits(
     filepath: str,
-    data: _np.ndarray | _np.ma.MaskedArray,
+    data: _ot.ImageData | _ot._CubeData | _ot.MatrixLike | _ot.ArrayLike | _ot.Any,
     overwrite: bool = True,
     header: dict[str, any] | _fits.Header = None,
 ) -> None:
@@ -376,7 +377,7 @@ class _InterferometerConverter:
     """
 
     @staticmethod
-    def fromPhaseCam4020(h5filename):
+    def fromPhaseCam4020(h5filename: str) -> _ot.ImageData:
         """
         Function for PhaseCam4020
 
@@ -399,7 +400,7 @@ class _InterferometerConverter:
         return ima
 
     @staticmethod
-    def fromPhaseCam6110(i4dfilename):
+    def fromPhaseCam6110(i4dfilename : str) -> _ot.ImageData:
         """
         Function for PhaseCam6110
 
@@ -421,7 +422,7 @@ class _InterferometerConverter:
         return image
 
     @staticmethod
-    def fromFakeInterf(filename):
+    def fromFakeInterf(filename : str) -> _ot.ImageData:
         """
         Function for fake interferometer
 
@@ -439,7 +440,7 @@ class _InterferometerConverter:
         return masked_ima
 
     @staticmethod
-    def fromI4DToSimplerData(i4dname, folder, h5name):
+    def fromI4DToSimplerData(i4dname: str, folder: str, h5name: str) -> str:
         """
         Function for converting files from 4D 6110 files to H5 files
 

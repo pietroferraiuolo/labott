@@ -14,7 +14,7 @@ global CAPTURE_FOLDER_NAME_4D_PC
 global PRODUCE_FOLDER_NAME_4D_PC
 global PRODUCE_FOLDER_NAME_LOCAL_PC
 
-def _create_folder(path):
+def _create_folder(path: str) -> None:
     if not _os.path.exists(path):
         _os.makedirs(path)
 
