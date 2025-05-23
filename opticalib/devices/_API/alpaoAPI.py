@@ -5,7 +5,7 @@ from opticalib.core.exceptions import CommandError
 
 class BaseAlpaoMirror:
 
-    def __init__(self, ip: str, port: int, nActs: int):
+    def __init__(self, ip: str|None, port: int|None, nActs: int|str|None):
         self._dmCoords = {
             "dm97": [5, 7, 9, 11],
             "dm277": [7, 9, 11, 13, 15, 17, 19],
@@ -68,11 +68,11 @@ class BaseAlpaoMirror:
         self.actCoord = _np.array([cx, cy])
         return self.actCoord
 
-    def _init_dm(self, ip: str, port: int, nacts: int) -> object:
+    def _init_dm(self, ip: str|None, port: int|None, nacts: int|str|None) -> object:
         import plico_dm
 
         if (ip, port) == (None, None) and nacts is not None:
-            name = f"Alpao{nacts}"
+            name = f"Alpao{int(nacts)}"
             self.ip, self.port = getDmAddress(name)
         elif (ip, port, nacts) == (None, None, None):
             raise ValueError("Either (ip, port) or nacts must be provided.")

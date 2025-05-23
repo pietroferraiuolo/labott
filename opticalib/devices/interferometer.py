@@ -14,7 +14,7 @@ class AccuFiz(_api.BaseInterferometer):
     Class for the AccuFiz Laser Interferometer.
     """
 
-    def __init__(self, model: ot_Optional[str|int] = None, ip: str = None, port: int = None):
+    def __init__(self, model: _ot.Optional[str|int] = None, ip: str = None, port: int = None):
         """The constructor"""
         self.name = "AccuFiz" + str(model)
         super().__init__(self.name, ip, port)

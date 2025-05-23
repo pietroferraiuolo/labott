@@ -23,9 +23,9 @@ class AlpaoDm(_api.BaseAlpaoMirror, _api.base_devices.BaseDeformableMirror):
     Alpao Deformable Mirror interface.
     """
 
-    def __init__(self, ip: str = None, port: int = None, nacts: int = None):
+    def __init__(self, nacts: _ot.Optional[int|str] = None, ip: _ot.Optional[str] = None, port: _ot.Optional[int] = None):
         """The Contructor"""
-        super.__init__(ip, port, nacts)
+        super().__init__(ip, port, nacts)
         self.baseDataPath = _opdi
 
     def get_shape(self) -> _ot.ArrayLike:

@@ -231,7 +231,7 @@ def read_phasemap(file_path: str) -> _ot.ImageData:
     return image
 
 
-def load_fits(filepath: str) -> _ot.ImageData | _ot._CubeData | _ot.MatrixLike | _ot.ArrayLike | _ot.Any:
+def load_fits(filepath: str) -> _ot.ImageData | _ot.CubeData | _ot.MatrixLike | _ot.ArrayLike | _ot.Any:
     """
     Loads a FITS file.
 
@@ -255,7 +255,7 @@ def load_fits(filepath: str) -> _ot.ImageData | _ot._CubeData | _ot.MatrixLike |
 
 def save_fits(
     filepath: str,
-    data: _ot.ImageData | _ot._CubeData | _ot.MatrixLike | _ot.ArrayLike | _ot.Any,
+    data: _ot.ImageData | _ot.CubeData | _ot.MatrixLike | _ot.ArrayLike | _ot.Any,
     overwrite: bool = True,
     header: dict[str, any] | _fits.Header = None,
 ) -> None:
