@@ -231,7 +231,7 @@ def read_phasemap(file_path: str) -> _ot.ImageData:
     return image
 
 
-def load_fits(filepath: str) -> _ot.ImageData | _ot.CubeData | _ot.MatrixLike | _ot.ArrayLike | _ot.Any:
+def load_fits(filepath: str, return_header:bool = False) -> tuple[_ot.ImageData|_ot.CubeData|_ot.MatrixLike|_ot.ArrayLike,_ot.Any]:
     """
     Loads a FITS file.
 
@@ -239,17 +239,24 @@ def load_fits(filepath: str) -> _ot.ImageData | _ot.CubeData | _ot.MatrixLike | 
     ----------
     filepath : str
         Path to the FITS file.
-
+    return_header: bool
+        Wether to return the header of the loaded fits file. Default is False.
+    
     Returns
     -------
     fit : np.ndarray or np.ma.MaskedArray
         FITS file data.
+    header : dict | fits.Header, optional
+        The header of the loaded fits file.
     """
     with _fits.open(filepath) as hdul:
         fit = hdul[0].data
         if len(hdul) > 1 and hasattr(hdul[1], "data"):
             mask = hdul[1].data.astype(bool)
             fit = _masked_array(fit, mask=mask)
+        if return_header:
+            header = hdul[0].header
+            return fit, header
     return fit
 
 
