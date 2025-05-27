@@ -136,7 +136,7 @@ def getFileList(tn: str = None, fold: str = None, key: str = None) -> list[str]:
                         [_os.path.join(path, file) for file in _os.listdir(path)]
                     )
                 else:
-                    raise Exception
+                    continue
         except Exception as exc:
             raise FileNotFoundError(
                 f"Invalid Path: no data found for tn '{tn}'"

@@ -71,6 +71,7 @@ class _DMProtocol(Protocol):
 DeformableMirrorDevice = TypeVar("DeformableMirrorDevice", bound=_DMProtocol)
 
 GenericDevice = TypeVar("GenericDevice")
+
 ################################
 ## Custom `isinstance` checks ##
 ################################

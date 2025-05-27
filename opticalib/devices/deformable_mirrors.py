@@ -73,7 +73,7 @@ class AlpaoDm(_api.BaseAlpaoMirror, _api.base_devices.BaseDeformableMirror):
                 self.set_shape(cmd)
                 if interf is not None:
                     _time.sleep(delay)
-                    img = interf.acquire_phasemap()
+                    img = interf.acquire_map()
                     path = _os.path.join(datafold, f"image_{i:05d}.fits")
                     _sf(path, img)
         self.set_shape(s)

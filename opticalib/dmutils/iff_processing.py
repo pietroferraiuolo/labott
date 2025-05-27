@@ -119,7 +119,7 @@ def process(
         saveCube(tn, rebin=rebin, register=dx)
 
 
-def saveCube(tn: str, rebin: int = 1, register: bool = False) -> _ot.CubeData:
+def saveCube(tn: str, rebin: int = 1, register: bool = False, cube_header = None) -> _ot.CubeData:
     """
     Creates and save a cube from the fits files contained in the tn folder,
     along with the command matrix and the modes vector fits.
@@ -136,6 +136,8 @@ def saveCube(tn: str, rebin: int = 1, register: bool = False) -> _ot.CubeData:
         If not False, and int or a tuple of int must be passed as value, and
         the registration algorithm is performed on the images before stacking them
         into the cube. Default is False.
+    cube_header : dict | Header, optional
+        Header to be used for the cube. If None, a default header is created.
 
     Returns
     -------
@@ -143,7 +145,6 @@ def saveCube(tn: str, rebin: int = 1, register: bool = False) -> _ot.CubeData:
         Data cube of the images, with shape (npx, npx, nmodes).
     """
     from opticalib.analyzer import cubeRebinner, createCube
-
     old_fold = _os.path.join(_ifFold, tn)
     filelist = _osu.getFileList(fold=old_fold, key="mode_")
     cube = createCube(filelist, register=register)
@@ -155,7 +156,7 @@ def saveCube(tn: str, rebin: int = 1, register: bool = False) -> _ot.CubeData:
     if not _os.path.exists(new_fold):
         _os.mkdir(new_fold)
     cube_path = _os.path.join(new_fold, cubeFile)
-    _osu.save_fits(cube_path, cube, overwrite=True)
+    _osu.save_fits(cube_path, cube, overwrite=True, header=cube_header)
     # Copying the cmdMatrix and the ModesVector into the INTMAT Folder
     cmat = _osu.load_fits(_os.path.join(_ifFold, tn, "cmdMatrix.fits"))
     mvec = _osu.load_fits(_os.path.join(_ifFold, tn, "modesVector.fits"))
