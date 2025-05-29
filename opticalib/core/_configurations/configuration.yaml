@@ -49,6 +49,14 @@ INFLUENCE.FUNCTIONS:
     template: [1, -1, 1]
     modalbase: hadamard
 
+
+STITCHING:
+  pixel_scale: 0.09095 # mm/px
+  alpha: 0 # degrees
+  starting_coords: [0,0] # motors position in mm
+  home_coords: [0,0] # motors position in mm
+
+
 # Filled, as example, with M4 OTT configuration
 SYSTEM.ALIGNMENT:
   names:

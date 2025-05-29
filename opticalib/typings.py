@@ -12,6 +12,7 @@ from typing import (
 import collections.abc
 import numpy as _np
 from numpy.typing import ArrayLike
+from astropy.io.fits import Header
 
 if TYPE_CHECKING:
     from .devices import AlpaoDm, SplattDm, PhaseCam
@@ -192,7 +193,7 @@ class InstanceCheck:
         try:
             check = checks[class_name](obj)
         except TypeError:
-            check = checks(obj, class_name)
+            check = checks[class_name](obj, class_name)
         return check
 
 

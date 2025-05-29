@@ -7,8 +7,6 @@ Author(s)
 import yaml
 import os as _os
 import numpy as _np
-import json as _json
-import shutil as _sh
 from .exceptions import DeviceNotFoundError
 
 global _cfold
@@ -48,7 +46,7 @@ def load_yaml_config(path: str = None):
 
     Parameters
     ----------
-    bpath : str, optional
+    path : str, optional
         Base path of the file to read. Default points to the configuration root folder.
 
     Returns
@@ -395,3 +393,16 @@ def getAlignmentConfig():
             else:
                 raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
     return alignmentConfig(config)
+
+
+def getStitchingConfig():
+    """
+    Reads the stitching settings in the configuration file.
+
+    Returns
+    -------
+    config : dict
+        The defined stitching parameters.
+    """
+    config = (load_yaml_config(_cfile))['STITCHING']
+    return config
