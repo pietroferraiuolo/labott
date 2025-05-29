@@ -130,7 +130,7 @@ class StitchAnalysis:
         np.MaskedArray
             The stitched image
         """
-        coords = self.retrieveCubeCoords(cube=cube.shape[-1], header=header)
+        coords = self.retrieveCubeCoords(n_positions=cube.shape[-1], header=header)
         coords = self._transform_coord(coords, deg=deg)
         if average is not None:
             pass
@@ -177,7 +177,7 @@ class StitchAnalysis:
 
 
     def retrieveCubeCoords(
-        self, n_positions: int, header: dict[str, _ot.Ant] | _ot.Header
+        self, n_positions: int, header: dict[str, _ot.Any] | _ot.Header
     ) -> _ot.ArrayLike:
         """
         Returns the coordinates written in the cube's header
@@ -285,7 +285,7 @@ class StitchAnalysis:
         for i in range(len(pixpos)):
             yi = slice(pixpos[i, 0], pixpos[i, 0] + imgsize[0])
             xi = slice(pixpos[i, 1], pixpos[i, 1] + imgsize[1])
-            fullmask[xi, yi] = imgf[xi, yi] * (maskvec[i])
+            fullmask[xi, yi] = fullmask[xi, yi] * (maskvec[i])
             imgf = _np.ma.zeros([int(imgfsize[0]), int(imgfsize[1])])
             maskf = _np.ones([int(imgfsize[0]), int(imgfsize[1])])
             imgf[xi, yi] = imgcube[i]
@@ -295,7 +295,7 @@ class StitchAnalysis:
             # imgf = _np.ma.masked_array(imgf,maskf)
             imgvecout.append(imgf)
         imgvecout = _np.ma.dstack(imgvecout)
-        return fullmask, imgvecout
+        return fullmask, _np.transpose(imgvecout, (2,0,1))
 
 
 class StitchAcquire:
