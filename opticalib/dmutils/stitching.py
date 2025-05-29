@@ -264,9 +264,9 @@ class StitchAnalysis:
         imgvecout : _ot.CubeData
             A cube of images masked and placed according to the specified positions.
         """
-        n1, n2, n3 = _np.shape(imgcube)
+        n1,n2,n3 = _np.shape(imgcube)
         if n1 == n2:
-            imgcube = _np.transpose(imgcube, (2, 0, 1))
+            imgcube = _np.transpose(imgcube.copy(), (2, 0, 1))
         elif n2 == n3:
             pass
         else:
@@ -289,10 +289,8 @@ class StitchAnalysis:
             imgf = _np.ma.zeros([int(imgfsize[0]), int(imgfsize[1])])
             maskf = _np.ones([int(imgfsize[0]), int(imgfsize[1])])
             imgf[xi, yi] = imgcube[i]
-            # imgf = imgf.data
             maskf[xi, yi] = maskf[xi, yi] * (maskvec[i])
             imgf.mask = maskf
-            # imgf = _np.ma.masked_array(imgf,maskf)
             imgvecout.append(imgf)
         imgvecout = _np.ma.dstack(imgvecout)
         return fullmask, _np.transpose(imgvecout, (2,0,1))
