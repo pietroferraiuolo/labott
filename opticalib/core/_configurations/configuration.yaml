@@ -15,12 +15,19 @@ DEVICES:
         capture_4dpc: "D:/M4/Capture"
         produce_4dpc: "D:/M4/Produced"
         produce: "/home/m4/4d/M4/Produced"
-
+    AccuFizAO:
+      ip: "193.206.155.218"
+      port: 8011
+      Paths:
+        settings: "/home/labot/Shared4DFolders/AccuFizAOConfig/AppSettings.ini"
+        copied_settings: '4DSettings.ini'
+        capture_4dpc: "C:/Data/Capture"
+        produce_4dpc: "C:/Data/Produced"
+        produce: "/home/labot/Shared4DFolders/AccuFizAOData/Produced"
   DEFORMABLE.MIRRORS:
     AlpaoXXX:
       ip:
       port:
-
     Splatt:
       ip: '193.206.155.220'
       port: 9090
@@ -49,13 +56,11 @@ INFLUENCE.FUNCTIONS:
     template: [1, -1, 1]
     modalbase: hadamard
 
-
 STITCHING:
   pixel_scale: 0.09095 # mm/px
   alpha: 0 # degrees
   starting_coords: [0,0] # motors position in mm
   home_coords: [0,0] # motors position in mm
-
 
 # Filled, as example, with M4 OTT configuration
 SYSTEM.ALIGNMENT:

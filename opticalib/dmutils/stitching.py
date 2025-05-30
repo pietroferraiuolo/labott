@@ -19,8 +19,10 @@ class StitchAnalysis:
     to perform the stitching algorithm and produce stitched images.
     """
     
-    def __init__(self):
+    def __init__(self, tn: _ot.Optional[str] = None):
+        """The Initiation"""
         self.constants = _gsc()
+        self.tn = tn
 
 
     def processTns(self, tnvec: list[str, tuple[float] | list[float]]) -> str:
@@ -165,7 +167,7 @@ class StitchAnalysis:
         if deg is None:
             deg = self.constants["alpha"]
         cube, header = _osu.load_fits(
-            _os.path.join(_fn.OPD_IMAGES_ROOT_FOLDER, tn), True
+            _os.path.join(_fn.OPD_IMAGES_ROOT_FOLDER, tn, 'cube.fits'), True
         )
         coords = self.retrieveCubeCoords(n_positions=cube.shape[-1], header=header)
         coords = self._transform_coord(coords, deg=deg)
@@ -198,6 +200,26 @@ class StitchAnalysis:
         for ii in range(n_positions):
             coords.append((header[f"X{ii}"], header[f"Z{ii}"]))
         return _np.array(coords)
+    
+
+    def getCubeAndHeader(filepath: str) -> tuple[_ot.CubeData, dict[str, _ot.Any]]:
+        """
+        Load a cube and its header from a FITS file.
+
+        Parameters
+        ----------
+        filepath : str
+            The path to the FITS file.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the transposed cube data (shape `[n_img,n_px,n_px]`)
+            and the header.
+        """
+        cube, header = _osu.load_fits(filepath, True)
+        cube = _np.transpose(cube.copy(), (2, 0, 1))
+        return cube, header
 
 
     def reloadConstants(self):
@@ -267,6 +289,8 @@ class StitchAnalysis:
         n1,n2,n3 = _np.shape(imgcube)
         if n1 == n2:
             imgcube = _np.transpose(imgcube.copy(), (2, 0, 1))
+        elif n1==n3:
+            imgcube = _np.transpose(imgcube.copy(), (1, 0, 2))
         elif n2 == n3:
             pass
         else:
