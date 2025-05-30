@@ -8,6 +8,7 @@ from . import iff_module as _iff, iff_processing as _ifp
 from opticalib import typings as _ot
 from opticalib.core.read_config import getStitchingConfig as _gsc
 from ._stitching_algorithm import map_stitching as _map_stitching
+from skimage.draw import disk as _disk
 
 
 _ts = _osu.newtn
@@ -220,6 +221,59 @@ class StitchAnalysis:
         cube, header = _osu.load_fits(filepath, True)
         cube = _np.transpose(cube.copy(), (2, 0, 1))
         return cube, header
+    
+
+    def remaskCube(self, mask_radius_in_mm: float, cube: _ot.CubeData, header: dict[str, _ot.Any]|_ot.Header) -> _ot.CubeData:
+        """
+        Remask all the images in the cube by intersecting a circular mask with
+        a specified radius with the already existing one.
+
+        Parameters
+        ----------
+        mask_radius : float
+            The radius of the circular mask in pixels.
+        cube : _ot.CubeData
+            The input image cube to be remasked.
+        header : dict[str, _ot.Any]
+            The header of the cube containing the coordinates.
+
+        Returns
+        -------
+        new_cube : _ot.CubeData
+            The remasked image cube.
+        new_header : dict[str, _ot.Any]
+            The updated header with the coordinates of the remasked images.
+        """
+        n1,n2,n3 = _np.shape(cube)
+        if n1 == n2:
+            cube = _np.transpose(cube.copy(), (2, 0, 1))
+        elif n1==n3:
+            cube = _np.transpose(cube.copy(), (1, 0, 2))
+        elif n2 == n3:
+            pass
+        else:
+            print(
+                "Warning: could not determine the right cube orientation. Be sure it is `(n_img, n_px, n_px)`"
+            )
+        img_shape = _np.shape(cube[1:])
+        mask_center = (img_shape[0] // 2, img_shape[1] // 2)
+        mask_radius_px = int(mask_radius_in_mm // self.constants["pixel_scale"])
+        mask = _np.ones(img_shape)
+        mx, my = _disk(mask_center, mask_radius_px)
+        mask[mx, my] = 0
+        new_cube = []
+        new_header = {}
+        for i, img in enumerate(cube):
+            new_header.update({f"X{i}": header[f"X{i}"],
+                               f"Z{i}": header[f"Z{i}"]})
+            new_mask = _np.logical_and(img.mask, mask)
+            newimg = _np.ma.masked_array((img.copy()).data, mask=new_mask)
+            new_cube.append(newimg)
+        new_cube = _np.ma.dstack(new_cube)
+        new_cube = _np.transpose(new_cube, (2, 0, 1))
+        return new_cube, new_header
+
+
 
 
     def reloadConstants(self):
