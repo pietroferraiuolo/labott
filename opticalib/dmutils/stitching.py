@@ -133,7 +133,8 @@ class StitchAnalysis:
         np.MaskedArray
             The stitched image
         """
-        coords = self.retrieveCubeCoords(n_positions=cube.shape[-1], header=header)
+        cube = self._check_cube_dimension(cube)
+        coords = self.retrieveCubeCoords(n_positions=cube.shape[0], header=header)
         coords = self._transform_coord(coords, deg=deg)
         if average is not None:
             pass
@@ -167,10 +168,10 @@ class StitchAnalysis:
         """
         if deg is None:
             deg = self.constants["alpha"]
-        cube, header = _osu.load_fits(
-            _os.path.join(_fn.OPD_IMAGES_ROOT_FOLDER, tn, 'cube.fits'), True
+        cube, header = self.getCubeAndHeader(
+            _os.path.join(_fn.OPD_IMAGES_ROOT_FOLDER, tn, 'cube.fits')
         )
-        coords = self.retrieveCubeCoords(n_positions=cube.shape[-1], header=header)
+        coords = self.retrieveCubeCoords(n_positions=cube.shape[0], header=header)
         coords = self._transform_coord(coords, deg=deg)
         if average is not None:
             pass
@@ -203,7 +204,7 @@ class StitchAnalysis:
         return _np.array(coords)
     
 
-    def getCubeAndHeader(filepath: str) -> tuple[_ot.CubeData, dict[str, _ot.Any]]:
+    def getCubeAndHeader(self, filepath: str) -> tuple[_ot.CubeData, dict[str, _ot.Any]]:
         """
         Load a cube and its header from a FITS file.
 
@@ -219,7 +220,7 @@ class StitchAnalysis:
             and the header.
         """
         cube, header = _osu.load_fits(filepath, True)
-        cube = _np.transpose(cube.copy(), (2, 0, 1))
+        cube = self._check_cube_dimension(cube)
         return cube, header
     
 
@@ -244,6 +245,36 @@ class StitchAnalysis:
         new_header : dict[str, _ot.Any]
             The updated header with the coordinates of the remasked images.
         """
+        cube = self._check_cube_dimension(cube)
+        img_shape = (cube.shape[1], cube.shape[2])
+        mask_center = (img_shape[0] // 2, img_shape[1] // 2)
+        mask_radius_px = int(mask_radius_in_mm // self.constants["pixel_scale"])
+        mask = _np.ones(img_shape)
+        mx, my = _disk(mask_center, mask_radius_px)
+        mask[mx, my] = 0
+        new_cube = []
+        new_header = {}
+        for i, img in enumerate(cube):
+            new_header.update({f"X{i}": header[f"X{i}"],
+                               f"Z{i}": header[f"Z{i}"]})
+            new_mask = _np.logical_or(img.mask, mask)
+            newimg = _np.ma.masked_array((img.copy()).data, mask=new_mask)
+            new_cube.append(newimg)
+        new_cube = _np.ma.dstack(new_cube)
+        new_cube = _np.transpose(new_cube, (2, 0, 1))
+        return new_cube, new_header
+
+
+    def reloadConstants(self) -> None:
+        """Reload the constants from the configuration file"""
+        self.constants = _gsc()
+        print("Constants reloaded")
+
+    
+    def _check_cube_dimension(self, cube: _ot.CubeData) -> _ot.CubeData:
+        """
+        Check and returns the cube with dimension `(n_img,n_px,n_px)`
+        """
         n1,n2,n3 = _np.shape(cube)
         if n1 == n2:
             cube = _np.transpose(cube.copy(), (2, 0, 1))
@@ -255,31 +286,7 @@ class StitchAnalysis:
             print(
                 "Warning: could not determine the right cube orientation. Be sure it is `(n_img, n_px, n_px)`"
             )
-        img_shape = _np.shape(cube[1:])
-        mask_center = (img_shape[0] // 2, img_shape[1] // 2)
-        mask_radius_px = int(mask_radius_in_mm // self.constants["pixel_scale"])
-        mask = _np.ones(img_shape)
-        mx, my = _disk(mask_center, mask_radius_px)
-        mask[mx, my] = 0
-        new_cube = []
-        new_header = {}
-        for i, img in enumerate(cube):
-            new_header.update({f"X{i}": header[f"X{i}"],
-                               f"Z{i}": header[f"Z{i}"]})
-            new_mask = _np.logical_and(img.mask, mask)
-            newimg = _np.ma.masked_array((img.copy()).data, mask=new_mask)
-            new_cube.append(newimg)
-        new_cube = _np.ma.dstack(new_cube)
-        new_cube = _np.transpose(new_cube, (2, 0, 1))
-        return new_cube, new_header
-
-
-
-
-    def reloadConstants(self):
-        """Reload the constants from the configuration file"""
-        self.constants = _gsc()
-        print("Constants reloaded")
+        return cube
 
 
     def _transform_coord(
@@ -340,24 +347,14 @@ class StitchAnalysis:
         imgvecout : _ot.CubeData
             A cube of images masked and placed according to the specified positions.
         """
-        n1,n2,n3 = _np.shape(imgcube)
-        if n1 == n2:
-            imgcube = _np.transpose(imgcube.copy(), (2, 0, 1))
-        elif n1==n3:
-            imgcube = _np.transpose(imgcube.copy(), (1, 0, 2))
-        elif n2 == n3:
-            pass
-        else:
-            print(
-                "Warning: could not determine the right cube orientation. Be sure it is `(n_img, n_px, n_px)`"
-            )
+        imgcube = self._check_cube_dimension(imgcube)
         maskvec = []
         for ii in imgcube:
             maskvec.append(ii.mask)
-        ps = 1 / self.constants["pixel_scale"] * 1000
+        ps = 1/self.constants["pixel_scale"] * 1000
         pixpos = (pos * ps).astype(int)
         imgsize = _np.array(_np.shape(maskvec[0])).astype(int)
-        imgfsize = imgsize + pixpos.max(0)
+        imgfsize = imgsize + pixpos.max() # -> cambiato da `.max(0)`
         fullmask = _np.ones([int(imgfsize[0]), int(imgfsize[1])])
         imgvecout = []
         for i in range(len(pixpos)):
