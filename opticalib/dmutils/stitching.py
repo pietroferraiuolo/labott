@@ -224,7 +224,7 @@ class StitchAnalysis:
         return cube, header
     
 
-    def remaskCube(self, mask_radius_in_mm: float, cube: _ot.CubeData, header: dict[str, _ot.Any]|_ot.Header) -> _ot.CubeData:
+    def remaskCube(self, mask_radius: float, cube: _ot.CubeData, header: dict[str, _ot.Any]|_ot.Header) -> _ot.CubeData:
         """
         Remask all the images in the cube by intersecting a circular mask with
         a specified radius with the already existing one.
@@ -232,7 +232,7 @@ class StitchAnalysis:
         Parameters
         ----------
         mask_radius : float
-            The radius of the circular mask in pixels.
+            The radius of the circular mask in millimeters.
         cube : _ot.CubeData
             The input image cube to be remasked.
         header : dict[str, _ot.Any]
@@ -248,7 +248,7 @@ class StitchAnalysis:
         cube = self._check_cube_dimension(cube)
         img_shape = (cube.shape[1], cube.shape[2])
         mask_center = (img_shape[0] // 2, img_shape[1] // 2)
-        mask_radius_px = int(mask_radius_in_mm // self.constants["pixel_scale"])
+        mask_radius_px = int(mask_radius // self.constants["pixel_scale"])
         mask = _np.ones(img_shape)
         mx, my = _disk(mask_center, mask_radius_px)
         mask[mx, my] = 0
