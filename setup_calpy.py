@@ -15,6 +15,7 @@ def main():
     home = os.path.expanduser("~")
     mnt = '/mnt/'
     media = '/media/'
+    init_file = os.path.join(os.path.dirname(__file__), '__init_script__', 'initCalpy.py')
     # Check if ipython3 is installed
     if not shutil.which("ipython3"):
         print("Error: ipython3 is not installed or not in your PATH.")
@@ -61,7 +62,7 @@ no option : Initialize an ipython3 --pylab='qt' shell
             if not os.path.exists(config_path):
                 config_path = os.path.join(os.path.dirname(config_path), 'SysConfig', 'configuration.yaml')
             print("\n Initiating IPython Shell, importing Opticalib...\n")
-            os.system(f"export AOCONF={config_path} && ipython3 --pylab='qt' -i -c 'import opticalib'")
+            os.system(f"export AOCONF={config_path} && ipython3 --pylab='qt' -i '{init_file}'")
         except OSError as ose:
             print(f"Error: {ose}")
             sys.exit(1)

@@ -5,9 +5,38 @@
 
 import numpy as np
 from opticalib.ground import zernike as zern
+from typing import Callable, Any
+
+import time
+import functools
+import gc
 
 
+def timer(func: Callable) -> Callable:
+    """
+    Simple timing decorator for functions.
+    
+    Parameters
+    ----------
+    func : Callable
+        Function to be timed.
+        
+    Returns
+    -------
+    Callable
+        Wrapped function that prints execution time.
+    """
+    @functools.wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        print(f"{func.__name__} executed in {end_time - start_time:.4f} seconds")
+        return result
+    return wrapper
 
+
+@timer
 def map_stitching(zz, fullmask, idr):
     """
     
@@ -27,67 +56,77 @@ def map_stitching(zz, fullmask, idr):
 # idx = zernike to remove
 
     N = zz.shape[0]  # Number of images
-
     MM = fullmask.copy()
     M = len(idr)
-#    p = [ZernikeCalc(i, 1, MM, 'noll') for i in idr]  # Create base matrices
 
-    pippo = np.ones(np.shape(MM))*2
-    base = np.ma.masked_array(pippo, MM)
+#   p = [ZernikeCalc(i, 1, MM, 'noll') for i in idr]  # Create base matrices
+
+    base = np.ma.masked_array(np.full(MM.shape, 2, dtype=float), MM)
     _, mat = zern.zernikeFit(base, idr)
-    p = []
-    temp = np.zeros(len(idr))
-    for ii in range(len(idr)):
-        temp[ii]=1
-        surf = zern.zernikeSurface(base, temp, mat)
-        p.append(surf)
+    
+    temp = np.tri(M, dtype=float)
+    p = np.array([zern.zernikeSurface(base, temp[i], mat) for i in range(M)])
+
+    # p = []
+    # temp = np.zeros(M)
+    # for ii in range(M):
+        # temp[ii]=1
+        # surf = zern.zernikeSurface(base, temp, mat)
+        # p.append(surf)
 
     Qo = np.tile(p, (M, 1,1))
 #    Qv = np.tile(np.array(p).T, (1, M)) # matrici trasposte che non ci piacciono
 # matrice diagonale a blocchi
-    v_temp = np.arange(M**2)
-    m_temp = np.reshape(v_temp,(M,M))
-    v_order = np.reshape(m_temp.T,(1,M**2))
-    q = []
-    for ii in range(M**2): # Compute q matrices
 
-        qo = Qo[ii]
-        qv = Qo[v_order[0,ii]]
-        q.append(qo*qv)
+    v_order = np.reshape(
+        np.reshape(
+            np.arange(M**2),(M,M)
+            ).T,
+        (1,M**2)
+    )
+
+    # q = []
+    # for ii in range(M**2): # Compute q matrices
+    #     qo = Qo[ii]
+    #     qv = Qo[v_order[0,ii]]
+    #     q.append(qo*qv)
+    q = Qo * Qo[v_order[0]]
 
     Q = []
     P = []
     for ii in range(N):
         for jj in range(N):
+            print(f"{ii = :03d}/{N}, {jj = :03d}/{N}", end='\r', flush=True)
             mm = np.logical_or(zz[ii, :, :].mask, zz[jj, :, :].mask)
 #            idx = np.argwhere(mm==True)
             if ii == jj:
                # Q[(ii, jj)] = np.zeros((M, M))
                 Q.append(np.zeros(M**2))
             else:
-                Qn = []
-                for ki in range(M**2):
-#                    temp = np.ma.masked_array(q[ki], mm)
-                    temp = q[ki]*(-1*mm+1)
-                    #temp[idx] = 0.0
-                    Qn.append(np.sum(temp[:]))
+#                 Qn = []
+#                 for ki in range(M**2):
+# #                    temp = np.ma.masked_array(q[ki], mm)
+#                     temp = q[ki]*(-1*mm+1)
+#                     #temp[idx] = 0.0
+#                     Qn.append(np.sum(temp[:]))
 
                # for ki in range(M):
                #     for kj in range(M):
                #         Qn[ki, kj] = np.sum(q[ki][kj][mm])
-                Q.append(Qn)
+                Q.append(np.sum(q * (-1*mm+1), axis=(1,2)))
 
             img = zz[ii, :, :] - zz[jj, :, :]
-            Pn = []
-            for ki in range(M):
-                temp2 = p[ki]*(-1*mm+1)
-#                temp2[idx] = 0.0
-#                np.ma.masked_array(p[ki],mm).data
-                Pn.append(np.array(np.nansum(temp2*img.data)))
-            P.append(Pn)
+#             Pn = []
+#             for ki in range(M):
+#                 temp2 = p[ki]*(-1*mm+1)
+# #                temp2[idx] = 0.0
+# #                np.ma.masked_array(p[ki],mm).data
+#                 Pn.append(np.array(np.nansum(temp2*img.data)))
+            P.append(np.array(np.nansum(p*(-1*mm+1)*img.data, axis=(1,2))))
 
-    P = np.array(P)
-    P1 = np.reshape(P,(N,N,M))
+    #P = np.array(P)
+    P1 = np.reshape(np.array(P),(N,N,M))
+
     Pt = []
     for ii in range(N):
 #        temp = np.sum(P1[:,ii],axis=0)
@@ -96,12 +135,12 @@ def map_stitching(zz, fullmask, idr):
 
     PP = np.reshape(Pt,M*N)
 
-    Q = np.array(Q)
-    Q1 = np.reshape(Q,(N,N,M**2))
-
+    #Q = np.array(Q)
+    Q1 = np.reshape(np.array(Q),(N,N,M**2))
     QQ = np.reshape(Q1,(N,N,M,M))
 
     temp = np.vstack([np.hstack([QQ[ii, jj,:,:] for ii in range(N)]) for jj in range(N)]) #N-1
+
     QQ = temp.copy()
 #    QQ = np.vstack([np.hstack([Q[(ii, jj)] for jj in range(N-1)]) for ii in range(N-1)])
 
@@ -131,11 +170,11 @@ def map_stitching(zz, fullmask, idr):
         res = np.zeros_like(MM)
         for ki in range(M):
             res += p[ki] * c[ii, ki]
-        tmp = img + res
-        tmp = tmp*(-1*mm+1)
-        tmp = np.ma.masked_array(tmp,mm)
+        # tmp = img + res
+        # tmp = tmp*(-1*mm+1)
+        # tmp = np.ma.masked_array((img+res)*(-1*mm+1),mm)
 #        tmp[~mm] = 0
-        zzc[ii, :, :] = tmp
+        zzc[ii, :, :] = np.ma.masked_array((img+res)*(-1*mm+1),mm)
 
 #    zzc[:, :, N-1] = zz[:, :, N-1]
 
