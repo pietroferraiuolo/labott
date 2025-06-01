@@ -252,14 +252,19 @@ class StitchAnalysis:
         mask = _np.ones(img_shape)
         mx, my = _disk(mask_center, mask_radius_px)
         mask[mx, my] = 0
+        mask_pixels = _np.sum(~mask.astype(bool))
         new_cube = []
         new_header = {}
+        j=0
         for i, img in enumerate(cube):
-            new_header.update({f"X{i}": header[f"X{i}"],
-                               f"Z{i}": header[f"Z{i}"]})
             new_mask = _np.logical_or(img.mask, mask)
             newimg = _np.ma.masked_array((img.copy()).data, mask=new_mask)
-            new_cube.append(newimg)
+            newimg_pixels = _np.sum(~newimg.mask)
+            if not (newimg_pixels < 0.2*mask_pixels):
+                new_cube.append(newimg)
+                new_header.update({f"X{j}": header[f"X{i}"],
+                                f"Z{j}": header[f"Z{i}"]})
+                j += 1
         new_cube = _np.ma.dstack(new_cube)
         new_cube = _np.transpose(new_cube, (2, 0, 1))
         return new_cube, new_header
