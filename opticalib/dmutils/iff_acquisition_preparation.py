@@ -17,7 +17,6 @@ import os as _os
 import numpy as _np
 from opticalib.ground import osutils as _osu
 from opticalib.core import read_config as _rif
-from opticalib.core.root import IFFUNCTIONS_ROOT_FOLDER as _iffold
 from opticalib import typings as _ot
 from .iff_processing import _getAcqInfo
 
