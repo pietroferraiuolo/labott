@@ -75,7 +75,7 @@ class StitchAnalysis:
         return newtn
 
 
-    def stitchAllIffCubes(self, tn: str) -> _ot.CubeData:
+    def stitchAllIffCubes(self, tn: str, **stitchargs) -> _ot.CubeData:
         """
         Stitch the IFF cubes obtained during the acquisition, and produces a single cube
         for each IFF in different positions.
@@ -91,14 +91,16 @@ class StitchAnalysis:
             The cube of stitched iffs.
         """
         newtn = _ts()
+        print(newtn)
         dir = _os.path.join(_fn.INTMAT_ROOT_FOLDER, newtn)
         if not _os.path.exists(dir):
             _os.mkdir(dir)
         cubelist = _osu.getFileList(tn, fold="IntMatrices", key="mode_")
         stitch_list = []
-        for cube in cubelist:
+        for m,cube in enumerate(cubelist):
+            print(f"Mode {m}", flush=True)
             cube, header = _osu.load_fits(cube, True)
-            stitch_list.append(self.stitchSingleIffCube(cube, header))
+            stitch_list.append(self.stitchSingleIffCube(cube=cube, header=header,**stitchargs))
         stitched = _np.ma.dstack(stitch_list)
         header = {}
         header["STITCH"] = (True, "if the cube is the result of stitching")
@@ -111,7 +113,10 @@ class StitchAnalysis:
         self,
         cube: _ot.CubeData,
         header: dict[str, _ot.Any] | _ot.Header,
-        deg: float = None,
+        remask: float = None,
+        mask_threshold:float = 0.2,
+        step_size: _ot.Optional[float|int] = None,
+        deg: _ot.Optional[float] = None,
         average: _ot.Optional[_ot.ImageData] = None,
     ):
         """
@@ -123,6 +128,13 @@ class StitchAnalysis:
             The cube data to be stitched.
         header : dict or astropy.Header
             The header of the cube containing the coordinates.
+        remask : float, optional
+            The new mask radius, in mm, to apply to the cube images. Default
+            is False, meaning no remask.
+        mask_threshold : float, optional
+            Pixel threshold to trim images.
+        step_size : float | int, optional
+            The step size of the re-sampling of the iff.
         average: np.ndarray, optional
             The average image to subtract from the cube images.
         deg: float, optional
@@ -135,7 +147,25 @@ class StitchAnalysis:
         """
         cube = self._check_cube_dimension(cube)
         coords = self.retrieveCubeCoords(n_positions=cube.shape[0], header=header)
+        step = _np.abs(coords[0]-coords[1])
         coords = self._transform_coord(coords, deg=deg)
+        if remask:
+            cube, coords = self.remaskCube(remask, cube, coords, mask_threshold)
+        ocube = cube.copy()
+        ocoords = coords.copy()
+        try:
+            if step_size:
+                coords = []
+                cube = []
+                for k in range(0,ocube.shape[0], 2):
+                    cube.append(ocube[k])
+                    coords.append([ocoords[k,0],ocoords[k,1]])
+            coords = _np.array(coords)
+        finally:
+            import gc
+            del(ocube)
+            del(ocoords)
+            gc.collect()
         if average is not None:
             pass
         fm, iv = self._prepare_masks_and_images(cube, coords)
@@ -224,7 +254,7 @@ class StitchAnalysis:
         return cube, header
     
 
-    def remaskCube(self, mask_radius: float, cube: _ot.CubeData, header: dict[str, _ot.Any]|_ot.Header) -> _ot.CubeData:
+    def remaskCube(self, mask_radius: float, cube: _ot.CubeData, coords: _ot.ArrayLike, threshold: float = 0.2) -> _ot.CubeData:
         """
         Remask all the images in the cube by intersecting a circular mask with
         a specified radius with the already existing one.
@@ -254,20 +284,17 @@ class StitchAnalysis:
         mask[mx, my] = 0
         mask_pixels = _np.sum(~mask.astype(bool))
         new_cube = []
-        new_header = {}
-        j=0
+        new_coords = []
         for i, img in enumerate(cube):
             new_mask = _np.logical_or(img.mask, mask)
             newimg = _np.ma.masked_array((img.copy()).data, mask=new_mask)
             newimg_pixels = _np.sum(~newimg.mask)
-            if not (newimg_pixels < 0.2*mask_pixels):
+            if not (newimg_pixels < threshold*mask_pixels):
                 new_cube.append(newimg)
-                new_header.update({f"X{j}": header[f"X{i}"],
-                                f"Z{j}": header[f"Z{i}"]})
-                j += 1
+                new_coords.append([coords[i,0], coords[i,1]])
         new_cube = _np.ma.dstack(new_cube)
         new_cube = _np.transpose(new_cube, (2, 0, 1))
-        return new_cube, new_header
+        return new_cube, _np.array(new_coords)
 
 
     def reloadConstants(self) -> None:
@@ -292,7 +319,6 @@ class StitchAnalysis:
                 "Warning: could not determine the right cube orientation. Be sure it is `(n_img, n_px, n_px)`"
             )
         return cube
-
 
     def _transform_coord(
         self, coords: _ot.ArrayLike, deg: float = None
@@ -328,6 +354,15 @@ class StitchAnalysis:
             new_coords.append(cc)
         new_coords = _np.array(new_coords)
         rot_coords = new_coords + [-new_coords[:, 0].min(), -new_coords[:, 1].min()]
+        nsteps = int(_np.sqrt(len(coords)))
+        if (nsteps % 2) != 0:
+            new_ax = []
+            for k in range(0,len(rot_coords),nsteps):
+                new_ax.append(_np.flip(rot_coords[k:k+nsteps,0], axis=0))
+            nax = _np.array(new_ax[0])
+            for i in range(1,len(new_ax)):
+                nax = _np.hstack((nax, new_ax[i]))
+            rot_coords[:,0] = nax
         return rot_coords
 
 
