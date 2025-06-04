@@ -65,6 +65,7 @@ from . import typings as _ot
 
 _sc = _gac()
 
+
 class Alignment:
     """
     Class for the alignment procedure: calibration and correction.
@@ -100,7 +101,11 @@ class Alignment:
 
     """
 
-    def __init__(self, mechanical_devices: _ot.GenericDevice|list[_ot.GenericDevice], acquisition_devices: _ot.InterferometerDevice|list[_ot.InterferometerDevice]):
+    def __init__(
+        self,
+        mechanical_devices: _ot.GenericDevice | list[_ot.GenericDevice],
+        acquisition_devices: _ot.InterferometerDevice | list[_ot.InterferometerDevice],
+    ):
         """
         Initializes the Alignment class with mechanical and acquisition devices.
 
@@ -115,21 +120,22 @@ class Alignment:
         """
         self.mdev = mechanical_devices
         self.ccd = acquisition_devices
-        self.cmdMat = _rfits(_os.path.join(_fn.CONTROL_MATRIX_FOLDER, _sc.commandMatrix))
+        self.cmdMat = _rfits(
+            _os.path.join(_fn.CONTROL_MATRIX_FOLDER, _sc.commandMatrix)
+        )
         self.intMat = None
         self.recMat = None
         self._cmdAmp = None
         self._surface = (
-            _rfits(_sc.fitting_surface).mask
-            if not _sc.fitting_surface == ""
-            else None
+            _rfits(_sc.fitting_surface).mask if not _sc.fitting_surface == "" else None
         )
         self._moveFnc = self.__get_callables(self.mdev, _sc.devices_move_calls)
         self._readFnc = self.__get_callables(self.mdev, _sc.devices_read_calls)
         self._acquire = self.__get_callables(self.ccd, _sc.ccd_acquisition)
         self._devName = self.__get_dev_names(_sc.names, ndev=len(self._moveFnc))
         self._dof = [
-            _np.array(dof) if not isinstance(dof, _np.ndarray) else dof for dof in _sc.dof
+            _np.array(dof) if not isinstance(dof, _np.ndarray) else dof
+            for dof in _sc.dof
         ]
         self._dofTot = (
             _sc.devices_dof
@@ -140,15 +146,17 @@ class Alignment:
         self._zvec2fit = _np.arange(1, 11)
         self._zvec2use = _sc.zernike_to_use
         self._template = _sc.push_pull_template
-        self._dataPath = _fn.ALIGNMENT_ROOT_FOLDER if _sc.data_path is '' else _sc.data_path
-        self._logPath = _os.path.join(_fn.LOGGING_FILE_PATH, 'alignment.log')
+        self._dataPath = (
+            _fn.ALIGNMENT_ROOT_FOLDER if _sc.data_path is "" else _sc.data_path
+        )
+        self._logPath = _os.path.join(_fn.LOGGING_FILE_PATH, "alignment.log")
         self._txt = _logger.txtLogger(self._logPath.strip(".log") + "Record.txt")
         _logger.set_up_logger(self._logPath, 20)
 
     def correct_alignment(
         self,
         modes2correct: _ot.ArrayLike,
-        zern2correct : _ot.ArrayLike,
+        zern2correct: _ot.ArrayLike,
         tn: _ot.Optional[str] = None,
         apply: bool = False,
         n_frames: int = 15,
@@ -191,9 +199,7 @@ class Alignment:
         initpos = self.read_positions(show=False)
         zernike_coeff = self._zern_routine(image)
         if tn is not None:
-            intMat = _rfits(
-                self._dataPath + f"/{tn}/InteractionMatrix.fits"
-            )
+            intMat = _rfits(self._dataPath + f"/{tn}/InteractionMatrix.fits")
             self.intMat = intMat
         else:
             try:
@@ -205,9 +211,7 @@ class Alignment:
                 raise AttributeError(
                     "No internal matrix found. Please calibrate the alignment first."
                 )
-        reduced_intMat = intMat[
-            _np.ix_(zern2correct, modes2correct)
-        ]
+        reduced_intMat = intMat[_np.ix_(zern2correct, modes2correct)]
         reduced_cmdMat = self.cmdMat[:, modes2correct]
         recMat = self._create_rec_mat(reduced_intMat)
         reduced_cmd = _np.dot(recMat, zernike_coeff[zern2correct])
@@ -227,7 +231,7 @@ class Alignment:
 
     def calibrate_alignment(
         self,
-        cmdAmp: int|float|_ot.ArrayLike,
+        cmdAmp: int | float | _ot.ArrayLike,
         n_frames: int = 15,
         template: _ot.ArrayLike = None,
         n_repetitions: int = 1,
@@ -264,6 +268,7 @@ class Alignment:
         5. Optionally saves the internal matrix to a FITS file.
         """
         import os
+
         _logger.log(f"{self.calibrate_alignment.__qualname__}")
         self._cmdAmp = cmdAmp
         template = template if template is not None else self._template
@@ -278,7 +283,7 @@ class Alignment:
             _logger.log(f"{_sfits.__qualname__}")
         return "Ready for Alignment..."
 
-    def read_positions(self, show:bool=True) -> _ot.ArrayLike:
+    def read_positions(self, show: bool = True) -> _ot.ArrayLike:
         """
         Reads the current positions of the devices.
 
@@ -297,7 +302,7 @@ class Alignment:
             logMsg += f"{dev_name}" + " " * (16 - len(dev_name)) + f" : {temp}\n"
         logMsg += "-" * 30
         if show:
-            print(logMsg) 
+            print(logMsg)
         return pos
 
     def load_fitting_surface(self, filepath: str) -> str:
@@ -321,7 +326,9 @@ class Alignment:
         self._surface = surf
         return f"Correctly loaded '{filepath}'"
 
-    def _images_production(self, template: _ot.ArrayLike, n_frames: int, n_repetitions: int) -> _ot.CubeData:
+    def _images_production(
+        self, template: _ot.ArrayLike, n_frames: int, n_repetitions: int
+    ) -> _ot.CubeData:
         """
         Produces images based on the provided template and number of repetitions.
 
@@ -472,7 +479,9 @@ class Alignment:
             device_commands.append(res_cmd)
         return device_commands
 
-    def _img_acquisition(self, k: int, template: _ot.ArrayLike, n_frames: int) -> _ot.CubeData:
+    def _img_acquisition(
+        self, k: int, template: _ot.ArrayLike, n_frames: int
+    ) -> _ot.CubeData:
         """
         Acquires images based on the given template.
 
@@ -504,7 +513,9 @@ class Alignment:
             imglist.append(self._acquire[0](n_frames))
         return imglist
 
-    def _push_pull_redux(self, imglist: _ot.CubeData, template: _ot.ArrayLike) -> _ot.ImageData:
+    def _push_pull_redux(
+        self, imglist: _ot.CubeData, template: _ot.ArrayLike
+    ) -> _ot.ImageData:
         """
         Reduces the push-pull images based on the given template.
 
@@ -558,9 +569,11 @@ class Alignment:
             )
         )
         return
-    
+
     @staticmethod
-    def __get_callables(devices: _ot.GenericDevice|list[_ot.GenericDevice], callables: list[str]) -> list[_ot.Callable[...,_ot.Any]]:
+    def __get_callables(
+        devices: _ot.GenericDevice | list[_ot.GenericDevice], callables: list[str]
+    ) -> list[_ot.Callable[..., _ot.Any]]:
         """
         Returns a list of callables for the instanced object, taken from the
         configuration.py file.
@@ -614,7 +627,6 @@ class Alignment:
         return dev_names
 
 
-
 class _Command:
     """
     The _Command class represents a command with a vector and a flag indicating
@@ -640,7 +652,9 @@ class _Command:
             Processes the command logic to determine the to_ignore flag.
     """
 
-    def __init__(self, vector: _ot.ArrayLike = None, to_ignore: _ot.Optional[bool] = None):
+    def __init__(
+        self, vector: _ot.ArrayLike = None, to_ignore: _ot.Optional[bool] = None
+    ):
         """
         Initializes a new instance of the _Command class.
 
@@ -724,7 +738,9 @@ class _Command:
         """
         return _np.all(self.vect == 0)
 
-    def _process_command_logic(self, P: "_Command", C: "_Command", S: "_Command") -> bool:
+    def _process_command_logic(
+        self, P: "_Command", C: "_Command", S: "_Command"
+    ) -> bool:
         """
         Processes the command logic to determine the to_ignore flag.
 

@@ -17,11 +17,7 @@ from .ground import zernike as zern
 from .ground import osutils as osu
 from .core import root as _foldname
 from .ground.geo import qpupil as _qpupil
-from scipy import (
-    stats as _stats,
-    fft as _fft,
-    ndimage as _ndimage
-)
+from scipy import stats as _stats, fft as _fft, ndimage as _ndimage
 
 _OPDIMG = _foldname.OPD_IMAGES_ROOT_FOLDER
 _OPDSER = _foldname.OPD_SERIES_ROOT_FOLDER
@@ -496,7 +492,7 @@ def zernikePlot(mylist, modes=_np.array(range(1, 11))):
     zlist = []
     for i in range(imgcube.shape[-1]):
         print(i)
-        coeff, _ = zern.zernikeFit(imgcube[:,:,i], modes)
+        coeff, _ = zern.zernikeFit(imgcube[:, :, i], modes)
         zlist.append(coeff)
     zcoeff = _np.array(zlist)
     zcoeff = zcoeff.T
@@ -786,6 +782,7 @@ def modeRebinner(img, rebin):
     newImg = _rebin2DArray(img, new_shape)
     return newImg
 
+
 def cubeRebinner(cube, rebin):
     """
     Cube rebinner
@@ -796,7 +793,7 @@ def cubeRebinner(cube, rebin):
         Cube to rebin.
     rebin : int
         Rebinning factor.
-    
+
     Returns
     -------
     newCube : ndarray
@@ -804,8 +801,9 @@ def cubeRebinner(cube, rebin):
     """
     newCube = []
     for i in range(cube.shape[-1]):
-        newCube.append(modeRebinner(cube[:,:,i], rebin))
+        newCube.append(modeRebinner(cube[:, :, i], rebin))
     return _np.ma.dstack(newCube)
+
 
 # From ARTE #
 def _rebin2DArray(a, new_shape, sample=False):

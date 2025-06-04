@@ -9,6 +9,7 @@ Description
 -----------
 This module contains functions for geometric operations on images.
 """
+
 import numpy as _np
 from skimage.draw import disk as _disk
 from skimage.measure import CircleModel as _CM

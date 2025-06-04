@@ -231,7 +231,9 @@ def read_phasemap(file_path: str) -> _ot.ImageData:
     return image
 
 
-def load_fits(filepath: str, return_header:bool = False) -> tuple[_ot.ImageData|_ot.CubeData|_ot.MatrixLike|_ot.ArrayLike,_ot.Any]:
+def load_fits(
+    filepath: str, return_header: bool = False
+) -> tuple[_ot.ImageData | _ot.CubeData | _ot.MatrixLike | _ot.ArrayLike, _ot.Any]:
     """
     Loads a FITS file.
 
@@ -241,7 +243,7 @@ def load_fits(filepath: str, return_header:bool = False) -> tuple[_ot.ImageData|
         Path to the FITS file.
     return_header: bool
         Wether to return the header of the loaded fits file. Default is False.
-    
+
     Returns
     -------
     fit : np.ndarray or np.ma.MaskedArray
@@ -407,7 +409,7 @@ class _InterferometerConverter:
         return ima
 
     @staticmethod
-    def fromPhaseCam6110(i4dfilename : str) -> _ot.ImageData:
+    def fromPhaseCam6110(i4dfilename: str) -> _ot.ImageData:
         """
         Function for PhaseCam6110
 
@@ -429,7 +431,7 @@ class _InterferometerConverter:
         return image
 
     @staticmethod
-    def fromFakeInterf(filename : str) -> _ot.ImageData:
+    def fromFakeInterf(filename: str) -> _ot.ImageData:
         """
         Function for fake interferometer
 

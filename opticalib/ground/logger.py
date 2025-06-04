@@ -16,34 +16,35 @@ import logging.handlers as _lh
 
 def set_up_logger(filename: str, logging_level: int = _l.DEBUG) -> _l.Logger:
     """
-    Set up a rotating file logger.
-    This function configures a logger to write log messages to a file with
-    rotation. The log file will be encoded in UTF-8 and will rotate when it
-    reaches a specified size, keeping a specified number of backup files.
+        Set up a rotating file logger.
+        This function configures a logger to write log messages to a file with
+        rotation. The log file will be encoded in UTF-8 and will rotate when it
+        reaches a specified size, keeping a specified number of backup files.
 
-    Parameters
-    ----------
-    filename : str
-        The path to the log file where log messages will be written.
-    logging_level : int
-        The logging level to set for the logger. This should be one of the
-        logging level constants defined in the `logging` module:
-            Warning = 30, Info = 20, Debug = 10, Notset = 0
+        Parameters
+        ----------
+        filename : str
+            The path to the log file where log messages will be written.
+        logging_level : int
+            The logging level to set for the logger. This should be one of the
+            logging level constants defined in the `logging` module:
+                Warning = 30, Info = 20, Debug = 10, Notset = 0
 
-    Notes
-    -----
-    - The log file will rotate when it reaches 10,000,000 bytes (10 MB).
-    - Up to 3 backup log files will be kept.
-    - The log format includes the timestamp, log level, logger name, and message.
-    - The logger is configured at the root level, affecting all loggers in the application.
-    - The handler will perform an initial rollover when set up.
+        Notes
+        -----
+        - The log file will rotate when it reaches 10,000,000 bytes (10 MB).
+        - Up to 3 backup log files will be kept.
+        - The log format includes the timestamp, log level, logger name, and message.
+        - The logger is configured at the root level, affecting all loggers in the application.
+        - The handler will perform an initial rollover when set up.
 
-    Examples
-    --------
->>> set_up_logger('/path/to/logfile.log', logging.DEBUG)
+        Examples
+        --------
+    >>> set_up_logger('/path/to/logfile.log', logging.DEBUG)
     """
     import os
     from opticalib.core.root import LOGGING_ROOT_FOLDER
+
     file_path = os.path.join(LOGGING_ROOT_FOLDER, filename)
     FORMAT = "%(asctime)s %(levelname)s %(name)s %(message)s"
     formato = _l.Formatter(fmt=FORMAT)

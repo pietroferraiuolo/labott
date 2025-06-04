@@ -119,7 +119,9 @@ def process(
         saveCube(tn, rebin=rebin, register=dx)
 
 
-def saveCube(tn: str, rebin: int = 1, register: bool = False, cube_header = None) -> _ot.CubeData:
+def saveCube(
+    tn: str, rebin: int = 1, register: bool = False, cube_header=None
+) -> _ot.CubeData:
     """
     Creates and save a cube from the fits files contained in the tn folder,
     along with the command matrix and the modes vector fits.
@@ -145,6 +147,7 @@ def saveCube(tn: str, rebin: int = 1, register: bool = False, cube_header = None
         Data cube of the images, with shape (npx, npx, nmodes).
     """
     from opticalib.analyzer import cubeRebinner, createCube
+
     old_fold = _os.path.join(_ifFold, tn)
     filelist = _osu.getFileList(fold=old_fold, key="mode_")
     cube = createCube(filelist, register=register)

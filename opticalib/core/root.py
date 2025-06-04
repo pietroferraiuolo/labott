@@ -14,9 +14,11 @@ global CAPTURE_FOLDER_NAME_4D_PC
 global PRODUCE_FOLDER_NAME_4D_PC
 global PRODUCE_FOLDER_NAME_LOCAL_PC
 
+
 def _create_folder(path: str) -> None:
     if not _os.path.exists(path):
         _os.makedirs(path)
+
 
 def create_folder_tree(BASE_DATA_PATH: str) -> None:
     """
@@ -50,14 +52,14 @@ def create_folder_tree(BASE_DATA_PATH: str) -> None:
         _create_folder(p)
 
 
-def _updateInterfPaths(paths: dict[str,str]) -> None:
+def _updateInterfPaths(paths: dict[str, str]) -> None:
     """
     Update the path of the configuration file and the folders.
 
     This function reads the configuration file and updates the paths of the
     settings file and the folders used in the package.
     """
-    print('è partita?')
+    print("è partita?")
     global SETTINGS_CONF_FILE
     global COPIED_SETTINGS_CONF_FILE
     global CAPTURE_FOLDER_NAME_4D_PC
@@ -79,25 +81,29 @@ TEMPLATE_CONF_FILE: str = (
     _os.path.dirname(_os.path.abspath(__file__)) + "/_configurations/configuration.yaml"
 )
 CONFIGURATION_ROOT_FOLDER: str = _os.path.dirname(TEMPLATE_CONF_FILE)
-CONFIGURATION_FILE: str = _os.getenv('AOCONF', TEMPLATE_CONF_FILE)
+CONFIGURATION_FILE: str = _os.getenv("AOCONF", TEMPLATE_CONF_FILE)
 
 with open(CONFIGURATION_FILE, "r") as _f:
     _config = _gyml.load(_f)
 
 _bdp = _config["SYSTEM"].get("data_path")
-BASE_DATA_PATH: str = _bdp if not _bdp == '' else _os.path.join(_os.path.expanduser("~"), ".tmp_opticalibData")
+BASE_DATA_PATH: str = (
+    _bdp
+    if not _bdp == ""
+    else _os.path.join(_os.path.expanduser("~"), ".tmp_opticalibData")
+)
 
-OPT_DATA_ROOT_FOLDER    : str = _os.path.join(BASE_DATA_PATH, "OPTData")
-LOGGING_ROOT_FOLDER     : str = _os.path.join(BASE_DATA_PATH, "Logging")
-CONFIGURATION_FOLDER    : str = _os.path.join(BASE_DATA_PATH, "SysConfig")
-OPD_SERIES_ROOT_FOLDER  : str = _os.path.join(OPT_DATA_ROOT_FOLDER, "OPDSeries")
-OPD_IMAGES_ROOT_FOLDER  : str = _os.path.join(OPT_DATA_ROOT_FOLDER, "OPDImages")
-ALIGNMENT_ROOT_FOLDER   : str = _os.path.join(OPT_DATA_ROOT_FOLDER, "Alignment")
-FLAT_ROOT_FOLDER        : str = _os.path.join(OPT_DATA_ROOT_FOLDER, "Flattening")
-MODALBASE_ROOT_FOLDER   : str = _os.path.join(OPT_DATA_ROOT_FOLDER, "ModalBases")
-IFFUNCTIONS_ROOT_FOLDER : str = _os.path.join(OPT_DATA_ROOT_FOLDER, "IFFunctions")
-INTMAT_ROOT_FOLDER      : str = _os.path.join(OPT_DATA_ROOT_FOLDER, "IntMatrices")
-CONTROL_MATRIX_FOLDER   : str = _os.path.join(ALIGNMENT_ROOT_FOLDER, "ControlMatrices")
+OPT_DATA_ROOT_FOLDER: str = _os.path.join(BASE_DATA_PATH, "OPTData")
+LOGGING_ROOT_FOLDER: str = _os.path.join(BASE_DATA_PATH, "Logging")
+CONFIGURATION_FOLDER: str = _os.path.join(BASE_DATA_PATH, "SysConfig")
+OPD_SERIES_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "OPDSeries")
+OPD_IMAGES_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "OPDImages")
+ALIGNMENT_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "Alignment")
+FLAT_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "Flattening")
+MODALBASE_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "ModalBases")
+IFFUNCTIONS_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "IFFunctions")
+INTMAT_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "IntMatrices")
+CONTROL_MATRIX_FOLDER: str = _os.path.join(ALIGNMENT_ROOT_FOLDER, "ControlMatrices")
 
 create_folder_tree(BASE_DATA_PATH)
 
@@ -111,8 +117,7 @@ PRODUCE_FOLDER_NAME_4D_PC: str = None
 PRODUCE_FOLDER_NAME_LOCAL_PC: str = None
 
 
-def create_configuration_file(
-    path: str = "", data_path: str | bool = False) -> None:
+def create_configuration_file(path: str = "", data_path: str | bool = False) -> None:
     """
     Create a configuration file in the specified path.
 
@@ -157,7 +162,8 @@ def create_configuration_file(
             _config = _gyml.load(_f)
         create_folder_tree(data_path)
         from shutil import move
-        conf_folder = _os.path.join(data_path, 'SysConfig')
+
+        conf_folder = _os.path.join(data_path, "SysConfig")
         move(file, _os.path.join(conf_folder, "configuration.yaml"))
         print(f"Configuration file moved to {conf_folder}")
 
@@ -167,6 +173,7 @@ def create_configuration_file(
 ###############################################################################
 class _folds:
     """Wrapper class for the folder tree of the package"""
+
     def __init__(self):
         self.BASE_DATA_PATH = BASE_DATA_PATH
         self.CONFIGURATION_FILE = CONFIGURATION_FILE
@@ -192,7 +199,7 @@ class _folds:
     def print_all(self):
         """Print all the folders"""
         print(
-f"""Folder Tree
+            f"""Folder Tree
               
 BASE_DATA_PATH = {self.BASE_DATA_PATH}
 CONFIGURATION_FILE = {self.CONFIGURATION_FILE}
@@ -213,7 +220,8 @@ COPIED_SETTINGS_CONF_FILE = {self.COPIED_SETTINGS_CONF_FILE}
 CAPTURE_FOLDER_NAME_4D_PC = {self.CAPTURE_FOLDER_NAME_4D_PC}
 PRODUCE_FOLDER_NAME_4D_PC = {self.PRODUCE_FOLDER_NAME_4D_PC}
 PRODUCE_FOLDER_NAME_LOCAL_PC = {self.PRODUCE_FOLDER_NAME_LOCAL_PC}
-""")
+"""
+        )
 
     def _update_interf_paths(self):
         """

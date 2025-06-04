@@ -15,5 +15,5 @@ __all__ = [
     "iff_module",
     "iff_processing",
     "stitching",
-    "flattening"
+    "flattening",
 ]

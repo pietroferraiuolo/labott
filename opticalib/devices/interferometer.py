@@ -14,13 +14,15 @@ class AccuFiz(_api.BaseInterferometer):
     Class for the AccuFiz Laser Interferometer.
     """
 
-    def __init__(self, model: _ot.Optional[str|int] = None, ip: str = None, port: int = None):
+    def __init__(
+        self, model: _ot.Optional[str | int] = None, ip: str = None, port: int = None
+    ):
         """The constructor"""
         self.name = "AccuFiz" + str(model)
         super().__init__(self.name, ip, port)
         self._i4d = _api.I4D(self.ip, self.port)
         self._ic = _InterferometerConverter()
-    
+
     def acquire_map(
         self, nframes: int = 1, delay: int | float = 0, rebin: int = 1
     ) -> _ot.ImageData:
@@ -270,7 +272,9 @@ class PhaseCam(_api.BaseInterferometer):
     Class for the 4D Twyman-Green PhaseCam Laser Interferometer.
     """
 
-    def __init__(self, model: _ot.Optional[str|int] = None, ip: str = None, port: int = None):
+    def __init__(
+        self, model: _ot.Optional[str | int] = None, ip: str = None, port: int = None
+    ):
         """The constructor"""
         self.name = "PhaseCam" + str(model)
         super().__init__(self.name, ip, port)

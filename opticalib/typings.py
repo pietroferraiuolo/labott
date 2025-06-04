@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
 Reconstructor: TypeAlias = Union["ComputeReconstructor", None]
 
+
 @runtime_checkable
 class _MatrixProtocol(Protocol):
     def shape(self) -> tuple[int, int]: ...
@@ -51,6 +52,7 @@ class _InterfProtocol(Protocol):
         self, nframes: int, delay: int | float, rebin: int
     ) -> ImageData: ...
 
+
 InterferometerDevice = TypeVar("InterferometerDevice", bound=_InterfProtocol)
 
 
@@ -69,6 +71,7 @@ class _DMProtocol(Protocol):
         differential: bool,
     ) -> str: ...
 
+
 DeformableMirrorDevice = TypeVar("DeformableMirrorDevice", bound=_DMProtocol)
 
 GenericDevice = TypeVar("GenericDevice")
@@ -76,6 +79,7 @@ GenericDevice = TypeVar("GenericDevice")
 ################################
 ## Custom `isinstance` checks ##
 ################################
+
 
 class InstanceCheck:
     """

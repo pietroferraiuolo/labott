@@ -17,12 +17,7 @@ How to Use:
 """
 
 from . import analyzer
-from .ground.osutils import (
-    load_fits,
-    save_fits,
-    getFileList,
-    read_phasemap
-)
+from .ground.osutils import load_fits, save_fits, getFileList, read_phasemap
 from .core.root import (
     folders,
     create_configuration_file,
@@ -31,15 +26,15 @@ from .core import read_config
 from .devices import *
 
 __all__ = [
-    'analyzer',
-    'load_fits',
-    'save_fits',
-    'read_phasemap',
-    'getFileList',
-    'folders',
-    'create_configuration_file',
-    'load_configuration_file',
-    'read_config',
-    'interferometer',
-    'deformable_mirrors',
+    "analyzer",
+    "load_fits",
+    "save_fits",
+    "read_phasemap",
+    "getFileList",
+    "folders",
+    "create_configuration_file",
+    "load_configuration_file",
+    "read_config",
+    "interferometer",
+    "deformable_mirrors",
 ]

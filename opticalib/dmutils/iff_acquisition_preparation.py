@@ -73,6 +73,7 @@ class IFFCapturePreparation:
         # DM information
         if not _ot.isinstance_(dm, "DeformableMirrorDevice"):
             from opticalib.core.exceptions import DeviceError
+
             raise DeviceError(dm, "DeformableMirrorDevice")
         self.mirrorModes = dm.mirrorModes
         self._NActs = dm.nActs

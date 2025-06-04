@@ -8,8 +8,9 @@ Author(s)
 import numpy as _np
 from skimage import measure as _meas
 
+
 def roiGenerator(ima):
-    '''
+    """
     Parameters
     ----------
         ima: numpy masked array
@@ -24,7 +25,7 @@ def roiGenerator(ima):
 
         roiList[3] = RM roi for alignement, roiList[3] = central roi for segment
 
-    '''
+    """
     labels = _meas.label(_np.invert(ima.mask))
     roiList = []
     for i in range(1, 13):
@@ -34,8 +35,9 @@ def roiGenerator(ima):
         roiList.append(final_roi)
     return roiList
 
+
 def automatical_roi_selection(image, segment_view, ref_mirror_in):
-    '''
+    """
     Parameters
     ----------
     image: numpy masked array
@@ -46,7 +48,7 @@ def automatical_roi_selection(image, segment_view, ref_mirror_in):
     RM_in = boolean
         if reference mirror is inside the image it is True,
         else False
-    '''
+    """
     roiList = roiGenerator(image)
 
     if segment_view is True:
@@ -83,7 +85,8 @@ def automatical_roi_selection(image, segment_view, ref_mirror_in):
             roi_rm = None
         return segRoiList, roi_rm
 
-def single_segment_mask(image, apply:bool=True):
+
+def single_segment_mask(image, apply: bool = True):
     """
     Given an interferometer image of a selected, non-masked, M4's segment,
     automatically masks the image so that only the pointed segment is visible.
@@ -104,8 +107,9 @@ def single_segment_mask(image, apply:bool=True):
     roilist = _meas.label(_np.invert(image.mask))
     segments = _find_big_segments_roi(roilist)
     max_area = max([seg.area for seg in segments])
-    act_seg = segments[next(i for i, obj in enumerate(segments) \
-                                                    if obj.area == max_area)]
+    act_seg = segments[
+        next(i for i, obj in enumerate(segments) if obj.area == max_area)
+    ]
     maski = _np.zeros(roilist.shape, dtype=bool)
     maski[_np.where(roilist == act_seg.label)] = 1
     final_roi = _np.ma.mask_or(_np.invert(maski), image.mask)
@@ -115,7 +119,8 @@ def single_segment_mask(image, apply:bool=True):
         out = final_roi
     return out
 
-def adjacent_segments_mask(image, apply:bool=True):
+
+def adjacent_segments_mask(image, apply: bool = True):
     """
     Given an interferometer image of a selected, non-masked, M4's segment,
     automatically masks the image so that only the pointed segment and it's
@@ -149,7 +154,8 @@ def adjacent_segments_mask(image, apply:bool=True):
         out = final_roi
     return out
 
-def all_segments_mask(image, apply:bool=True):
+
+def all_segments_mask(image, apply: bool = True):
     """
 
 
@@ -181,7 +187,8 @@ def all_segments_mask(image, apply:bool=True):
     else:
         out = final_roi
     return out
-    
+
+
 def imgCut(img):
     """
     Cuts the image to the bounding box of the finite (non-NaN) pixels in the masked image.
@@ -203,7 +210,7 @@ def imgCut(img):
         return img
     top_left = finite_coords.min(axis=0)
     bottom_right = finite_coords.max(axis=0)
-    cutImg = img[top_left[0]:bottom_right[0]+1, top_left[1]:bottom_right[1]+1] 
+    cutImg = img[top_left[0] : bottom_right[0] + 1, top_left[1] : bottom_right[1] + 1]
     return cutImg
 
 
@@ -223,10 +230,11 @@ def _find_all_segments_roi(roilist):
 
     """
     regions = _meas.regionprops(roilist)
-    for i,region in enumerate(regions):
-        if region.area < 10000: #TODO - Find good criteria
+    for i, region in enumerate(regions):
+        if region.area < 10000:  # TODO - Find good criteria
             regions.pop(i)
     return regions
+
 
 def _find_big_segments_roi(roilist):
     """

@@ -61,7 +61,7 @@ from . import geo as _geo
 fac = _math.factorial
 
 
-def removeZernike(ima, modes = _np.array([1, 2, 3, 4])):
+def removeZernike(ima, modes=_np.array([1, 2, 3, 4])):
     """
     Remove Zernike modes from an image.
 

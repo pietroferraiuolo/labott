@@ -19,12 +19,11 @@ class StitchAnalysis:
     Class to process and analyze acquisitions in sub-aperture mode of a mirror,
     to perform the stitching algorithm and produce stitched images.
     """
-    
+
     def __init__(self, tn: _ot.Optional[str] = None):
         """The Initiation"""
         self.constants = _gsc()
         self.tn = tn
-
 
     def processTns(self, tnvec: list[str, tuple[float] | list[float]]) -> str:
         """
@@ -74,8 +73,7 @@ class StitchAnalysis:
             )
         return newtn
 
-
-    def stitchAllIffCubes(self, tn: str, **stitchargs) -> _ot.CubeData:
+    def stitchAllIffCubes(self, tn: str, **stitchargs: dict[str,_ot.Any]) -> _ot.CubeData:
         """
         Stitch the IFF cubes obtained during the acquisition, and produces a single cube
         for each IFF in different positions.
@@ -97,10 +95,12 @@ class StitchAnalysis:
             _os.mkdir(dir)
         cubelist = _osu.getFileList(tn, fold="IntMatrices", key="mode_")
         stitch_list = []
-        for m,cube in enumerate(cubelist):
+        for m, cube in enumerate(cubelist):
             print(f"Mode {m}", flush=True)
             cube, header = _osu.load_fits(cube, True)
-            stitch_list.append(self.stitchSingleIffCube(cube=cube, header=header,**stitchargs))
+            stitch_list.append(
+                self.stitchSingleIffCube(cube=cube, header=header, **stitchargs)
+            )
         stitched = _np.ma.dstack(stitch_list)
         header = {}
         header["STITCH"] = (True, "if the cube is the result of stitching")
@@ -108,14 +108,13 @@ class StitchAnalysis:
         _osu.save_fits(_os.path.join(dir, "IMCube.fits"), stitched)
         return stitched
 
-
     def stitchSingleIffCube(
         self,
         cube: _ot.CubeData,
         header: dict[str, _ot.Any] | _ot.Header,
         remask: float = None,
-        mask_threshold:float = 0.2,
-        step_size: _ot.Optional[float|int] = None,
+        mask_threshold: float = 0.2,
+        step_size: _ot.Optional[float | int] = None,
         deg: _ot.Optional[float] = None,
         average: _ot.Optional[_ot.ImageData] = None,
     ):
@@ -147,7 +146,7 @@ class StitchAnalysis:
         """
         cube = self._check_cube_dimension(cube)
         coords = self.retrieveCubeCoords(n_positions=cube.shape[0], header=header)
-        step = _np.abs(coords[0]-coords[1])
+        step = _np.abs(coords[0] - coords[1])
         coords = self._transform_coord(coords, deg=deg)
         if remask:
             cube, coords = self.remaskCube(remask, cube, coords, mask_threshold)
@@ -157,21 +156,21 @@ class StitchAnalysis:
             if step_size:
                 coords = []
                 cube = []
-                for k in range(0,ocube.shape[0], 2):
+                for k in range(0, ocube.shape[0], 2):
                     cube.append(ocube[k])
-                    coords.append([ocoords[k,0],ocoords[k,1]])
+                    coords.append([ocoords[k, 0], ocoords[k, 1]])
             coords = _np.array(coords)
         finally:
             import gc
-            del(ocube)
-            del(ocoords)
+
+            del ocube
+            del ocoords
             gc.collect()
         if average is not None:
             pass
         fm, iv = self._prepare_masks_and_images(cube, coords)
         stitched = _map_stitching(iv, fm, [1, 2, 3])
         return stitched
-
 
     def stitchSingleScansionCube(
         self,
@@ -199,7 +198,7 @@ class StitchAnalysis:
         if deg is None:
             deg = self.constants["alpha"]
         cube, header = self.getCubeAndHeader(
-            _os.path.join(_fn.OPD_IMAGES_ROOT_FOLDER, tn, 'cube.fits')
+            _os.path.join(_fn.OPD_IMAGES_ROOT_FOLDER, tn, "cube.fits")
         )
         coords = self.retrieveCubeCoords(n_positions=cube.shape[0], header=header)
         coords = self._transform_coord(coords, deg=deg)
@@ -209,52 +208,13 @@ class StitchAnalysis:
         stitched = _map_stitching(iv, fm, [1, 2, 3])
         return stitched
 
-
-    def retrieveCubeCoords(
-        self, n_positions: int, header: dict[str, _ot.Any] | _ot.Header
-    ) -> _ot.ArrayLike:
-        """
-        Returns the coordinates written in the cube's header
-
-        Parameters
-        ----------
-        n_positions : int
-            The number of pair coordinate positions in the cube.
-        header : dict or astropy.Header
-            The header of the cube containing the coordinates.
-
-        Returns
-        -------
-        coords : _ot.ArrayLike
-            An array of coordinates in the form of (x, z) for each position.
-        """
-        coords = []
-        for ii in range(n_positions):
-            coords.append((header[f"X{ii}"], header[f"Z{ii}"]))
-        return _np.array(coords)
-    
-
-    def getCubeAndHeader(self, filepath: str) -> tuple[_ot.CubeData, dict[str, _ot.Any]]:
-        """
-        Load a cube and its header from a FITS file.
-
-        Parameters
-        ----------
-        filepath : str
-            The path to the FITS file.
-
-        Returns
-        -------
-        tuple
-            A tuple containing the transposed cube data (shape `[n_img,n_px,n_px]`)
-            and the header.
-        """
-        cube, header = _osu.load_fits(filepath, True)
-        cube = self._check_cube_dimension(cube)
-        return cube, header
-    
-
-    def remaskCube(self, mask_radius: float, cube: _ot.CubeData, coords: _ot.ArrayLike, threshold: float = 0.2) -> _ot.CubeData:
+    def remaskCube(
+        self,
+        mask_radius: float,
+        cube: _ot.CubeData,
+        coords: _ot.ArrayLike,
+        threshold: float = 0.2,
+    ) -> _ot.CubeData:
         """
         Remask all the images in the cube by intersecting a circular mask with
         a specified radius with the already existing one.
@@ -289,28 +249,70 @@ class StitchAnalysis:
             new_mask = _np.logical_or(img.mask, mask)
             newimg = _np.ma.masked_array((img.copy()).data, mask=new_mask)
             newimg_pixels = _np.sum(~newimg.mask)
-            if not (newimg_pixels < threshold*mask_pixels):
+            if not (newimg_pixels < threshold * mask_pixels):
                 new_cube.append(newimg)
-                new_coords.append([coords[i,0], coords[i,1]])
+                new_coords.append([coords[i, 0], coords[i, 1]])
         new_cube = _np.ma.dstack(new_cube)
         new_cube = _np.transpose(new_cube, (2, 0, 1))
         return new_cube, _np.array(new_coords)
 
+    def retrieveCubeCoords(
+        self, n_positions: int, header: dict[str, _ot.Any] | _ot.Header
+    ) -> _ot.ArrayLike:
+        """
+        Returns the coordinates written in the cube's header
+
+        Parameters
+        ----------
+        n_positions : int
+            The number of pair coordinate positions in the cube.
+        header : dict or astropy.Header
+            The header of the cube containing the coordinates.
+
+        Returns
+        -------
+        coords : _ot.ArrayLike
+            An array of coordinates in the form of (x, z) for each position.
+        """
+        coords = []
+        for ii in range(n_positions):
+            coords.append((header[f"X{ii}"], header[f"Z{ii}"]))
+        return _np.array(coords)
+
+    def getCubeAndHeader(
+        self, filepath: str
+    ) -> tuple[_ot.CubeData, dict[str, _ot.Any]]:
+        """
+        Load a cube and its header from a FITS file.
+
+        Parameters
+        ----------
+        filepath : str
+            The path to the FITS file.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the transposed cube data (shape `[n_img,n_px,n_px]`)
+            and the header.
+        """
+        cube, header = _osu.load_fits(filepath, True)
+        cube = self._check_cube_dimension(cube)
+        return cube, header
 
     def reloadConstants(self) -> None:
         """Reload the constants from the configuration file"""
         self.constants = _gsc()
         print("Constants reloaded")
 
-    
     def _check_cube_dimension(self, cube: _ot.CubeData) -> _ot.CubeData:
         """
         Check and returns the cube with dimension `(n_img,n_px,n_px)`
         """
-        n1,n2,n3 = _np.shape(cube)
+        n1, n2, n3 = _np.shape(cube)
         if n1 == n2:
             cube = _np.transpose(cube.copy(), (2, 0, 1))
-        elif n1==n3:
+        elif n1 == n3:
             cube = _np.transpose(cube.copy(), (1, 0, 2))
         elif n2 == n3:
             pass
@@ -357,14 +359,13 @@ class StitchAnalysis:
         nsteps = int(_np.sqrt(len(coords)))
         if (nsteps % 2) != 0:
             new_ax = []
-            for k in range(0,len(rot_coords),nsteps):
-                new_ax.append(_np.flip(rot_coords[k:k+nsteps,0], axis=0))
+            for k in range(0, len(rot_coords), nsteps):
+                new_ax.append(_np.flip(rot_coords[k : k + nsteps, 0], axis=0))
             nax = _np.array(new_ax[0])
-            for i in range(1,len(new_ax)):
+            for i in range(1, len(new_ax)):
                 nax = _np.hstack((nax, new_ax[i]))
-            rot_coords[:,0] = nax
+            rot_coords[:, 0] = nax
         return rot_coords
-
 
     def _prepare_masks_and_images(
         self, imgcube: _ot.CubeData, pos: _ot.ArrayLike
@@ -391,10 +392,10 @@ class StitchAnalysis:
         maskvec = []
         for ii in imgcube:
             maskvec.append(ii.mask)
-        ps = 1/self.constants["pixel_scale"] * 1000
+        ps = 1 / self.constants["pixel_scale"] * 1000
         pixpos = (pos * ps).astype(int)
         imgsize = _np.array(_np.shape(maskvec[0])).astype(int)
-        imgfsize = imgsize + pixpos.max() # -> cambiato da `.max(0)`
+        imgfsize = imgsize + pixpos.max()  # -> cambiato da `.max(0)`
         fullmask = _np.ones([int(imgfsize[0]), int(imgfsize[1])])
         imgvecout = []
         for i in range(len(pixpos)):
@@ -408,7 +409,7 @@ class StitchAnalysis:
             imgf.mask = maskf
             imgvecout.append(imgf)
         imgvecout = _np.ma.dstack(imgvecout)
-        return fullmask, _np.transpose(imgvecout, (2,0,1))
+        return fullmask, _np.transpose(imgvecout, (2, 0, 1))
 
 
 class StitchAcquire:

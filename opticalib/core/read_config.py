@@ -4,6 +4,7 @@ Author(s)
 - Pietro Ferraiuolo
 - Runa Briguglio
 """
+
 import yaml
 import os as _os
 import numpy as _np
@@ -12,6 +13,7 @@ from .exceptions import DeviceNotFoundError
 global _cfold
 global _iffold
 global _cfile
+
 
 def _update_imports():
     global _cfold
@@ -22,20 +24,22 @@ def _update_imports():
         IFFUNCTIONS_ROOT_FOLDER,
         CONFIGURATION_FILE,
     )
+
     _cfold = CONFIGURATION_FOLDER
     _iffold = IFFUNCTIONS_ROOT_FOLDER
     _cfile = CONFIGURATION_FILE
+
 
 _update_imports()
 
 yaml_config_file = "configuration.yaml"
 _iff_config_file = "iffConfig.yaml"
 
-_nzeroName     = 'numberofzeros'
-_modeIdName    = 'modeid'
-_modeAmpName   = 'modeamp'
-_templateName  = 'template'
-_modalBaseName = 'modalbase'
+_nzeroName = "numberofzeros"
+_modeIdName = "modeid"
+_modeAmpName = "modeamp"
+_templateName = "template"
+_modalBaseName = "modalbase"
 
 _items = [_nzeroName, _modeIdName, _modeAmpName, _templateName, _modalBaseName]
 
@@ -61,7 +65,7 @@ def load_yaml_config(path: str = None):
             fname = _os.path.join(path, _iff_config_file)
         else:
             fname = path
-    with open(fname, 'r') as f:
+    with open(fname, "r") as f:
         config = yaml.safe_load(f)
     return config
 
@@ -84,7 +88,7 @@ def dump_yaml_config(config, path: str = None):
             fname = _os.path.join(path, _iff_config_file)
         else:
             fname = path
-    with open(fname, 'w') as f:
+    with open(fname, "w") as f:
         yaml.dump(config, f)
 
 
@@ -102,7 +106,7 @@ def getIffConfig(key, bpath=_cfold):
             - 'IFFUNC'
     bpath : str, optional
         Base path of the file to read. Default points to the configuration root folder.
-            
+
     Returns
     -------
     info : dict
@@ -114,32 +118,32 @@ def getIffConfig(key, bpath=_cfold):
             - modalBase
     """
     config = load_yaml_config(bpath)
-    # The nested block is under INFLUENCE.FUNCTIONS in the 
+    # The nested block is under INFLUENCE.FUNCTIONS in the
     # full configuration file
-    # but under INFLUENCE.FUNCTIONS/IFFUNC in the IFF copied 
+    # but under INFLUENCE.FUNCTIONS/IFFUNC in the IFF copied
     # config file
     try:
         cc = config["INFLUENCE.FUNCTIONS"][key]
     except KeyError:
         cc = config[key]
-    nzeros     = int(cc[_nzeroName])
-    modeId     = _parse_val(cc[_modeIdName])
-    modeAmp    = _parse_val(cc[_modeAmpName])
-    modalBase  = cc[_modalBaseName]
-    template   = _np.array(cc[_templateName])
+    nzeros = int(cc[_nzeroName])
+    modeId = _parse_val(cc[_modeIdName])
+    modeAmp = _parse_val(cc[_modeAmpName])
+    modalBase = cc[_modalBaseName]
+    template = _np.array(cc[_templateName])
     info = {
-        'zeros': nzeros,
-        'modes': modeId,
-        'amplitude': modeAmp,
-        'template': template,
-        'modalBase': modalBase
+        "zeros": nzeros,
+        "modes": modeId,
+        "amplitude": modeAmp,
+        "template": template,
+        "modalBase": modalBase,
     }
     return info
 
 
 def copyIffConfigFile(tn, old_path=_cfold):
     """
-    Copies the YAML configuration file to the new folder for record keeping of the 
+    Copies the YAML configuration file to the new folder for record keeping of the
     configuration used on data acquisition.
 
     Parameters
@@ -155,9 +159,9 @@ def copyIffConfigFile(tn, old_path=_cfold):
         Path where the file was copied.
     """
     config = load_yaml_config(old_path)
-    nfname = _os.path.join(_iffold, tn, 'iffConfig.yaml')
-    with open(nfname, 'w') as f:
-        yaml.dump(config['INFLUENCE.FUNCTIONS'], f)
+    nfname = _os.path.join(_iffold, tn, "iffConfig.yaml")
+    with open(nfname, "w") as f:
+        yaml.dump(config["INFLUENCE.FUNCTIONS"], f)
     print(f"IFF configuration copied to {nfname.rsplit('/' + yaml_config_file, 1)[0]}")
     return nfname
 
@@ -170,14 +174,14 @@ def updateIffConfig(tn: str, item: str, value):
     Parameters
     ----------
     tn : str
-        Tracking number of the `iffConfig.yaml` copied from the original 
+        Tracking number of the `iffConfig.yaml` copied from the original
         `configuration.yaml` file.
     item : str
         The configuration item to update.
     value : any
         New value to update.
     """
-    key = 'IFFUNC'
+    key = "IFFUNC"
     file = _os.path.join(_iffold, tn, _iff_config_file)
     config = load_yaml_config(file)
     if isinstance(value, _np.ndarray):
@@ -209,6 +213,7 @@ def updateConfigFile(key: str, item: str, value, bpath=_cfold):
         Base path of the configuration file.
     """
     import warnings
+
     warnings.warn(
         "updateConfigFile is deprecated. Use updateIffConfig instead.",
         DeprecationWarning,
@@ -228,7 +233,9 @@ def updateConfigFile(key: str, item: str, value, bpath=_cfold):
         vmax = _np.max(value)
         vmin = _np.min(value)
         if _np.array_equal(value, _np.arange(vmin, vmax + 1)):
-            config["INFLUENCE.FUNCTIONS"][key][item] = f"\"np.arange({vmin}, {vmax + 1})\""
+            config["INFLUENCE.FUNCTIONS"][key][
+                item
+            ] = f'"np.arange({vmin}, {vmax + 1})"'
         else:
             config["INFLUENCE.FUNCTIONS"][key][item] = str(value.tolist())
     else:
@@ -252,7 +259,7 @@ def getNActs(bpath=_cfold):
     """
     config = load_yaml_config(bpath)
     dm_config = config["INFLUENCE.FUNCTIONS"]["DM"]
-    nacts = int(dm_config['nacts'])
+    nacts = int(dm_config["nacts"])
     return nacts
 
 
@@ -272,7 +279,7 @@ def getTiming(bpath=_cfold):
     """
     config = load_yaml_config(bpath)
     dm_config = config["INFLUENCE.FUNCTIONS"]["DM"]
-    timing = int(dm_config['timing'])
+    timing = int(dm_config["timing"])
     return timing
 
 
@@ -292,7 +299,7 @@ def getCmdDelay(bpath=_cfold):
     """
     config = load_yaml_config(bpath)
     dm_config = config["INFLUENCE.FUNCTIONS"]["DM"]
-    cmdDelay = float(dm_config['delay'])
+    cmdDelay = float(dm_config["delay"])
     return cmdDelay
 
 
@@ -347,11 +354,13 @@ def getDmAddress(device_name: str):
         DM port.
     """
     try:
-        config = (load_yaml_config(_cfile))['DEVICES']["DEFORMABLE.MIRRORS"][device_name]
+        config = (load_yaml_config(_cfile))["DEVICES"]["DEFORMABLE.MIRRORS"][
+            device_name
+        ]
     except KeyError:
         raise DeviceNotFoundError(device_name)
-    ip = config['ip']
-    port = config['port']
+    ip = config["ip"]
+    port = config["port"]
     return ip, port
 
 
@@ -367,7 +376,7 @@ def getInterfConfig(device_name: str):
         Interferometer port.
     """
     try:
-        config = (load_yaml_config(_cfile))['DEVICES']["INTERFEROMETER"][device_name]
+        config = (load_yaml_config(_cfile))["DEVICES"]["INTERFEROMETER"][device_name]
     except KeyError:
         raise DeviceNotFoundError(device_name)
     return config
@@ -382,16 +391,21 @@ def getAlignmentConfig():
     config : class
         The alignment configuration as a class, for backwards compatibility.
     """
-    config = (load_yaml_config(_cfile))['SYSTEM.ALIGNMENT']
-    config['slices'] = [slice(item["start"], item["stop"]) for item in config['slices']]
-    class alignmentConfig():
+    config = (load_yaml_config(_cfile))["SYSTEM.ALIGNMENT"]
+    config["slices"] = [slice(item["start"], item["stop"]) for item in config["slices"]]
+
+    class alignmentConfig:
         def __init__(self, config):
             self._conf = config
+
         def __getattr__(self, name):
             if name in self._conf:
                 return self._conf[name]
             else:
-                raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+                raise AttributeError(
+                    f"'{self.__class__.__name__}' object has no attribute '{name}'"
+                )
+
     return alignmentConfig(config)
 
 
@@ -404,5 +418,5 @@ def getStitchingConfig():
     config : dict
         The defined stitching parameters.
     """
-    config = (load_yaml_config(_cfile))['STITCHING']
+    config = (load_yaml_config(_cfile))["STITCHING"]
     return config
