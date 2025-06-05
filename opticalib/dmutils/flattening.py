@@ -222,7 +222,7 @@ class Flattening:
             return
         else:
             print("Filtering cube...")
-            self._oldCube = self._intCube
+            self._oldCube = self._intCube.copy()
             zern2fit = zernModes if zernModes is not None else [1, 2, 3]
             self._intCube, new_tn = _ifp.filterZernikeCube(self.tn, zern2fit)
             self.loadNewTn(new_tn)
@@ -274,17 +274,22 @@ class Flattening:
         intCube : CubeData
             The interaction cube data array.
         """
-        intCube = _osu.read_phasemap(_os.path.join(self._path, _ifp.cubeFile))
-        with open(_os.path.join(self._path, _ifp.flagFile), "r") as file:
-            lines = file.readlines()
-        rebin = eval(lines[1].split("=")[-1])
-        with open(_os.path.join(self._path, _ifp.flagFile), "r", encoding="utf-8") as f:
-            flag = f.read()
-        if " filtered " in flag:
-            self.filtered = True
-        else:
-            self.filtered = False
+        intCube, cubeHeader = _osu.load_fits(_os.path.join(self._path, _ifp.cubeFile), True)
+        try:
+            # Backwards compatibility for rebinning
+            with open(_os.path.join(self._path, _ifp.flagFile), "r") as file:
+                lines = file.readlines()
+                flag = file.read()
+            rebin = eval(lines[1].split("=")[-1])
+            if " filtered " in flag:
+                filtered = True
+            else:
+                filtered = False
+        except FileNotFoundError:
+            rebin = cubeHeader.get("REBIN", None)
+            filtered = cubeHeader.get("FILTERED", False)
         self.rebin = rebin
+        self.filtered = filtered
         return intCube
 
     def _loadCmdMat(self) -> _ot.MatrixLike:
@@ -325,7 +330,7 @@ class Flattening:
         frame_center = _osu.load_fits("data")
         return frame_center
 
-    def _registerShape(self, shape):
+    def _registerShape(self, shape: tuple[int, int]) -> _ot.ImageData:
         xxx = None
         dp = _ifp.findFrameOffset(self.tn, xxx)
         # cannot work. we should create a dedicated function, not necessarily linked to IFF or flattening

@@ -1,7 +1,8 @@
 import os as _os
 import io as _io
-import contextlib as _clib
 import numpy as _np
+import contextlib as _clib
+from shutil import copyfile as _cp
 from opticalib import folders as _fn
 from opticalib.ground import osutils as _osu
 from . import iff_module as _iff, iff_processing as _ifp
@@ -54,6 +55,8 @@ class StitchAnalysis:
             captured_output = _io.StringIO()
             with _clib.redirect_stdout(captured_output):
                 _ifp.saveCube(tn=tn, cube_header=header)
+        amat = _osu.getFileList(tnvec[0][0], fold="IntMatrices", key="cmdMat")
+        _cp(amat, _os.path.join(dir, "cmdMatrix.fits"))
         for i in range(self.dm.nActs):
             modevec = []
             for k, (tn, _) in enumerate(tnvec):
@@ -88,12 +91,15 @@ class StitchAnalysis:
         stitched_cube = np.MaskedArray
             The cube of stitched iffs.
         """
+        remask_size = stitchargs.get("remask", None)
         newtn = _ts()
         print(newtn)
         dir = _os.path.join(_fn.INTMAT_ROOT_FOLDER, newtn)
         if not _os.path.exists(dir):
             _os.mkdir(dir)
         cubelist = _osu.getFileList(tn, fold="IntMatrices", key="mode_")
+        cmdmat = _osu.getFileList(tn, fold="IntMatrices", key="cmdMat")
+        _cp(cmdmat, _os.path.join(dir, "cmdMat.fits"))
         stitch_list = []
         for m, cube in enumerate(cubelist):
             print(f"Mode {m}", flush=True)
@@ -101,11 +107,19 @@ class StitchAnalysis:
             stitch_list.append(
                 self.stitchSingleIffCube(cube=cube, header=header, **stitchargs)
             )
+        rebin = header.get('REBIN', 1)
         stitched = _np.ma.dstack(stitch_list)
-        header = {}
-        header["STITCH"] = (True, "if the cube is the result of stitching")
-        header["REBIN"] = (1, "cube rebinning factor")
-        _osu.save_fits(_os.path.join(dir, "IMCube.fits"), stitched)
+        nheader = {}
+        nheader.update(
+            {
+                'STITCHED' : (True, "if the cube is the result of stitching"),
+                'MASKSIZE' : (remask_size, "sub aperture mask size in mm"),
+                "FILTERED" : (True, "whether the cube has zernike removed or not"),
+                "ZREMOVED" : ("[1,2,3]", "whether the cube has zernike removed or not"),
+                "REBIN"    : (rebin, "cube rebinning factor"),
+            }
+        )
+        _osu.save_fits(_os.path.join(dir, "IMCube.fits"), stitched, header=nheader)
         return stitched
 
     def stitchSingleIffCube(

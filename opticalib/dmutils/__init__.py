@@ -1,6 +1,5 @@
 from . import (
     flattening,
-    iff_acquisition_preparation,
     iff_module,
     iff_processing,
     stitching,

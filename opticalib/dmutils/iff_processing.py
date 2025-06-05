@@ -219,7 +219,7 @@ def stackCubes(tnlist: str) -> None:
 
 
 def filterZernikeCube(
-    tn: str, zern_modes: _ot.Optional[list[int]] = None, save: bool = True
+    tn: str, zern_modes: _ot.Optional[list[int]] = None, save: bool = True, cube_header: _ot.Optional[dict[str,_ot.Any]|_ot.Header] = None
 ) -> tuple[_ot.CubeData, str]:
     """
     Function which filters out the desired zernike modes from a cube.
@@ -244,7 +244,6 @@ def filterZernikeCube(
     oldCube = _os.path.join(_intMatFold, tn, cubeFile)
     ocFlag = _os.path.join(_intMatFold, tn, flagFile)
     newCube = _os.path.join(new_tn, cubeFile)
-    ocFlag = _os.path.join(_intMatFold, tn, flagFile)
     newFlag = _os.path.join(new_tn, flagFile)
     CmdMat = _os.path.join(_intMatFold, tn, cmdMatFile)
     ModesVec = _os.path.join(_intMatFold, tn, modesVecFile)
@@ -256,9 +255,18 @@ def filterZernikeCube(
         fcube.append(filtered)
     ffcube = _np.ma.dstack(fcube)
     if save:
-        _osu.save_fits(newCube, ffcube)
+        if cube_header:
+            zern2filter = "[" + ",".join(map(str, zern2filter)) + "]"
+            cube_header.update(
+                {
+                    "FILTERED": (True, "whether the cube has zernike removed or not"),
+                    "ZREMOVED": (zern2filter, "the zernike modes removed"),
+                }
+            )
+        _osu.save_fits(newCube, ffcube, header=cube_header)
         _sh.copyfile(CmdMat, _os.path.join(new_tn, cmdMatFile))
         _sh.copyfile(ModesVec, _os.path.join(new_tn, modesVecFile))
+        # DEPRECATION : Flag file deprecated and will be removed in the future
         with open(ocFlag, "r", encoding="utf-8") as oflag:
             flag = oflag.readlines()
         flag.pop(-1)

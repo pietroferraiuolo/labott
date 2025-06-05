@@ -7,10 +7,10 @@ import functools
 import time
 try:
     import cupy as cp
-    print("GPU acceleration available. Using it.")
+    print("[STITCHING] GPU acceleration available.")
 except ImportError:
     cp = None
-    print("No GPU acceleration available. Falling back to CPU computation.")
+    print("[STITCHING] No GPU acceleration available. Using multi-core CPU computation.")
 
 
 def timer(func: t.Callable[...,t.Any]) -> t.Callable[...,t.Any]:
