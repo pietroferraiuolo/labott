@@ -8,6 +8,7 @@ import time
 try:
     import cupy as cp
     print("[STITCHING] GPU acceleration available.")
+    print("[STITCHING] ", cp.cuda.runtime.getDeviceProperties(0)['name'].decode())
 except ImportError:
     cp = None
     print("[STITCHING] No GPU acceleration available. Using multi-core CPU computation.")
