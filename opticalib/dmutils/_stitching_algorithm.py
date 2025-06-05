@@ -7,8 +7,9 @@ import functools
 import time
 try:
     import cupy as cp
+    gpu = cp.cuda.runtime.getDeviceProperties(0)['name'].decode()
     print("\n[STITCHING] GPU acceleration available.")
-    print("[STITCHING] ", cp.cuda.runtime.getDeviceProperties(0)['name'].decode())
+    print(f"[STITCHING] {gpu}" )
 except Exception:
     cp = None
     print("\n[STITCHING] No GPU acceleration available. ")
