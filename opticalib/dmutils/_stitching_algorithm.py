@@ -7,11 +7,12 @@ import functools
 import time
 try:
     import cupy as cp
-    print("[STITCHING] GPU acceleration available.")
+    print("\n[STITCHING] GPU acceleration available.")
     print("[STITCHING] ", cp.cuda.runtime.getDeviceProperties(0)['name'].decode())
-except ImportError:
+except Exception:
     cp = None
-    print("[STITCHING] No GPU acceleration available. Using multi-core CPU computation.")
+    print("\n[STITCHING] No GPU acceleration available. ")
+    print("[STITCHING] Using multi-core CPU computation.")
 
 
 def timer(func: t.Callable[...,t.Any]) -> t.Callable[...,t.Any]:
