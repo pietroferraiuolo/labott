@@ -146,7 +146,7 @@ class StitchAnalysis:
         """
         cube = self._check_cube_dimension(cube)
         coords = self.retrieveCubeCoords(n_positions=cube.shape[0], header=header)
-        step = _np.abs(coords[0] - coords[1])
+        step = _np.abs(coords[0,0] - coords[1,0])
         coords = self._transform_coord(coords, deg=deg)
         if remask:
             cube, coords = self.remaskCube(remask, cube, coords, mask_threshold)
@@ -156,7 +156,7 @@ class StitchAnalysis:
             if step_size:
                 coords = []
                 cube = []
-                for k in range(0, ocube.shape[0], step_size//2):
+                for k in range(0, ocube.shape[0], step_size//step):
                     cube.append(ocube[k])
                     coords.append([ocoords[k, 0], ocoords[k, 1]])
             coords = _np.array(coords)
