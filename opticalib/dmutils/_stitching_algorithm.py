@@ -96,7 +96,6 @@ def map_stitching(
                 P[ii, jj, :] = cp.asnumpy(P_val)
     else:
         # Back to CPU computation
-        print("No GPU available. Falling back to mcCPU computation")
         time.sleep(0.5)
         block_compute = _BlockCompute(masks, data, M, p, q)
         with Pool(processes=cpu_count()) as pool:
