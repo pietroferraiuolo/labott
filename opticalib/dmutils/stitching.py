@@ -156,7 +156,7 @@ class StitchAnalysis:
             if step_size:
                 coords = []
                 cube = []
-                for k in range(0, ocube.shape[0], 2):
+                for k in range(0, ocube.shape[0], step_size//2):
                     cube.append(ocube[k])
                     coords.append([ocoords[k, 0], ocoords[k, 1]])
             coords = _np.array(coords)
