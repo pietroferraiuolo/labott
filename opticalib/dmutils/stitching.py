@@ -84,12 +84,29 @@ class StitchAnalysis:
         Parameters
         ----------
         tn: str
-            The name of the scan to analyze
+            The tracking number where the IFF modes cubes are stored.
+
+        Additional Parameters
+        ---------------------
+        **stitchargs : dict[str, _ot.Any]
+            Additional arguments for stitching, including:
+        - remask : float, optional
+            The new mask radius, in mm, to apply to the cube images. Default is None, meaning no remask.
+        - step_size : int, optional
+            The step size of the re-sampling of the iff. Default is None, meaning no re-sampling.
+        - mask_threshold : float, optional
+            Pixel threshold to trim images. Default is 0.2, meaning that images with less than 20% of pixels
+            masked will be discarded.
+        - deg : float, optional
+            The rotation angle in degrees to apply to the coordinates. Default is None, meaning no rotation.
+        - average : np.ndarray, optional
+            The average image to subtract from the cube images. Default is None, meaning no subtraction.
+
 
         Returns
         -------
-        stitched_cube = np.MaskedArray
-            The cube of stitched iffs.
+        newtn = str
+            The tracking number of the stitched IFF cube.
         """
         remask_size = stitchargs.get("remask", None)
         newtn = _ts()
@@ -120,7 +137,7 @@ class StitchAnalysis:
             }
         )
         _osu.save_fits(_os.path.join(dir, "IMCube.fits"), stitched, header=nheader)
-        return stitched
+        return newtn
 
     def stitchSingleIffCube(
         self,
