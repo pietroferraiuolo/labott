@@ -128,9 +128,9 @@ class StitchAnalysis:
         stitched = _np.ma.dstack(stitch_list)
         nheader = {
                 'STITCHED' : (True, "if the cube is the result of stitching"),
-                'MASKSIZE' : (remask_size, "sub aperture mask size in mm"),
+                'MASKSIZE' : (remask_size*2, "sub aperture mask diameter in mm"),
                 "FILTERED" : (True, "whether the cube has zernike removed or not"),
-                "ZREMOVED" : ("[1,2,3]", "whether the cube has zernike removed or not"),
+                "ZREMOVED" : ("[1,2,3]", "the zernike modes filtered out"),
                 "REBIN"    : (rebin, "cube rebinning factor"),
             }
         header = _ot.Header()
