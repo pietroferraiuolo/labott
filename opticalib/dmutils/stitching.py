@@ -126,17 +126,17 @@ class StitchAnalysis:
             )
         rebin = header.get('REBIN', 1)
         stitched = _np.ma.dstack(stitch_list)
-        nheader = {}
-        nheader.update(
-            {
+        nheader = {
                 'STITCHED' : (True, "if the cube is the result of stitching"),
                 'MASKSIZE' : (remask_size, "sub aperture mask size in mm"),
                 "FILTERED" : (True, "whether the cube has zernike removed or not"),
                 "ZREMOVED" : ("[1,2,3]", "whether the cube has zernike removed or not"),
                 "REBIN"    : (rebin, "cube rebinning factor"),
             }
-        )
-        _osu.save_fits(_os.path.join(dir, "IMCube.fits"), stitched, header=nheader)
+        header = _ot.Header()
+        for key, value in nheader.items():
+            header[key] = value
+        _osu.save_fits(_os.path.join(dir, "IMCube.fits"), stitched, header=header)
         return newtn
 
     def stitchSingleIffCube(
