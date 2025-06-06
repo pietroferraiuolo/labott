@@ -56,7 +56,7 @@ class StitchAnalysis:
             with _clib.redirect_stdout(captured_output):
                 _ifp.saveCube(tn=tn, cube_header=header)
         amat = _osu.getFileList(tnvec[0][0], fold="IntMatrices", key="cmdMat")
-        _cp(amat, _os.path.join(dir, "cmdMatrix.fits"))
+        _cp(amat, _os.path.join(dir, _ifp.cmdMatFile))
         for i in range(self.dm.nActs):
             modevec = []
             for k, (tn, _) in enumerate(tnvec):
@@ -116,7 +116,7 @@ class StitchAnalysis:
             _os.mkdir(dir)
         cubelist = _osu.getFileList(tn, fold="IntMatrices", key="mode_")
         cmdmat = _osu.getFileList(tn, fold="IntMatrices", key="cmdMat")
-        _cp(cmdmat, _os.path.join(dir, "cmdMat.fits"))
+        _cp(cmdmat, _os.path.join(dir, _ifp.cmdMatFile))
         stitch_list = []
         for m, cube in enumerate(cubelist):
             print(f"Mode {m}", flush=True)

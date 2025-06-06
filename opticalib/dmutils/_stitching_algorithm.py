@@ -98,7 +98,7 @@ def map_stitching(
                 Q[ii, jj, :] = cp.asnumpy(Q_val)
                 P[ii, jj, :] = cp.asnumpy(P_val)
     else:
-        # Back to CPU computation
+        # Fallback to CPU computation
         time.sleep(0.5)
         block_compute = _BlockCompute(masks, data, M, p, q)
         with Pool(processes=cpu_count()) as pool:
