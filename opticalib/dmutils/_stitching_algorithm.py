@@ -75,16 +75,16 @@ def map_stitching(
     # Prepare all (ii, jj) pairs
     pairs = [(ii, jj) for ii in range(N) for jj in range(N)]
 
-    Q = np.zeros((N, N, M**2))
-    P = np.zeros((N, N, M))
+    Q = np.zeros((N, N, M**2), dtype=np.float32)
+    P = np.zeros((N, N, M), dtype=np.float32)
 
     if cp is not None:
         # GPU computation, if available
         # Move arrays to GPU
-        masks_gpu = cp.asarray(masks)
-        data_gpu = cp.asarray(data)
-        p_gpu = cp.asarray(p)
-        q_gpu = cp.asarray(q)
+        masks_gpu = cp.asarray(masks, dtype=cp.float32)
+        data_gpu = cp.asarray(data, dtype=cp.float32)
+        p_gpu = cp.asarray(p, dtype=cp.float32)
+        q_gpu = cp.asarray(q, dtype=cp.float32)
 
         for ii in trange(N, desc="P-Q Computation", ncols=80, colour="green"):
             for jj in range(N):
