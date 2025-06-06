@@ -6,7 +6,7 @@ from opticalib import typings as t
 import functools
 import time
 try:
-    import cupy as cp
+    import cupy as cp  # type: ignore
     gpu = cp.cuda.runtime.getDeviceProperties(0)['name'].decode()
     print("\n[STITCHING] GPU acceleration available.")
     print(f"[STITCHING] {gpu}" )
@@ -69,8 +69,8 @@ def map_stitching(
 
     print("Setting up stitching algorithm...", end="\r", flush=True)
     # Pre-extract masks and data for efficiency
-    masks = np.array([img.mask for img in image_vector])
-    data = np.array([img.data for img in image_vector])
+    masks = np.array([img.mask for img in image_vector], dtype=np.float32)
+    data = np.array([img.data for img in image_vector], dtype=np.float32)
 
     # Prepare all (ii, jj) pairs
     pairs = [(ii, jj) for ii in range(N) for jj in range(N)]
@@ -98,8 +98,7 @@ def map_stitching(
                 Q[ii, jj, :] = cp.asnumpy(Q_val)
                 P[ii, jj, :] = cp.asnumpy(P_val)
     else:
-        # Fallback to CPU computation
-        time.sleep(0.5)
+        # Back to CPU computation
         block_compute = _BlockCompute(masks, data, M, p, q)
         with Pool(processes=cpu_count()) as pool:
             for (ii, jj), Q_val, P_val in tqdm(
@@ -114,7 +113,6 @@ def map_stitching(
                 P[ii, jj, :] = P_val
 
     print("Computing stitched image...", end="\r", flush=True)
-    
     P1 = np.reshape(P, (N, N, M))
     Pt = [np.sum(P1[ii], axis=0) for ii in range(N)]
     PP = np.reshape(Pt, M * N)
