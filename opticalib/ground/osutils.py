@@ -285,12 +285,7 @@ def save_fits(
     """
     # Prepare the header
     if header is not None:
-        if isinstance(header, dict):
-            header = _fits.Header(header)
-        elif not isinstance(header, _fits.Header):
-            raise TypeError(
-                "'header' must be a dictionary or an astropy.io.fits.Header object"
-            )
+        header = _header_from_dict(header)
     # Save the FITS file
     if isinstance(data, _masked_array):
         _fits.writeto(filepath, data.data, header=header, overwrite=overwrite)
@@ -378,6 +373,37 @@ def getFrameRate(tn: str) -> float:
         setting_reader = _fn.ConfSettingReader4D(file_path)
     frame_rate = setting_reader.getFrameRate()
     return frame_rate
+
+
+def _header_from_dict(dictheader: dict[str, any|tuple[any,str]]) -> _fits.Header:
+    """
+    Converts a dictionary to an astropy.io.fits.Header object.
+
+    Parameters
+    ----------
+    dictheader : dict
+        Dictionary containing header information. Each key should be a string,
+        and the value can be a tuple of length 2, where the first element is the
+        value and the second is a comment.
+
+    Returns
+    -------
+    header : astropy.io.fits.Header
+        The converted FITS header object.
+    """
+    if isinstance(dictheader, _fits.Header):
+        return dictheader
+    header = _fits.Header()
+    for key, value in dictheader.items():
+        if isinstance(value, tuple) and len(value) > 2:
+            raise ValueError(
+                "Header values must be a tuple of length 2 or less, "
+                "where the first element is the value and the second is the comment."
+                f"{value}"
+            )
+        else:
+            header[key] = value
+
 
 
 class _InterferometerConverter:

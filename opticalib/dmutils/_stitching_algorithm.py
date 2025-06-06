@@ -1,6 +1,5 @@
 import numpy as np
 from tqdm import tqdm, trange
-from multiprocessing import Pool, cpu_count
 from opticalib.ground import zernike as zern
 from opticalib import typings as t
 import functools
@@ -36,7 +35,7 @@ def map_stitching(
     image_vector: t.CubeData, 
     fullmask: t.ImageData, 
     zern2fit: list[int],
-    mp_chunk_size: int = 64
+    mp_chunk_size: int = 128
 ) -> t.ImageData:
     """
     Stitching algorithm.
@@ -49,6 +48,8 @@ def map_stitching(
         2D array representing the full mask, shape (H, W).
     zern2fit : list
         List of Zernike indices to fit.
+    mp_chunk_size : int, optional
+        Chunk size for multiprocessing, by default 128.
 
     Returns
     -------
@@ -80,7 +81,7 @@ def map_stitching(
 
     if cp is not None:
         # GPU computation, if available
-        # Move arrays to GPU
+        # Move arrays to GPU in single precision float
         masks_gpu = cp.asarray(masks, dtype=cp.float32)
         data_gpu = cp.asarray(data, dtype=cp.float32)
         p_gpu = cp.asarray(p, dtype=cp.float32)
@@ -98,6 +99,7 @@ def map_stitching(
                 Q[ii, jj, :] = cp.asnumpy(Q_val)
                 P[ii, jj, :] = cp.asnumpy(P_val)
     else:
+        from multiprocessing import Pool, cpu_count
         # Back to CPU computation
         block_compute = _BlockCompute(masks, data, M, p, q)
         with Pool(processes=cpu_count()) as pool:

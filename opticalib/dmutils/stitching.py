@@ -208,6 +208,7 @@ class StitchAnalysis:
         tn: str,
         deg: float = None,
         average: _ot.Optional[_ot.ImageData] = None,
+        chunk_size: int = 128,
     ) -> _ot.ImageData:
         """
         Analyze a single scansion cube and performs the stitching.
@@ -236,7 +237,7 @@ class StitchAnalysis:
         if average is not None:
             pass
         fm, iv = self._prepare_masks_and_images(cube, coords)
-        stitched = _map_stitching(iv, fm, [1, 2, 3])
+        stitched = _map_stitching(iv, fm, [1, 2, 3], chunk_size=chunk_size)
         return stitched
 
     def remaskCube(
