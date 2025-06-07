@@ -108,7 +108,7 @@ class StitchAnalysis:
         newtn = str
             The tracking number of the stitched IFF cube.
         """
-        remask_size = stitchargs.get("remask", None)
+        remask_size = stitchargs.get("remask", False)
         newtn = _ts()
         print(newtn)
         dir = _os.path.join(_fn.INTMAT_ROOT_FOLDER, newtn)
@@ -128,7 +128,7 @@ class StitchAnalysis:
         stitched = _np.ma.dstack(stitch_list)
         nheader = {
                 'STITCHED' : (True, "if the cube is the result of stitching"),
-                'MASKSIZE' : (remask_size*2, "sub aperture mask diameter in mm"),
+                'MASKSIZE' : (remask_size*2, "sub aperture mask diameter in mm, 0 if not remasked"),
                 "FILTERED" : (True, "whether the cube has zernike removed or not"),
                 "ZREMOVED" : ("[1,2,3]", "the zernike modes filtered out"),
                 "REBIN"    : (rebin, "cube rebinning factor"),

@@ -375,7 +375,7 @@ def getFrameRate(tn: str) -> float:
     return frame_rate
 
 
-def _header_from_dict(dictheader: dict[str, any|tuple[any,str]]) -> _fits.Header:
+def _header_from_dict(dictheader: dict[str, _ot.Any|tuple[_ot.Any,str]]) -> _fits.Header:
     """
     Converts a dictionary to an astropy.io.fits.Header object.
 
