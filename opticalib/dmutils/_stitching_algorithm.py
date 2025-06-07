@@ -79,6 +79,7 @@ def map_stitching(
     Q = np.zeros((N, N, M**2), dtype=np.float32)
     P = np.zeros((N, N, M), dtype=np.float32)
 
+    pbar = "{l_bar}{bar}| {n_fmt}/{total_fmt} [{rate_fmt}{postfix}]"
     if cp is not None:
         # GPU computation, if available
         # Move arrays to GPU in single precision float
@@ -86,8 +87,7 @@ def map_stitching(
         data_gpu = cp.asarray(data, dtype=cp.float32)
         p_gpu = cp.asarray(p, dtype=cp.float32)
         q_gpu = cp.asarray(q, dtype=cp.float32)
-
-        for ii in trange(N, desc="P-Q Computation", ncols=80, colour="green"):
+        for ii in trange(N, desc="P-Q Computation", ncols=80, colour="green", unit='img', bar_format=pbar):
             for jj in range(N):
                 mm = cp.logical_or(masks_gpu[ii], masks_gpu[jj])
                 if ii == jj:
@@ -109,7 +109,8 @@ def map_stitching(
                 total=len(pairs),
                 ncols=80,
                 unit='pair',
-                colour='green'
+                colour='green',
+                bar_format=pbar
             ):
                 Q[ii, jj, :] = Q_val
                 P[ii, jj, :] = P_val
