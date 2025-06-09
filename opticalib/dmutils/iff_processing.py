@@ -219,7 +219,10 @@ def stackCubes(tnlist: str) -> None:
 
 
 def filterZernikeCube(
-    tn: str, zern_modes: _ot.Optional[list[int]] = None, save: bool = True, cube_header: _ot.Optional[dict[str,_ot.Any]|_ot.Header] = None
+    tn: str,
+    zern_modes: _ot.Optional[list[int]] = None,
+    save: bool = True,
+    cube_header: _ot.Optional[dict[str, _ot.Any] | _ot.Header] = None,
 ) -> tuple[_ot.CubeData, str]:
     """
     Function which filters out the desired zernike modes from a cube.

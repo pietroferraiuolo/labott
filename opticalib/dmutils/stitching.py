@@ -76,7 +76,9 @@ class StitchAnalysis:
             )
         return newtn
 
-    def stitchAllIffCubes(self, tn: str, **stitchargs: dict[str,_ot.Any]) -> _ot.CubeData:
+    def stitchAllIffCubes(
+        self, tn: str, **stitchargs: dict[str, _ot.Any]
+    ) -> _ot.CubeData:
         """
         Stitch the IFF cubes obtained during the acquisition, and produces a single cube
         for each IFF in different positions.
@@ -124,15 +126,18 @@ class StitchAnalysis:
             stitch_list.append(
                 self.stitchSingleIffCube(cube=cube, header=header, **stitchargs)
             )
-        rebin = header.get('REBIN', 1)
+        rebin = header.get("REBIN", 1)
         stitched = _np.ma.dstack(stitch_list)
         nheader = {
-                'STITCHED' : (True, "if the cube is the result of stitching"),
-                'MASKSIZE' : (remask_size*2, "sub aperture mask diameter in mm, 0 if not remasked"),
-                "FILTERED" : (True, "whether the cube has zernike removed or not"),
-                "ZREMOVED" : ("[1,2,3]", "the zernike modes filtered out"),
-                "REBIN"    : (rebin, "cube rebinning factor"),
-            }
+            "STITCHED": (True, "if the cube is the result of stitching"),
+            "MASKSIZE": (
+                remask_size * 2,
+                "sub aperture mask diameter in mm, 0 if not remasked",
+            ),
+            "FILTERED": (True, "whether the cube has zernike removed or not"),
+            "ZREMOVED": ("[1,2,3]", "the zernike modes filtered out"),
+            "REBIN": (rebin, "cube rebinning factor"),
+        }
         header = _ot.Header()
         for key, value in nheader.items():
             header[key] = value
@@ -177,7 +182,7 @@ class StitchAnalysis:
         """
         cube = self._check_cube_dimension(cube)
         coords = self.retrieveCubeCoords(n_positions=cube.shape[0], header=header)
-        step = _np.abs(coords[0,0] - coords[1,0])
+        step = _np.abs(coords[0, 0] - coords[1, 0])
         coords = self._transform_coord(coords, deg=deg)
         if remask:
             cube, coords = self.remaskCube(remask, cube, coords, mask_threshold)
@@ -187,7 +192,7 @@ class StitchAnalysis:
             if step_size:
                 coords = []
                 cube = []
-                for k in range(0, ocube.shape[0], step_size//step):
+                for k in range(0, ocube.shape[0], step_size // step):
                     cube.append(ocube[k])
                     coords.append([ocoords[k, 0], ocoords[k, 1]])
             coords = _np.array(coords)
@@ -365,7 +370,8 @@ class StitchAnalysis:
         coords : _ot.ArrayLike
             The coordinates to be transformed, expected to be in the shape of `(n_img, 2)`.
         deg : float, optional
-            The rotation angle in degrees to apply to the coordinates. If None, uses the default from constants.
+            The rotation angle in degrees to apply to the coordinates. If None,
+            uses the default from constants.
 
         Returns
         -------

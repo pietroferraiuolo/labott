@@ -274,7 +274,9 @@ class Flattening:
         intCube : CubeData
             The interaction cube data array.
         """
-        intCube, cubeHeader = _osu.load_fits(_os.path.join(self._path, _ifp.cubeFile), True)
+        intCube, cubeHeader = _osu.load_fits(
+            _os.path.join(self._path, _ifp.cubeFile), True
+        )
         try:
             # Backwards compatibility for rebinning
             with open(_os.path.join(self._path, _ifp.flagFile), "r") as file:
