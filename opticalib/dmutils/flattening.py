@@ -71,6 +71,7 @@ class Flattening:
         self.flatCmd = None
         self.rebin = None
         self.filtered = False
+        self.filteredModes = None
         self._path = _os.path.join(_ifp._intMatFold, self.tn)
         self._oldtn = tn
         self._intCube = self._loadIntCube()
@@ -184,8 +185,8 @@ class Flattening:
             reconstruction matrix computation (int) or the threshold value to discard
             computed eigenvalues for the reconstruction (float). Default is None.
         """
-        self.shape2flat = img
-        self._rec = self._rec.loadShape2Flat(img)
+        self.shape2flat = self._alignImgAndCubeMasks(img)
+        self._rec = self._rec.loadShape2Flat(self.shape2flat)
         if compute is not None:
             self.computeRecMat(compute)
 
@@ -215,11 +216,17 @@ class Flattening:
             Zernike modes to filter out this cube (if it's not already filtered).
             Default modes are [1,2,3] -> piston/tip/tilt.
         """
-        with open(_os.path.join(self._path, _ifp.flagFile), "r", encoding="utf-8") as f:
-            flag = f.read()
-        if " filtered " in flag:
-            print("Cube already filtered, skipping...")
-            return
+        try:
+            # DEPRECATED: this will be removed in future versions
+            with open(_os.path.join(self._path, _ifp.flagFile), "r", encoding="utf-8") as f:
+                flag = f.read()
+            if " filtered " in flag:
+                print("Cube already filtered, skipping...")
+                return
+        except FileNotFoundError:
+            if self.filtered:
+                print("Cube already filtered, skipping...")
+                return
         else:
             print("Filtering cube...")
             self._oldCube = self._intCube.copy()
@@ -227,6 +234,7 @@ class Flattening:
             self._intCube, new_tn = _ifp.filterZernikeCube(self.tn, zern2fit)
             self.loadNewTn(new_tn)
             self.filtered = True
+            self.filteredModes = zern2fit
         return self
 
     def loadNewTn(self, tn: str) -> None:
@@ -264,6 +272,39 @@ class Flattening:
         master_mask = _np.zeros(cubeMask.shape, dtype=_np.bool_)
         master_mask[_np.where(cubeMask > 0)] = True
         return master_mask
+    
+    def _alignImgAndCubeMasks(self, img: _ot.ImageData) -> _ot.ImageData:
+        """
+        Aligns the image mask with the interaction cube mask.
+
+        Parameters
+        ----------
+        img : ImageData
+            Image to align with the interaction cube mask.
+
+        Returns
+        -------
+        aligned_img : ImageData
+            Aligned image.
+        """
+        cubemask = self._getMasterMask()
+        pad_shape = ((cubemask.shape[0]-img.shape[0])//2, (cubemask.shape[1]-img.shape[1])//2)
+        img = _np.ma.masked_array(_np.pad(img.data, pad_shape), mask=~_np.pad(~img.mask, pad_shape))
+        if img.shape != cubemask.shape:
+            xdiff = cubemask.shape[1] - img.shape[1]
+            ydiff = cubemask.shape[0] - img.shape[0]
+            nimg = _np.pad(img.data, ((ydiff, 0), (0, xdiff)))
+            nmask = _np.pad(~img.mask, ((ydiff, 0), (0, xdiff)))
+            img = _np.ma.masked_array(nimg, mask=~nmask)
+        xci, yci = self.__get_mask_center(img.mask)
+        xcm, ycm = self.__get_mask_center(cubemask)
+        roll = (xcm - xci, ycm - yci)
+        img = _np.roll(img, roll, axis=(0, 1))
+        if self.filteredModes is not None:
+            from opticalib.ground import zernike
+            img = zernike.removeZernike(img, self.filteredModes)
+        return img
+    
 
     def _loadIntCube(self) -> _ot.CubeData:
         """
@@ -285,13 +326,17 @@ class Flattening:
             rebin = eval(lines[1].split("=")[-1])
             if " filtered " in flag:
                 filtered = True
+                fittedModes = eval(lines[2].split("=")[-1])
             else:
                 filtered = False
+                fittedModes = None
         except FileNotFoundError:
-            rebin = cubeHeader.get("REBIN", None)
+            rebin = cubeHeader.get("REBIN", 1)
             filtered = cubeHeader.get("FILTERED", False)
+            fittedModes = eval(cubeHeader.get("ZREMOVED", "None"))
         self.rebin = rebin
         self.filtered = filtered
+        self.filteredModes = fittedModes
         return intCube
 
     def _loadCmdMat(self) -> _ot.MatrixLike:
@@ -338,6 +383,25 @@ class Flattening:
         # cannot work. we should create a dedicated function, not necessarily linked to IFF or flattening
         return dp
 
+    def __get_mask_center(self, mask):
+        """
+        Computes the center of the mask, which is used to align images and cubes.
+        
+        Parameters
+        ----------
+        mask : ndarray
+            Mask of the image or cube.
+
+        Returns
+        -------
+        y_center, x_center : tuple
+            Coordinates of the center of the mask.
+        """
+        ys, xs = _np.where(~mask)
+        y_center = (ys.min() + ys.max()) // 2
+        x_center = (xs.min() + xs.max()) // 2
+        return y_center, x_center
+    
     def __update_tn(self, tn: str) -> None:
         """
         Updates the tn and cube path if the tn is to change

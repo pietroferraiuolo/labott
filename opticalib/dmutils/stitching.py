@@ -128,6 +128,8 @@ class StitchAnalysis:
             )
         rebin = header.get("REBIN", 1)
         stitched = _np.ma.dstack(stitch_list)
+        nheader = {}
+        nheader.update(header)
         nheader = {
             "STITCHED": (True, "if the cube is the result of stitching"),
             "MASKSIZE": (
@@ -262,15 +264,17 @@ class StitchAnalysis:
             The radius of the circular mask in millimeters.
         cube : _ot.CubeData
             The input image cube to be remasked.
-        header : dict[str, _ot.Any]
-            The header of the cube containing the coordinates.
+        coords : ArrayLike
+            The transformed coordinates written on the cube header.
+        threshold : float, optional
+            The pixel threshold used to reject images.Percentage of useful pixels.
 
         Returns
         -------
         new_cube : _ot.CubeData
             The remasked image cube.
-        new_header : dict[str, _ot.Any]
-            The updated header with the coordinates of the remasked images.
+        new_coords : ArrayLike
+            The updated transformed coordinates of the remasked images.
         """
         cube = self._check_cube_dimension(cube)
         img_shape = (cube.shape[1], cube.shape[2])
@@ -475,6 +479,7 @@ class StitchAcquire:
         self.interf = interf
         self.axis = motors
         self.dataFold = _fn.BASE_DATA_PATH
+        self._lastCommandedCoords = [-999,-999]
         self.cvec = None
 
     def getAxisPosition(self) -> dict[str, float]:
@@ -505,7 +510,14 @@ class StitchAcquire:
             e.g. [x, z]
         """
         x, z = coord
-        self.axis._go2coord([x, z])
+        xo, zo = self._lastCommandedCoords
+        if x == xo:
+            self.axis.set_position("z", z)
+        elif z == zo:
+            self.axis.set_position("x", x)
+        else: 
+            self.axis._go2coord(coord)
+        self._lastCommandedCoords = coord
         print(f"Reached position [{x},{z}]")
 
     def getCoordinatesVector(
@@ -550,7 +562,7 @@ class StitchAcquire:
             coord.extend(row)
         return coord
 
-    def acquireSingleScan(self, coord_vec: list[float], nframes: int = 1) -> str:
+    def acquireSingleScan(self, coord_vec: list[float], nframes: int = 1, homing:bool = True) -> str:
         """
         Acquire a single scan at each position in the coordinate vector.
 
@@ -561,6 +573,8 @@ class StitchAcquire:
             e.g. [(x1, z1), (x2, z2), ...]
         nframes : int, optional
             The number of frames to acquire at each position. Default is 1.
+        homing: bool, optional
+            If True, the axis will be homed after the acquisition. Default is True.
 
         Returns
         -------
@@ -576,13 +590,16 @@ class StitchAcquire:
         header = {}
         imglist = []
         for i, xz in enumerate(coord_vec):
-            header[f"X{i}"] = xz[0]
-            header[f"Z{i}"] = xz[1]
-            self.setAxisPosition(xz)
+            print(f"X = {xz[0]}, Z = {xz[1]}", end="\r", flush=True)
+            header.update({f"X{i}": xz[0],f"Z{i}": xz[1],})
+            co = _io.StringIO()
+            with _clib.redirect_stdout(co):
+                self.setAxisPosition(xz)
             imglist.append(self.interf.acquire_map(nframes=nframes))
         cube = _np.ma.dstack(imglist)
         _osu.save_fits(_os.path.join(ddir, "cube.fits"), cube, header=header)
-        self.axis.homing()
+        if homing:
+            self.axis.homing()
         return tn
 
     def acquireSubApertureIFF(

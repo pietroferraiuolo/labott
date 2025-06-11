@@ -94,7 +94,7 @@ def map_stitching(
         for ii in trange(
             N,
             desc="P-Q Computation",
-            ncols=80,
+            ncols=65,
             colour="green",
             unit="img",
             bar_format=pbar,
@@ -121,7 +121,7 @@ def map_stitching(
                 ),
                 desc="P-Q Computation",
                 total=len(pairs),
-                ncols=80,
+                ncols=65,
                 unit="pair",
                 colour="green",
                 bar_format=pbar,

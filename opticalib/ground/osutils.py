@@ -181,6 +181,10 @@ def tnRange(tn0: str, tn1: str) -> list[str]:
     """
     tn0_fold = findTracknum(tn0)
     tn1_fold = findTracknum(tn1)
+    if isinstance(tn0_fold, str):
+        tn0_fold = [tn0_fold]
+    if isinstance(tn1_fold, str):
+        tn1_fold = [tn1_fold]
     if len(tn0_fold) == 1 and len(tn1_fold) == 1:
         if tn0_fold[0] == tn1_fold[0]:
             fold_path = _os.path.join(_OPTDATA, tn0_fold[0])
@@ -405,6 +409,7 @@ def _header_from_dict(
             )
         else:
             header[key] = value
+    return header
 
 
 class _InterferometerConverter:
