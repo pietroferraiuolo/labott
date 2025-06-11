@@ -186,24 +186,32 @@ class StitchAnalysis:
         coords = self.retrieveCubeCoords(n_positions=cube.shape[0], header=header)
         step = _np.abs(coords[0, 0] - coords[1, 0])
         coords = self._transform_coord(coords, deg=deg)
-        if remask:
-            cube, coords = self.remaskCube(remask, cube, coords, mask_threshold)
         ocube = cube.copy()
         ocoords = coords.copy()
         try:
             if step_size:
+                N = ocube.shape[0]
+                imgshape = ocube.shape[1:]
+                Nrows = _np.floor(N**0.5).astype(int)
+                Ncols = _np.ceil(N**0.5).astype(int)
+                ocube = ocube.reshape((Nrows, Ncols, imgshape[0], imgshape[1]))
+                ocoords = ocoords.reshape((Nrows, Ncols, 2))
                 coords = []
                 cube = []
-                for k in range(0, ocube.shape[0], step_size // step):
-                    cube.append(ocube[k])
-                    coords.append([ocoords[k, 0], ocoords[k, 1]])
-            coords = _np.array(coords)
+                for c in range(0, ocube.shape[0], step_size//step):
+                    for k in range(0, ocube.shape[1], step_size // step):
+                        cube.append(ocube[c,k])
+                        coords.append([ocoords[c, k, 0], ocoords[c, k, 1]])
+                coords = _np.array(coords)
+                cube = _np.ma.dstack(cube)
         finally:
             import gc
 
             del ocube
             del ocoords
             gc.collect()
+        if remask:
+            cube, coords = self.remaskCube(remask, cube, coords, mask_threshold)
         if average is not None:
             pass
         fm, iv = self._prepare_masks_and_images(cube, coords)
