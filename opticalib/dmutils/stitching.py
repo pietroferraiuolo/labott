@@ -4,12 +4,15 @@ import numpy as _np
 import contextlib as _clib
 from shutil import copyfile as _cp
 from opticalib import folders as _fn
+from opticalib import typings as _ot
+from skimage.draw import disk as _disk
 from opticalib.ground import osutils as _osu
 from . import iff_module as _iff, iff_processing as _ifp
-from opticalib import typings as _ot
-from opticalib.core.read_config import getStitchingConfig as _gsc
 from ._stitching_algorithm import map_stitching as _map_stitching
-from skimage.draw import disk as _disk
+from opticalib.core.read_config import (
+    getStitchingConfig as _gsc, 
+    getNActs as _getNActs
+)
 
 
 _ts = _osu.newtn
@@ -26,7 +29,7 @@ class StitchAnalysis:
         self.constants = _gsc()
         self.tn = tn
 
-    def processTns(self, tnvec: list[str, tuple[float] | list[float]]) -> str:
+    def processTns(self, tnvec: list[str,tuple[float]|list[float]]) -> str:
         """
         Process the IFF obtained during the acquisition, and produces the modes and cubes
         for each position, and produces a cube for each IFF in different positions.
@@ -48,7 +51,7 @@ class StitchAnalysis:
             _os.mkdir(dir)
         full_coord_header = {}
         for j, (tn, xz) in enumerate(tnvec):
-            print(f"Processing {(j+1)/len(tnvec)*100:d}%: {tn}", end="\r", flush=True)
+            print(f"Processing {(j+1)/len(tnvec)*100:.2f}%: {tn}", end="\r", flush=True)
             _ifp.process(tn=tn)
             header = {f"X{j}": xz[0], f"Z{j}": xz[1]}
             full_coord_header.update(header)
@@ -57,11 +60,12 @@ class StitchAnalysis:
                 _ifp.saveCube(tn=tn, cube_header=header)
         amat = _osu.getFileList(tnvec[0][0], fold="IntMatrices", key="cmdMat")
         _cp(amat, _os.path.join(dir, _ifp.cmdMatFile))
-        for i in range(self.dm.nActs):
+        nacts = _getNActs()
+        for i in range(nacts):
             modevec = []
             for k, (tn, _) in enumerate(tnvec):
                 print(
-                    f"Processing Mode {i+1}/{self.dm.nActs} : {k/len(tnvec)*100}",
+                    f"Processing Mode {i+1}/{nacts} : {(k+1)/len(tnvec)*100:.2f}%",
                     end="\r",
                     flush=True,
                 )
