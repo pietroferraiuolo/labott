@@ -11,10 +11,44 @@ def check_dir(config_path: str) -> str:
     config_path = os.path.join(config_path, 'configuration.yaml')
     return config_path
 
+def get_available_backend(preferred: str = "qt") -> str:
+    """Check if the preferred matplotlib backend is available, fallback if not.
+
+    Parameters
+    ----------
+    preferred : str
+        The preferred backend to use.
+
+    Returns
+    -------
+    str
+        The backend to use.
+    """
+    import matplotlib
+    interactive_backends = matplotlib.backends.backend_registry.list_builtin(
+        matplotlib.backends.BackendFilter.INTERACTIVE
+    )
+    if preferred in interactive_backends:
+        try:
+            matplotlib.use(preferred, force=True)
+            return preferred
+        except Exception:
+            pass
+    # Fallback order: tk, gtk3, wx, qt5, qt, inline
+    for fallback in ["tk", "gtk3", "wx", "qt5", "qt", "inline"]:
+        if fallback in interactive_backends:
+            try:
+                matplotlib.use(fallback, force=True)
+                return fallback
+            except Exception:
+                continue
+    return "inline"
+
 def main():
     home = os.path.expanduser("~")
     mnt = '/mnt/'
     media = '/media/'
+    backend = get_available_backend()
     init_file = os.path.join(os.path.dirname(__file__), '__init_script__', 'initCalpy.py')
     # Check if ipython3 is installed
     if not shutil.which("ipython3"):
@@ -62,7 +96,7 @@ no option : Initialize an ipython3 --pylab='qt' shell
             if not os.path.exists(config_path):
                 config_path = os.path.join(os.path.dirname(config_path), 'SysConfig', 'configuration.yaml')
             print("\n Initiating IPython Shell, importing Opticalib...\n")
-            os.system(f"export AOCONF={config_path} && ipython3 --pylab='qt' -i '{init_file}'")
+            os.system(f"export AOCONF={config_path} && ipython3 --pylab='{backend}' -i '{init_file}'")
         except OSError as ose:
             print(f"Error: {ose}")
             sys.exit(1)

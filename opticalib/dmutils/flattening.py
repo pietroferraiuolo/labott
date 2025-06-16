@@ -218,7 +218,9 @@ class Flattening:
         """
         try:
             # DEPRECATED: this will be removed in future versions
-            with open(_os.path.join(self._path, _ifp.flagFile), "r", encoding="utf-8") as f:
+            with open(
+                _os.path.join(self._path, _ifp.flagFile), "r", encoding="utf-8"
+            ) as f:
                 flag = f.read()
             if " filtered " in flag:
                 print("Cube already filtered, skipping...")
@@ -272,7 +274,7 @@ class Flattening:
         master_mask = _np.zeros(cubeMask.shape, dtype=_np.bool_)
         master_mask[_np.where(cubeMask > 0)] = True
         return master_mask
-    
+
     def _alignImgAndCubeMasks(self, img: _ot.ImageData) -> _ot.ImageData:
         """
         Aligns the image mask with the interaction cube mask.
@@ -288,8 +290,13 @@ class Flattening:
             Aligned image.
         """
         cubemask = self._getMasterMask()
-        pad_shape = ((cubemask.shape[0]-img.shape[0])//2, (cubemask.shape[1]-img.shape[1])//2)
-        img = _np.ma.masked_array(_np.pad(img.data, pad_shape), mask=~_np.pad(~img.mask, pad_shape))
+        pad_shape = (
+            (cubemask.shape[0] - img.shape[0]) // 2,
+            (cubemask.shape[1] - img.shape[1]) // 2,
+        )
+        img = _np.ma.masked_array(
+            _np.pad(img.data, pad_shape), mask=~_np.pad(~img.mask, pad_shape)
+        )
         if img.shape != cubemask.shape:
             xdiff = cubemask.shape[1] - img.shape[1]
             ydiff = cubemask.shape[0] - img.shape[0]
@@ -302,9 +309,9 @@ class Flattening:
         img = _np.roll(img, roll, axis=(0, 1))
         if self.filteredModes is not None:
             from opticalib.ground import zernike
+
             img = zernike.removeZernike(img, self.filteredModes)
         return img
-    
 
     def _loadIntCube(self) -> _ot.CubeData:
         """
@@ -386,7 +393,7 @@ class Flattening:
     def __get_mask_center(self, mask):
         """
         Computes the center of the mask, which is used to align images and cubes.
-        
+
         Parameters
         ----------
         mask : ndarray
@@ -401,7 +408,7 @@ class Flattening:
         y_center = (ys.min() + ys.max()) // 2
         x_center = (xs.min() + xs.max()) // 2
         return y_center, x_center
-    
+
     def __update_tn(self, tn: str) -> None:
         """
         Updates the tn and cube path if the tn is to change

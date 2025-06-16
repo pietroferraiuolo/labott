@@ -9,10 +9,7 @@ from skimage.draw import disk as _disk
 from opticalib.ground import osutils as _osu
 from . import iff_module as _iff, iff_processing as _ifp
 from ._stitching_algorithm import map_stitching as _map_stitching
-from opticalib.core.read_config import (
-    getStitchingConfig as _gsc, 
-    getNActs as _getNActs
-)
+from opticalib.core.read_config import getStitchingConfig as _gsc, getNActs as _getNActs
 
 
 _ts = _osu.newtn
@@ -29,7 +26,7 @@ class StitchAnalysis:
         self.constants = _gsc()
         self.tn = tn
 
-    def processTns(self, tnvec: list[str,tuple[float]|list[float]]) -> str:
+    def processTns(self, tnvec: list[str, tuple[float] | list[float]]) -> str:
         """
         Process the IFF obtained during the acquisition, and produces the modes and cubes
         for each position, and produces a cube for each IFF in different positions.
@@ -202,9 +199,9 @@ class StitchAnalysis:
                 ocoords = ocoords.reshape((Nrows, Ncols, 2))
                 coords = []
                 cube = []
-                for c in range(0, ocube.shape[0], step_size//step):
+                for c in range(0, ocube.shape[0], step_size // step):
                     for k in range(0, ocube.shape[1], step_size // step):
-                        cube.append(ocube[c,k])
+                        cube.append(ocube[c, k])
                         coords.append([ocoords[c, k, 0], ocoords[c, k, 1]])
                 coords = _np.array(coords)
                 cube = _np.ma.dstack(cube)
@@ -491,7 +488,7 @@ class StitchAcquire:
         self.interf = interf
         self.axis = motors
         self.dataFold = _fn.BASE_DATA_PATH
-        self._lastCommandedCoords = [-999,-999]
+        self._lastCommandedCoords = [-999, -999]
         self.cvec = None
 
     def getAxisPosition(self) -> dict[str, float]:
@@ -527,7 +524,7 @@ class StitchAcquire:
             self.axis.set_position("z", z)
         elif z == zo:
             self.axis.set_position("x", x)
-        else: 
+        else:
             self.axis._go2coord(coord)
         self._lastCommandedCoords = coord
         print(f"Reached position [{x},{z}]")
@@ -574,7 +571,9 @@ class StitchAcquire:
             coord.extend(row)
         return coord
 
-    def acquireSingleScan(self, coord_vec: list[float], nframes: int = 1, homing:bool = True) -> str:
+    def acquireSingleScan(
+        self, coord_vec: list[float], nframes: int = 1, homing: bool = True
+    ) -> str:
         """
         Acquire a single scan at each position in the coordinate vector.
 
@@ -603,7 +602,12 @@ class StitchAcquire:
         imglist = []
         for i, xz in enumerate(coord_vec):
             print(f"X = {xz[0]}, Z = {xz[1]}", end="\r", flush=True)
-            header.update({f"X{i}": xz[0],f"Z{i}": xz[1],})
+            header.update(
+                {
+                    f"X{i}": xz[0],
+                    f"Z{i}": xz[1],
+                }
+            )
             co = _io.StringIO()
             with _clib.redirect_stdout(co):
                 self.setAxisPosition(xz)

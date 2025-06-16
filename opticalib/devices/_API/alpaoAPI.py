@@ -1,6 +1,7 @@
 import numpy as _np
 from opticalib.core.read_config import getDmAddress
 from opticalib.core.exceptions import CommandError
+from opticalib import typings as _t
 
 
 class BaseAlpaoMirror:
@@ -29,17 +30,22 @@ class BaseAlpaoMirror:
             raise ValueError(f"Reference actuator {refAct} is out of range.")
         self.refAct = refAct
 
-    def _checkCmdIntegrity(self, cmd) -> None:
+    def _checkCmdIntegrity(self, cmd: list[float], amp_threshold: float = 0.9) -> None:
+        """
+        Checks the integrity of the command vector.
+        """
+        at = amp_threshold
+        stdt = _np.sqrt(at)/2
         mcmd = _np.max(cmd)
-        if mcmd > 0.9:
-            raise CommandError(f"Command value {mcmd} is greater than 1.")
+        if mcmd > at:
+            raise CommandError(f"Command value {mcmd} is greater than {at:.2f}")
         mcmd = _np.min(cmd)
-        if mcmd < -0.9:
-            raise CommandError(f"Command value {mcmd} is smaller than -1.")
+        if mcmd < -at:
+            raise CommandError(f"Command value {mcmd} is smaller than {-at:.2f}")
         scmd = _np.std(cmd)
-        if scmd > 0.5:
+        if scmd > stdt:
             raise CommandError(
-                f"Command standard deviation {scmd} is greater than 0.1."
+                f"Command standard deviation {scmd} is greater than {stdt:.2f}."
             )
 
     def _initNactuators(self) -> int:
@@ -52,7 +58,6 @@ class BaseAlpaoMirror:
         lower_rows = [l for l in reversed(upper_rows)]
         center_rows = [n_dim] * upper_rows[0]
         rows_number_of_acts = upper_rows + center_rows + lower_rows
-        N_acts = sum(rows_number_of_acts)
         n_rows = len(rows_number_of_acts)
         cx = _np.array([], dtype=int)
         cy = _np.array([], dtype=int)

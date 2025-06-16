@@ -4,3 +4,7 @@ scikit-learn
 astropy
 plico_dm
 Pyro4
+jdcal
+scikit-image
+matplotlib
+h5py

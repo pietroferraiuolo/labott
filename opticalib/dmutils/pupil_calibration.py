@@ -22,6 +22,7 @@ class PupilCalibrator:
         self._dm = dm
         self._tn = tn
 
+
     def act_coordinates_tranformation(
         self, dm: _ot.DeformableMirrorDevice, img: _ot.Optional[_ot.ImageData] = None
     ) -> _ot.MatrixLike:
@@ -30,3 +31,8 @@ class PupilCalibrator:
         ## Sudo code here
         #
         ...
+    
+    def remapMask(mask, geometry) -> _ot.ImageData: ...
+
+    def remapIff(iff_image, mask, geometry) -> _ot.ImageData: ...
+    
