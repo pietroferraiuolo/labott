@@ -35,7 +35,7 @@ def get_available_backend(preferred: str = "qt") -> str:
         except Exception:
             pass
     # Fallback order: tk, gtk3, wx, qt5, qt, inline
-    for fallback in ["tkagg", "gtk3agg", "qt", "qt5", "qtagg", "inline"]:
+    for fallback in ["qt", "qtagg", "gtk3agg", "qt5", "inline", "tkagg"]:
         if fallback in interactive_backends:
             try:
                 matplotlib.use(fallback, force=True)

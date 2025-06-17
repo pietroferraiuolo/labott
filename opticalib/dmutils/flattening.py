@@ -18,11 +18,11 @@ How to Use it
 =============
 Instancing the class only with the tn of the interaction cube
 
-    >>> from m4.dmutils import flattening as flt
+    >>> from opticalib.dmutils import flattening as flt
     >>> tn = '20240906_110000' # example tn
     >>> f = flt.Flattening(tn)
     >>> # say we have acquired an image
-    >>> img = interf.acquire_phasemap()
+    >>> img = interf.acquire_map()
     >>> f.load_image2shape(img)
     >>> f.computeRecMat()
     'Computing reconstruction matrix...'
