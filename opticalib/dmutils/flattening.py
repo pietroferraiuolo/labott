@@ -156,18 +156,19 @@ class Flattening:
         """
         img = _np.ma.masked_array(self.shape2flat, mask=self._getMasterMask())
         _cmd = -_np.dot(img.compressed(), self._recMat)
+        cmdMat = self._cmdMat.copy()
         if isinstance(n_modes, int):
-            flat_cmd = self._cmdMat[:, :n_modes] @ _cmd[:n_modes]
+            flat_cmd = cmdMat[:, :n_modes] @ _cmd[:n_modes]
         elif isinstance(n_modes, list):
-            _cmdMat = _np.zeros((self._cmdMat.shape[1], len(n_modes)))
+            _cmdMat = _np.zeros((cmdMat.shape[1], len(n_modes)))
             _scmd = _np.zeros(_cmd.shape[0])
             for i, mode in enumerate(n_modes):
-                _cmdMat.T[i] = self._cmdMat.T[mode]
+                _cmdMat.T[i] = cmdMat.T[mode]
                 _scmd[i] = _cmd[mode]
             flat_cmd = _cmdMat @ _cmd
         else:
-            raise TypeError("n_modes must be either an int or a list of int")
-        self.flatCmd = flat_cmd
+            raise TypeError(f"`n_modes` must be either an int or a list of int: {type(n_modes)}")
+        self.flatCmd = flat_cmd.copy()
         return flat_cmd
 
     def loadImage2Shape(

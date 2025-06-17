@@ -18,9 +18,35 @@ from opticalib.ground.osutils import newtn as _ts, save_fits as _sf
 from opticalib.core import exceptions as _oe
 
 
-class AdOpticaDm():
+class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
 
-    def __init__(self): ...
+    def __init__(self, tn: _ot.Optional[str] = None):
+        """The Constructor"""
+        self._name = "AdOpticaDm"
+        super().__init__(tn)
+
+    def get_shape(self):
+        """
+        Retrieve the actuators positions
+        """
+        pos = self._aoClient.getPosition()
+        return pos
+
+    def set_shape(self, cmd: list[float]): #cmd, segment=None):
+        """
+        Applies the given command to the DM actuators.
+
+        Parameters
+        ----------
+        cmd : list[float]
+            The command to be applied to the DM actuators, of lenght equal
+            the number of actuators.
+        """
+        if not len(cmd) == self.nActs:
+            raise _oe.CommandError(
+                f"Command length {len(cmd)} does not match the number of actuators {self.nActs}."
+            )
+        self._aoClient.mirrorCommand(cmd)
 
 
 class AlpaoDm(_api.BaseAlpaoMirror, _api.base_devices.BaseDeformableMirror):
