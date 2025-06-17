@@ -1,5 +1,5 @@
 import numpy as _np
-from opticalib.core.read_config import getDmAddress
+from opticalib.core.read_config import getDmConfig
 from opticalib.core.exceptions import CommandError
 from opticalib import typings as _t
 
@@ -17,6 +17,7 @@ class BaseAlpaoMirror:
         self.nActs = self._initNactuators()
         self._name = f"Alpao{self.nActs}"
         self.actCoord = self._initActCoord()
+        self.diameter = getDmConfig(self._name).get("diameter", None)
         self.mirrorModes = None
         self.cmdHistory = None
         self.refAct = None
@@ -80,7 +81,8 @@ class BaseAlpaoMirror:
 
         if (ip, port) == (None, None) and nacts is not None:
             name = f"Alpao{int(nacts)}"
-            self.ip, self.port = getDmAddress(name)
+            config = getDmConfig(name)
+            ip, port = config.get("ip"), config.get("port")
         elif (ip, port, nacts) == (None, None, None):
             raise ValueError("Either (ip, port) or nacts must be provided.")
         else:

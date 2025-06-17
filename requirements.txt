@@ -8,3 +8,4 @@ jdcal
 scikit-image
 matplotlib
 h5py
+thin-plate-spline

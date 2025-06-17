@@ -98,10 +98,11 @@ class SPLATTEngine:
             print("Shell set variable is True, overwrite it if you wish to set again")
 
     def _get_address(self, ip, port):
-        from opticalib.core.read_config import getDmAddress
+        from opticalib.core.read_config import getDmConfig
 
         try:
-            rip, rport = getDmAddress("Splatt")
+            config  = getDmConfig("Splatt")
+            rip, rport = config.get("ip"), config.get("port")
             if (ip, port) == (None, None):
                 ip, port = (rip, rport)
         except KeyError:

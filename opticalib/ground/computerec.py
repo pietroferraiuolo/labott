@@ -162,9 +162,8 @@ class ComputeReconstructor:
         self._logger.info(
             "Computing interaction matrix from cube of size %s", self._intMatCube.shape
         )
-        print(
-            "Computing interaction matrix from cube of size %s", self._intMatCube.shape
-        )
+        print("Computing Interaction Matrix", end="\a")
+        print("...", end="\a", flush=True)
         try:
             self._setAnalysisMask()
             self._intMat = _np.array(
@@ -176,7 +175,7 @@ class ComputeReconstructor:
         except Exception as e:
             self._logger.error("Error in computing interaction matrix from cube:%s", e)
             raise e
-        print("Interaction Matrix : ", self._intMat.shape)
+        print(self._intMat.shape)
 
     def _setAnalysisMask(self):
         """

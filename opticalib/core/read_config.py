@@ -337,7 +337,7 @@ def _parse_val(val):
     return val
 
 
-def getDmAddress(device_name: str):
+def getDmConfig(device_name: str):
     """
     Retrieves the DM address from the YAML configuration file.
 
@@ -359,9 +359,7 @@ def getDmAddress(device_name: str):
         ]
     except KeyError:
         raise DeviceNotFoundError(device_name)
-    ip = config["ip"]
-    port = config["port"]
-    return ip, port
+    return config
 
 
 def getInterfConfig(device_name: str):

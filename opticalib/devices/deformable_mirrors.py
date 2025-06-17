@@ -18,6 +18,11 @@ from opticalib.ground.osutils import newtn as _ts, save_fits as _sf
 from opticalib.core import exceptions as _oe
 
 
+class AdOpticaDm():
+
+    def __init__(self): ...
+
+
 class AlpaoDm(_api.BaseAlpaoMirror, _api.base_devices.BaseDeformableMirror):
     """
     Alpao Deformable Mirror interface.

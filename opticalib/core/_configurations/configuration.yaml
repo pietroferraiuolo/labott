@@ -28,6 +28,7 @@ DEVICES:
     AlpaoXXX:
       ip:
       port:
+      diameter:
     Splatt:
       ip: '193.206.155.220'
       port: 9090
