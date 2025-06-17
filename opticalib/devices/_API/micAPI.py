@@ -15,7 +15,7 @@ class BaseAdOpticaDm():
     Base class for AdOptica DM devices.
     This class is intended to be inherited by specific device classes.
     """
-    def __init__(self, tracknum=None):
+    def __init__(self, tracknum: str = None):
         """The constructor"""
         """
         print(f"Initializing the M4AU with configuration: '{os.path.join(fn.MIRROR_FOLDER,tracknum)}'")
@@ -28,8 +28,6 @@ class BaseAdOpticaDm():
         self.mirrorModes = self._initMirrorModes()
         self.actCoord    = self._initActCoord()
         self.workingActs = self._initWorkingActs()
-
-        print('init the DM with no configurations')
 
     def getCounter(self):
         """
