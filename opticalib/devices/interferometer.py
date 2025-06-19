@@ -79,7 +79,7 @@ class AccuFiz(_api.BaseInterferometer):
         data2d: numpy masked array
                 detector interferometer image
         """
-        self.acquire_phasemap()
+        self.acquire_map()
         if nframes == 1:
             data, height, _, width = self._i4d.getFringeAmplitudeData()
             data2d = _np.reshape(data, (width, height))
@@ -337,7 +337,7 @@ class PhaseCam(_api.BaseInterferometer):
         data2d: numpy masked array
                 detector interferometer image
         """
-        self.acquire_phasemap()
+        self.acquire_map()
         if nframes == 1:
             data, height, _, width = self._i4d.getFringeAmplitudeData()
             data2d = _np.reshape(data, (width, height))
