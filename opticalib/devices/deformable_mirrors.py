@@ -48,6 +48,12 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             )
         self._aoClient.mirrorCommand(cmd)
 
+    def uploadCmdHistory(self):
+        pass
+
+    def runCmdHistory(self):
+        pass
+
 
 class AlpaoDm(_api.BaseAlpaoMirror, _api.base_devices.BaseDeformableMirror):
     """

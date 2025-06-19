@@ -28,14 +28,14 @@ def get_available_backend(preferred: str = "qt") -> str:
     interactive_backends = matplotlib.backends.backend_registry.list_builtin(
         matplotlib.backends.BackendFilter.INTERACTIVE
     )
-    if preferred in interactive_backends:
-        try:
-            matplotlib.use(preferred, force=True)
-            return preferred
-        except Exception:
-            pass
+    # if preferred in interactive_backends:
+    try:
+        matplotlib.use(preferred, force=True)
+        return preferred
+    except Exception:
+        pass
     # Fallback order: tk, gtk3, wx, qt5, qt, inline
-    for fallback in ["qt", "qtagg", "gtk3agg", "qt5", "inline", "tkagg"]:
+    for fallback in ["auto", "inline", "qt5", "gtk3", "qt5", "tkagg"]:
         if fallback in interactive_backends:
             try:
                 matplotlib.use(fallback, force=True)
@@ -48,7 +48,7 @@ def main():
     home = os.path.expanduser("~")
     mnt = '/mnt/'
     media = '/media/'
-    backend = get_available_backend()
+    backend = get_available_backend(preferred='agg')
     init_file = os.path.join(os.path.dirname(__file__), '__init_script__', 'initCalpy.py')
     # Check if ipython3 is installed
     if not shutil.which("ipython3"):
