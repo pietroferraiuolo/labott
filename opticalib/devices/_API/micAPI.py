@@ -1,7 +1,10 @@
 import os
 import numpy as np
 from abc import abstractmethod
-from Microgate.adopt.AOClient import AO_CLIENT #type: ignore
+try:
+    from Microgate.adopt.AOClient import AO_CLIENT #type: ignore
+except ImportError:
+    pass
 
 
 mirrorModesFile = 'ff_v_matrix.fits'
