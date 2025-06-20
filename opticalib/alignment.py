@@ -146,10 +146,8 @@ class Alignment:
         self._zvec2fit = _np.arange(1, 11)
         self._zvec2use = _sc.zernike_to_use
         self._template = _sc.push_pull_template
-        self._dataPath = (
-            _fn.ALIGNMENT_ROOT_FOLDER if _sc.data_path is "" else _sc.data_path
-        )
-        self._logPath = _os.path.join(_fn.LOGGING_FILE_PATH, "alignment.log")
+        self._dataPath = _fn.ALIGNMENT_ROOT_FOLDER
+        self._logPath = _os.path.join(_fn.LOGGING_ROOT_FOLDER, "alignment.log")
         self._txt = _logger.txtLogger(self._logPath.strip(".log") + "Record.txt")
         _logger.set_up_logger(self._logPath, 20)
 
@@ -217,7 +215,7 @@ class Alignment:
         reduced_cmd = _np.dot(recMat, zernike_coeff[zern2correct])
         f_cmd = -_np.dot(reduced_cmdMat, reduced_cmd)
         print(f"Resulting Command: {f_cmd}")
-        self._write_correction_log(tn, initpos)
+        #self._write_correction_log(tn, initpos)
         self._txt.log(
             f"DoF & Zern2Corr:          {modes2correct} {zern2correct}\n" + "-" * 30
         )
@@ -267,18 +265,16 @@ class Alignment:
         4. Executes a Zernike routine on the image list to generate an internal matrix.
         5. Optionally saves the internal matrix to a FITS file.
         """
-        import os
-
         _logger.log(f"{self.calibrate_alignment.__qualname__}")
         self._cmdAmp = cmdAmp
         template = template if template is not None else self._template
-        imglist = self._images_production(template, n_repetitions)
+        imglist = self._images_production(template, n_frames, n_repetitions)
         intMat = self._zern_routine(imglist)
-        self.intMat = intMat
+        self.intMat = intMat.copy()
         if save:
             tn = _ts()
-            filename = os.path.join(self._dataPath, tn, "InteractionMatrix.fits")
-            os.mkdir(filename.strip("InteractionMatrix.fits"))
+            filename = _os.path.join(self._dataPath, tn, "InteractionMatrix.fits")
+            _os.mkdir(filename.strip("InteractionMatrix.fits"))
             _sfits("intMat.fits", self.intMat, overwrite=True)
             _logger.log(f"{_sfits.__qualname__}")
         return "Ready for Alignment..."
@@ -305,7 +301,7 @@ class Alignment:
             print(logMsg)
         return pos
 
-    def load_fitting_surface(self, filepath: str) -> str:
+    def load_fitting_surface(self, filepath: str) -> None:
         """
         This function let you load the mask to use for zernike fitting. In the case of
         M$, for example, here the calibrated parabola is loaded, so that zernike modes are
@@ -324,7 +320,7 @@ class Alignment:
         """
         surf = _rfits(filepath)
         self._surface = surf
-        return f"Correctly loaded '{filepath}'"
+        print(f"Correctly loaded '{filepath}'")
 
     def _images_production(
         self, template: _ot.ArrayLike, n_frames: int, n_repetitions: int
@@ -384,7 +380,7 @@ class Alignment:
         if not isinstance(imglist, list):
             imglist = [imglist]
         for img in imglist:
-            if self._auxMask is None:
+            if self._surface is None:
                 coeff, _ = _zern.zernikeFit(img, self._zvec2fit)
                 _logger.log(f"{_zern.zernikeFit.__qualname__}")
             else:
@@ -397,7 +393,7 @@ class Alignment:
                 _logger.log(f"{_zern.zernikeFitAuxmask.__qualname__}")
             coefflist.append(coeff[self._zvec2use])
         if len(coefflist) == 1:
-            coefflist = _np.array([c for c in coefflist(0)])
+            coefflist = _np.array([c for c in coefflist[0]])
         intMat = _np.array(coefflist).T
         return intMat
 

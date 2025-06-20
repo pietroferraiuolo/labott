@@ -27,10 +27,12 @@ class BaseAdOpticaDm():
         self._aoClient = AO_CLIENT(tracknum)
         self.ffm = (self._aoClient.aoSystem.sysConf.gen.FFWDSvdMatrix)[0]# 
         self.ff  = self._aoClient.aoSystem.sysConf.gen.FFWDMatrix
+        self._biasCmd    = self._aoClient.aoSystem.sysConf.gen.biasVectors[0]
         self.nActs       = self._initNActuators()
         self.mirrorModes = self._initMirrorModes()
         self.actCoord    = self._initActCoord()
         self.workingActs = self._initWorkingActs()
+        self._aoClient.connect()
 
     def getCounter(self):
         """

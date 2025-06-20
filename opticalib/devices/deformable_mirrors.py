@@ -48,11 +48,81 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             )
         self._aoClient.mirrorCommand(cmd)
 
-    def uploadCmdHistory(self):
-        pass
+    def uploadCmdHistory(self, tcmdhist: _ot.MatrixLike, for_triggered: bool = False) -> None:
+        """
+        Uploads the (timed) command history in the DM. if `for_triggered` is true, 
+        then it is loaded direclty in the AO client for the triggere mode run.
 
-    def runCmdHistory(self):
-        pass
+        Parameters
+        ----------
+        tcmdhist : _ot.MatrixLike
+            The command history to be uploaded, of shape (used_acts, nmodes).
+        tfor_triggered : bool, optional
+            If True, the command history will be uploaded directly to the AO client for
+            the triggered mode run. If False, it will be stored in the `cmdHistory`
+            attribute of the DM instance (default is False).
+        """
+        if not _ot.isinstance_(tcmdhist, "MatrixLike"):
+            raise _oe.MatrixError(
+                f"Expecting a 2D Matrix of shape (used_acts, nmodes), got instead: {tcmdhist.shape}"
+            )
+        if for_triggered:
+            self._aoClient.timeHistoryUpload(tcmdhist)
+        else:
+            self.cmdHistory = tcmdhist
+        print("Time History uploaded!")
+
+    def runCmdHistory(self, interf, differential: bool = False, triggered:bool|dict[str,_ot.Any] = False, sequential_delay: int | float = 0.2, save: _ot.Optional[str] = None) -> str:
+        """
+        Runs the loaded command history on the DM. If `triggered` is not False, it must
+        be a dictionary containing the low lever arguments for the `aoClient.timeHistoryRun` function.
+
+        Parameters
+        ----------
+        interf : _ot.InterferometerDevice
+            The interferometer device to be used for acquiring images during the command history run.
+        differential : bool, optional
+            If True, the commands will be applied as differential commands (default is False).
+        triggered : bool | dict[str, _ot.Any], optional 
+            If False, the command history will be run in a sequential mode. 
+            If not False, a dictionary must be provided, where it should contain the keys 
+            'freq', 'wait', and 'delay' for the triggered mode.
+        sequential_delay : int | float, optional
+            The delay between each command execution in seconds (only if not in 
+            triggered mode).
+        save : str, optional
+            If provided, the command history will be saved with this name as a timestamp.
+        """
+        if triggered:
+            for arg in triggered.keys():
+                if not arg in ["freq", "wait", "delay"]:
+                    raise _oe.CommandError(
+                        f"Invalid argument '{arg}' in triggered commands."
+                    )
+            freq = triggered.get("freq", 1.0)
+            wait = triggered.get("wait", 0.0)
+            tdelay = triggered.get("delay", 0.8)
+            self._aoClient.timeHistoryRun(freq, wait, tdelay)
+        else:
+            if self.cmdHistory is None:
+                raise _oe.CommandError("No Command History to run!")
+            else:
+                tn = _ts.now() if save is None else save
+                print(f"{tn} - {self.cmdHistory.shape[-1]} images to go.")
+                datafold = _os.path.join(self.baseDataPath, tn)
+                s = self.get_shape() - self._biasCmd
+                if not _os.path.exists(datafold) and interf is not None:
+                    _os.mkdir(datafold)
+                for i, cmd in enumerate(self.cmdHistory.T):
+                    print(f"{i+1}/{self.cmdHistory.shape[-1]}", end="\r", flush=True)
+                    if differential:
+                        cmd = cmd + s
+                    self.set_shape(cmd)
+                    if interf is not None:
+                        _time.sleep(sequential_delay)
+                        img = interf.acquire_map()
+                        path = _os.path.join(datafold, f"image_{i:05d}.fits")
+                        _sf(path, img)
 
 
 class AlpaoDm(_api.BaseAlpaoMirror, _api.base_devices.BaseDeformableMirror):
