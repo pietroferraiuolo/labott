@@ -32,7 +32,7 @@ class BaseAdOpticaDm():
         self.mirrorModes = self._initMirrorModes()
         self.actCoord    = self._initActCoord()
         self.workingActs = self._initWorkingActs()
-        self._aoClient.connect()
+        self._aoClient._connect()
 
     def getCounter(self):
         """
@@ -126,8 +126,4 @@ class BaseAdOpticaDm():
         '''
         Reading the actuators coordinate from file
         '''
-        pass
-        # fname = os.path.join(self.dmConf, actCoordFile)
-        # with pyfits.open(fname) as hdu:
-        #     actCoord = hdu[0].data
-        # return actCoord
+        return dm._aoClient.aoSystem.sysConf.gen.M2CMatrix.shape[-1]

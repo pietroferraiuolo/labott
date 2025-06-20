@@ -102,7 +102,9 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             freq = triggered.get("freq", 1.0)
             wait = triggered.get("wait", 0.0)
             tdelay = triggered.get("delay", 0.8)
+            ins = self.get_shape - self._biasCmd
             self._aoClient.timeHistoryRun(freq, wait, tdelay)
+            self.set_shape(ins)
         else:
             if self.cmdHistory is None:
                 raise _oe.CommandError("No Command History to run!")
