@@ -37,6 +37,42 @@ class BaseInterferometer(ABC):
         Must be implemented by subclasses.
         """
         pass
+    
+    @abstractmethod
+    def intoFullFrame(self, img):
+        """
+        Abstract method to convert the interference pattern into a full frame image.
+        Must be implemented by subclasses.
+        
+        Parameters
+        ----------
+        img: _ot.ImageData
+            The image data to be converted.
+        
+        Returns
+        -------
+        _ot.ImageData
+            The full frame image data.
+        """
+        pass
+    
+    def acquireFullFrame(self, **kwargs):
+        """
+        Wrapper for the consecutive execution of `acquire_mapo` and `intoFullFrame`.
+        
+        Parameters
+        ----------
+        **kwargs: dict
+            Additional keyword arguments to be passed to `acquire_map`.
+            
+        Returns
+        -------
+        _ot.ImageData
+            The full frame image data.
+        """
+        img = self.acquire_map(**kwargs)
+        full_frame = self.intoFullFrame(img)
+        return full_frame
 
 
 class BaseDeformableMirror(ABC):
