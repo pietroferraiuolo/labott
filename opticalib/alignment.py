@@ -497,7 +497,7 @@ class Alignment:
         """
         _logger.log(f"{self._img_acquisition.__qualname__}")
         _logger.log(f"{self._acquire[0].__qualname__}")
-        imglist = [self._acquire[0](n_frames)]
+        imglist = [self._acquire[0](n_frames=n_frames)]
         for t in template:
             logMsg = ""
             logMsg += f"t = {t}"
@@ -506,7 +506,7 @@ class Alignment:
             print(logMsg)
             self._apply_command(cmd)
             _logger.log(f"{self._acquire[0].__qualname__}")
-            imglist.append(self._acquire[0](n_frames))
+            imglist.append(self._acquire[0](n_frames=n_frames))
         return imglist
 
     def _push_pull_redux(
