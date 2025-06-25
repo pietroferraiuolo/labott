@@ -11,7 +11,7 @@ def check_dir(config_path: str) -> str:
     config_path = os.path.join(config_path, 'configuration.yaml')
     return config_path
 
-def get_available_backend(preferred: str = "qt") -> str:
+def backend_fallback() -> str:
     """Check if the preferred matplotlib backend is available, fallback if not.
 
     Parameters
@@ -25,30 +25,17 @@ def get_available_backend(preferred: str = "qt") -> str:
         The backend to use.
     """
     import matplotlib
-    interactive_backends = matplotlib.backends.backend_registry.list_builtin(
-        matplotlib.backends.BackendFilter.INTERACTIVE
-    )
-    # if preferred in interactive_backends:
     try:
-        matplotlib.use(preferred, force=True)
-        return preferred
+        matplotlib.use('qt', force=True)
+        return 'qt'
     except Exception:
-        pass
-    # Fallback order: tk, gtk3, wx, qt5, qt, inline
-    for fallback in ["auto", "inline", "qt5", "gtk3", "qt5", "tkagg"]:
-        if fallback in interactive_backends:
-            try:
-                matplotlib.use(fallback, force=True)
-                return fallback
-            except Exception:
-                continue
-    return "inline"
+        return "auto"
 
 def main():
     home = os.path.expanduser("~")
     mnt = '/mnt/'
     media = '/media/'
-    backend = get_available_backend(preferred='agg')
+    backend = backend_fallback()
     init_file = os.path.join(os.path.dirname(__file__), '__init_script__', 'initCalpy.py')
     # Check if ipython3 is installed
     if not shutil.which("ipython3"):
