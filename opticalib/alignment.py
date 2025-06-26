@@ -193,11 +193,11 @@ class Alignment:
         correction command or returns it.
         """
         _logger.log(f"{self.correct_alignment.__qualname__}")
-        image = self._acquire[0](n_frames)
+        image = self._acquire[0](n_frames=n_frames)
         initpos = self.read_positions(show=False)
         zernike_coeff = self._zern_routine(image)
         if tn is not None:
-            intMat = _rfits(self._dataPath + f"/{tn}/InteractionMatrix.fits")
+            intMat = _rfits(_fn.ALIGN_CALIBRATION_ROOT_FOLDER + f"/{tn}/InteractionMatrix.fits")
             self.intMat = intMat
         else:
             try:
@@ -273,10 +273,13 @@ class Alignment:
         self.intMat = intMat.copy()
         if save:
             tn = _ts()
-            filename = _os.path.join(self._dataPath, tn, "InteractionMatrix.fits")
-            _os.mkdir(filename.strip("InteractionMatrix.fits"))
-            _sfits("intMat.fits", self.intMat, overwrite=True)
+            path = _os.path.join(_fn.ALIGN_CALIBRATION_ROOT_FOLDER, tn)
+            if not _os.path.exists(path):
+                _os.mkdir(path)
+            filename = _os.path.join(path, "InteractionMatrix.fits")
+            _sfits(filename, self.intMat, overwrite=True)
             _logger.log(f"{_sfits.__qualname__}")
+            print(f"Calibration saved in '{filename}'")
         return "Ready for Alignment..."
 
     def read_positions(self, show: bool = True) -> _ot.ArrayLike:

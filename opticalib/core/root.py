@@ -35,6 +35,9 @@ def create_folder_tree(BASE_DATA_PATH: str) -> None:
     IFFUNCTIONS_ROOT_FOLDER = _os.path.join(OPT_DATA_ROOT_FOLDER, "IFFunctions")
     ALIGNMENT_ROOT_FOLDER = _os.path.join(OPT_DATA_ROOT_FOLDER, "Alignment")
     CONTROL_MATRIX_FOLDER = _os.path.join(ALIGNMENT_ROOT_FOLDER, "ControlMatrices")
+    ALIGN_CALIBRATION_ROOT_FOLDER: str = _os.path.join(
+    ALIGNMENT_ROOT_FOLDER, "Calibration"
+    )
     for p in [
         BASE_DATA_PATH,
         OPT_DATA_ROOT_FOLDER,
@@ -48,6 +51,7 @@ def create_folder_tree(BASE_DATA_PATH: str) -> None:
         IFFUNCTIONS_ROOT_FOLDER,
         ALIGNMENT_ROOT_FOLDER,
         CONTROL_MATRIX_FOLDER,
+        ALIGN_CALIBRATION_ROOT_FOLDER,
     ]:
         _create_folder(p)
 
