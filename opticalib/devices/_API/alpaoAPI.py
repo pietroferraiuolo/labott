@@ -82,7 +82,7 @@ class BaseAlpaoMirror:
         if (ip, port) == (None, None) and nacts is not None:
             name = f"Alpao{int(nacts)}"
             config = getDmConfig(name)
-            ip, port = config.get("ip"), config.get("port")
+            self.ip, self.port = config.get("ip"), config.get("port")
         elif (ip, port, nacts) == (None, None, None):
             raise ValueError("Either (ip, port) or nacts must be provided.")
         else:
