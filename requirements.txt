@@ -9,3 +9,6 @@ scikit-image
 matplotlib
 h5py
 thin-plate-spline
+ruamel.yaml
+tqdm
+arte
