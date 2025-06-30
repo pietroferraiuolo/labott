@@ -105,25 +105,29 @@ class Alignment:
         self,
         mechanical_devices: _ot.GenericDevice | list[_ot.GenericDevice],
         acquisition_devices: _ot.InterferometerDevice | list[_ot.InterferometerDevice],
+        calibtn: _ot.Optional[str] = None,
     ):
         """
         Initializes the Alignment class with mechanical and acquisition devices.
 
         Parameters
         ----------
-        mechanical_devices : object or list
+        mechanical_devices : object or list of objects
             The mechanical devices used for alignment. Can be either
             a single object which calls more devices or a list of
             single devices.
         acquisition_devices : object
             The acquisition devices used for alignment.
+        calibtn : str, optional
+            The tracking number of the alignment calibration to be used.
         """
         self.mdev = mechanical_devices
         self.ccd = acquisition_devices
         self.cmdMat = _rfits(
             _os.path.join(_fn.CONTROL_MATRIX_FOLDER, _sc.commandMatrix)
         )
-        self.intMat = None
+        self._calibtn = calibtn
+        self.intMat = self.__loadIntMat(calibtn)
         self.recMat = None
         self._cmdAmp = None
         self._surface = (
@@ -194,7 +198,6 @@ class Alignment:
         """
         _logger.log(f"{self.correct_alignment.__qualname__}")
         image = self._acquire[0](n_frames=n_frames)
-        initpos = self.read_positions(show=False)
         zernike_coeff = self._zern_routine(image)
         if tn is not None:
             intMat = _rfits(_fn.ALIGN_CALIBRATION_ROOT_FOLDER + f"/{tn}/InteractionMatrix.fits")
@@ -215,10 +218,6 @@ class Alignment:
         reduced_cmd = _np.dot(recMat, zernike_coeff[zern2correct])
         f_cmd = -_np.dot(reduced_cmdMat, reduced_cmd)
         print(f"Resulting Command: {f_cmd}")
-        #self._write_correction_log(tn, initpos)
-        self._txt.log(
-            f"DoF & Zern2Corr:          {modes2correct} {zern2correct}\n" + "-" * 30
-        )
         if apply:
             print("Applying correction command...")
             self._apply_command(f_cmd)
@@ -265,6 +264,7 @@ class Alignment:
         4. Executes a Zernike routine on the image list to generate an internal matrix.
         5. Optionally saves the internal matrix to a FITS file.
         """
+        self._calibtn = _ts()
         _logger.log(f"{self.calibrate_alignment.__qualname__}")
         self._cmdAmp = cmdAmp
         template = template if template is not None else self._template
@@ -272,7 +272,7 @@ class Alignment:
         intMat = self._zern_routine(imglist)
         self.intMat = intMat.copy()
         if save:
-            tn = _ts()
+            tn = self._calibtn
             path = _os.path.join(_fn.ALIGN_CALIBRATION_ROOT_FOLDER, tn)
             if not _os.path.exists(path):
                 _os.mkdir(path)
@@ -324,6 +324,20 @@ class Alignment:
         surf = _rfits(filepath)
         self._surface = surf
         print(f"Correctly loaded '{filepath}'")
+        
+    def load_calibration(self, tn: str) -> None:
+        """
+        Loads the alignment calibration InteractionMatrix.fits based on the 
+        provided tracking number.
+
+        Parameters
+        ----------
+        tn : str
+            The tracking number of the calibration to be loaded.
+        """
+        self._calibtn = tn
+        self.intMat = self.__loadIntMat(tn)
+        print(f"Calibration loaded from '{tn}'")
 
     def _images_production(
         self, template: _ot.ArrayLike, n_frames: int, n_repetitions: int
@@ -544,30 +558,34 @@ class Alignment:
         image = _np.ma.masked_array(image, mask=master_mask) / 6
         template.pop(0)
         return image
-
-    def _write_correction_log(self, tn: str, initpos: list[float]) -> None:
+    
+    def __loadIntMat(self, calibtn: str|None) -> _ot.MatrixLike:
         """
-        Writes the log of the allignment correction applied to the OTT devices.
+        Loads the interaction matrix from a FITS file based on the provided tracking number.
 
         Parameters
         ----------
-        initpos : list
-            List of the starting positions of the devices, as _Command classes.
+        calibtn : str, optional
+            The tracking number of the interaction matrix to be loaded.
+
+        Returns
+        -------
+        intMat : MatrixLike
+            The loaded interaction matrix.
+        
+        Raises
+        ------
+        FileNotFoundError
+            If the interaction matrix file does not exist.
         """
-        endpos = self.read_positions(show=False)
-        par_i, rm_i, m4_i = initpos
-        par_f, rm_f, m4_f = endpos
-        self._txt.log(
-            "Calib. Trackn & IniPos:  {} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e}".format(
-                tn, *par_i.vect, *rm_i.vect, *m4_i.vect
-            )
-        )
-        self._txt.log(
-            "Result Trackn & EndPos:  {} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e}".format(
-                tn, *par_f.vect, *rm_f.vect, *m4_f.vect
-            )
-        )
-        return
+        if calibtn is None:
+            return None
+        filename = _os.path.join(_fn.ALIGN_CALIBRATION_ROOT_FOLDER, calibtn, "InteractionMatrix.fits")
+        if not _os.path.exists(filename):
+            raise FileNotFoundError(f"Interaction matrix file '{filename}' does not exist.")
+        intMat = _rfits(filename)
+        return intMat
+
 
     @staticmethod
     def __get_callables(
