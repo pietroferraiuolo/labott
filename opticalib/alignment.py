@@ -131,7 +131,7 @@ class Alignment:
         self.recMat = None
         self._cmdAmp = None
         self._surface = (
-            _rfits(_sc.fitting_surface).mask if not _sc.fitting_surface == "" else None
+            _rfits(_sc.fitting_surface) if not _sc.fitting_surface == "" else None
         )
         self._moveFnc = self.__get_callables(self.mdev, _sc.devices_move_calls)
         self._readFnc = self.__get_callables(self.mdev, _sc.devices_read_calls)
@@ -197,7 +197,7 @@ class Alignment:
         correction command or returns it.
         """
         _logger.log(f"{self.correct_alignment.__qualname__}")
-        image = self._acquire[0](n_frames=n_frames)
+        image = self._acquire[0](nframes=n_frames)
         zernike_coeff = self._zern_routine(image)
         if tn is not None:
             intMat = _rfits(_fn.ALIGN_CALIBRATION_ROOT_FOLDER + f"/{tn}/InteractionMatrix.fits")
@@ -514,7 +514,7 @@ class Alignment:
         """
         _logger.log(f"{self._img_acquisition.__qualname__}")
         _logger.log(f"{self._acquire[0].__qualname__}")
-        imglist = [self._acquire[0](n_frames=n_frames)]
+        imglist = [self._acquire[0](nframes=n_frames)]
         for t in template:
             logMsg = ""
             logMsg += f"t = {t}"
@@ -523,7 +523,7 @@ class Alignment:
             print(logMsg)
             self._apply_command(cmd)
             _logger.log(f"{self._acquire[0].__qualname__}")
-            imglist.append(self._acquire[0](n_frames=n_frames))
+            imglist.append(self._acquire[0](nframes=n_frames))
         return imglist
 
     def _push_pull_redux(
