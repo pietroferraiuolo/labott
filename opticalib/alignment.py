@@ -159,7 +159,6 @@ class Alignment:
         self,
         modes2correct: _ot.ArrayLike,
         zern2correct: _ot.ArrayLike,
-        tn: _ot.Optional[str] = None,
         apply: bool = False,
         n_frames: int = 15,
     ) -> str | _ot.ArrayLike:
@@ -199,19 +198,10 @@ class Alignment:
         _logger.log(f"{self.correct_alignment.__qualname__}")
         image = self._acquire[0](nframes=n_frames)
         zernike_coeff = self._zern_routine(image)
-        if tn is not None:
-            intMat = _rfits(_fn.ALIGN_CALIBRATION_ROOT_FOLDER + f"/{tn}/InteractionMatrix.fits")
-            self.intMat = intMat
+        if self.intMat is not None:
+            intMat = self.intMat
         else:
-            try:
-                if self.intMat is not None:
-                    intMat = self.intMat
-                else:
-                    raise AttributeError()
-            except AttributeError:
-                raise AttributeError(
-                    "No internal matrix found. Please calibrate the alignment first."
-                )
+            raise AttributeError("No internal matrix found. Please calibrate the alignment first.")
         reduced_intMat = intMat[_np.ix_(zern2correct, modes2correct)]
         reduced_cmdMat = self.cmdMat[:, modes2correct]
         recMat = self._create_rec_mat(reduced_intMat)
