@@ -60,6 +60,8 @@ import numpy as _np
 import math as _math
 from . import geo as _geo
 from opticalib import typings as _t
+from arte.utils.zernike_generator import ZernikeGenerator
+from arte.types.mask import CircularMask
 
 fac = _math.factorial
 
@@ -286,14 +288,16 @@ def _getZernike(
     rho = _np.sqrt(yy**2 + xx**2)
     phi = _np.arctan2(yy, xx)
     zkm = []
+    zgen = ZernikeGenerator(CircularMask((256,256)))
     for j in zlist:
         if ordering == "noll":
-            m, n = _l2mn_noll(j)
-            cnorm = _np.sqrt(n + 1) if m == 0 else _np.sqrt(2.0 * (n + 1))
+            cpol = zgen._polar(j, rho, phi)
+            print(cpol.shape, cpol.std())
+            print(f"Zernike {j} generated with std: {cpol.std()}")
         elif ordering == "ansi":
             m, n = _l2mn_ansi(j)
-            cnorm = 1
-        zkm.append(cnorm * _zernike(m, n, rho, phi))
+            cpol = _zernike(m, n, rho, phi)
+        zkm.append(cpol)
     return _np.transpose(_np.array(zkm))
 
 
