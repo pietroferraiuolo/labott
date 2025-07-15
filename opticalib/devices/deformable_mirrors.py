@@ -105,12 +105,12 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
                     raise _oe.CommandError(
                         f"Invalid argument '{arg}' in triggered commands."
                     )
-            freq = triggered.get("freq", 1.0)
-            tdelay = triggered.get("delay", 0.8)
+            freq = triggered.get("frequency", 1.0)
+            tdelay = triggered.get("cmdDelay", 0.8)
             ins = _np.zeros(self.nActs)
             self._aoClient.timeHistoryRun(freq, 0, tdelay)
             nframes = self._tCmdHistory.shape[-1]
-            tn = interf.capture(nframes)
+            tn = interf.capture(nframes-2)
             self.set_shape(ins)
             return tn
         else:
