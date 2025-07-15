@@ -243,7 +243,7 @@ def updateConfigFile(key: str, item: str, value, bpath=_cfold):
     dump_yaml_config(config, bpath)
     
     
-def gedDmConfig(bpath=_cfold):
+def getDmIffConfig(bpath=_cfold):
     """
     Retrieves the DM configuration from the YAML file.
 
@@ -317,7 +317,7 @@ def getCmdDelay(bpath=_cfold):
     """
     config = load_yaml_config(bpath)
     dm_config = config["INFLUENCE.FUNCTIONS"]["DM"]
-    cmdDelay = float(dm_config["delay"])
+    cmdDelay = float(dm_config["sequentialDelay"])
     return cmdDelay
 
 

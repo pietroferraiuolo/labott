@@ -16,7 +16,7 @@ from opticalib import typings as _ot
 from opticalib.core.root import OPD_IMAGES_ROOT_FOLDER as _opdi
 from opticalib.ground.osutils import newtn as _ts, save_fits as _sf
 from opticalib.core import exceptions as _oe
-from opticalib.core.read_config import getDmConfig as _dmc
+from opticalib.core.read_config import getDmIffConfig as _dmc
 
 
 class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
@@ -49,7 +49,7 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             )
         self._aoClient.mirrorCommand(cmd)
 
-    def uploadCmdHistory(self, tcmdhist: _ot.MatrixLike, for_triggered: bool = False) -> None:
+    def uploadCmdHistory(self, tcmdhist: _ot.MatrixLike) -> None:
         """
         Uploads the (timed) command history in the DM. if `for_triggered` is true, 
         then it is loaded direclty in the AO client for the triggere mode run.
@@ -67,7 +67,8 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             raise _oe.MatrixError(
                 f"Expecting a 2D Matrix of shape (used_acts, nmodes), got instead: {tcmdhist.shape}"
             )
-        if for_triggered:
+        trig = _dmc()
+        if trig is not False:
             self._tCmdHistory = tcmdhist.copy()
             self._aoClient.timeHistoryUpload(tcmdhist)
         else:
@@ -107,11 +108,7 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             freq = triggered.get("freq", 1.0)
             tdelay = triggered.get("delay", 0.8)
             ins = _np.zeros(self.nActs)
-<<<<<<< Updated upstream
             self._aoClient.timeHistoryRun(freq, 0, tdelay)
-=======
-            self._aoClient.timeHistoryRun(freq, wait, tdelay)
->>>>>>> Stashed changes
             nframes = self._tCmdHistory.shape[-1]
             tn = interf.capture(nframes)
             self.set_shape(ins)
