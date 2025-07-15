@@ -82,7 +82,6 @@ def iffDataAcquisition(
     ):
         if value is not None:
             _rif.updateIffConfig(tn, param, value)
-    delay = _rif.getCmdDelay()
     dm.uploadCmdHistory(tch)
     dm.runCmdHistory(interf, save=tn)
     return tn

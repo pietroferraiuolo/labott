@@ -562,7 +562,9 @@ def getIffFileMatrix(tn: str) -> _ot.ArrayLike:
     fileList = _osu.getFileList(tn)
     _, _, infoIF = _getAcqInfo(tn)
     regEnd, _ = getRegFileMatrix(tn)
-    iffList = fileList[regEnd + infoIF["zeros"] :]
+    n_useful_frames = len(infoIF["modes"]) * len(infoIF["template"])
+    k = regEnd + infoIF["zeros"] 
+    iffList = fileList[k: k+ n_useful_frames]
     iffMat = _np.reshape(iffList, (len(infoIF["modes"]), len(infoIF["template"])))
     return iffMat
 

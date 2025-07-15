@@ -110,9 +110,8 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             ins = _np.zeros(self.nActs)
             self._aoClient.timeHistoryRun(freq, 0, tdelay)
             nframes = self._tCmdHistory.shape[-1]
-            tn = interf.capture(nframes-2)
+            interf.capture(nframes-2, tn)
             self.set_shape(ins)
-            return tn
         else:
             if self.cmdHistory is None:
                 raise _oe.CommandError("No Command History to run!")
