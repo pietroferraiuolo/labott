@@ -339,6 +339,9 @@ class IFFCapturePreparation:
         elif mbasename == "hadamard":
             self.modalBaseId = mbasename
             self._modalBase = self._createHadamardMat()
+        elif mbasename == 'mirror':
+            self.modalBaseId = mbasename
+            self._modalBase = self.mirrorModes
         else:
             self.modalBaseId = mbasename
             self._modalBase = self._createUserMat(mbasename)

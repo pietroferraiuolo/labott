@@ -67,6 +67,7 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
                 f"Expecting a 2D Matrix of shape (used_acts, nmodes), got instead: {tcmdhist.shape}"
             )
         if for_triggered:
+            self._tCmdHistory = tcmdhist.copy()
             self._aoClient.timeHistoryUpload(tcmdhist)
         else:
             self.cmdHistory = tcmdhist
@@ -100,11 +101,14 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
                         f"Invalid argument '{arg}' in triggered commands."
                     )
             freq = triggered.get("freq", 1.0)
-            wait = triggered.get("wait", 0.0)
+            wait = 0
             tdelay = triggered.get("delay", 0.8)
-            ins = self.get_shape - self._biasCmd
+            ins = np.zeros(self.nActs)
             self._aoClient.timeHistoryRun(freq, wait, tdelay)
+            nframes = self._tCmdHistory.shape[-1]
+            tn = interf.capture(nframes)
             self.set_shape(ins)
+            return tn
         else:
             if self.cmdHistory is None:
                 raise _oe.CommandError("No Command History to run!")

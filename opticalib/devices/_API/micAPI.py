@@ -1,6 +1,7 @@
 import os
 import numpy as np
-from abc import abstractmethod
+from opticalib import folders as fn
+from opticalib import typings as ot
 try:
     from Microgate.adopt.AOClient import AO_CLIENT #type: ignore
 except ImportError:
@@ -61,6 +62,40 @@ class BaseAdOpticaDm():
         #micLibrary.getForce()
         force = self._aoClient.getForce()
         return force
+    
+    
+    def plot_acts(self, amp: ot.Optional[ot.ArrayLike] = None, **kwargs):
+        """
+        Function which plots the actuators.
+
+        Parameters
+        ----------
+        amp: ot.ArrayLike
+            Amplitude to be plotted.
+        **kwargs: dict
+            Additional keyword arguments for plotting.
+        """
+        xA = self.actCoord[0:111,0]
+        yA = self.actCoord[0:111,1]
+        xB = self.actCoord[111:,0]
+        yB = self.actCoord[111:,1]
+        import matplotlib.pyplot as plt
+        plt.figure()
+        if amp is None:
+            col = col2 = 'black'
+        elif amp.shape[0] == 222:
+            col = amp[:111]
+            col2 = amp[111:]
+        else:
+            col = col2 = amp
+        plt.scatter(xA, yA, c=col, **kwargs)
+        plt.scatter(xB, yB, c=col2, **kwargs)
+        plt.xlabel('X [mm]')
+        plt.ylabel('Y [mm]')
+        plt.title('Actuators')
+        plt.axis('equal')
+        plt.colorbar()
+        plt.show()
 
 
     def _initNActuators(self) -> int:
@@ -73,11 +108,7 @@ class BaseAdOpticaDm():
         nact: int
             number of actuators of the DM.
         """
-        pass
-        # fname = open(os.path.join(self.dmConf, nActFile),'r')
-        # with open(fname,'r') as f:
-        #     nact = int(f.read())
-        # return nact
+        return self._aoClient.aoSystem.sysConf.gen.M2CMatrix.shape[-1]
 
 
     def _initMirrorModes(self):
@@ -89,17 +120,11 @@ class BaseAdOpticaDm():
         mirrorModes: numpy.ndarray
             Mirror Modes Matrix.
         """
-        pass
-        # fname = os.path.join(self.dmConf, mirrorModesFile)
-        # if os.path.exists(fname):
-        #     print('Initializing Mirror Modes')
-        #     with pyfits.open(fname) as hdu:
-        #         mirrorModes = hdu[0].data
-        # else:
-        #     print('Initializing Analytical Modal Base')
-        #     mirrorModes = np.eye(self.nActs)
-        # #nActs = np.shape(cmdMat)[0]
-        # return mirrorModes
+        cmdMat = np.zeros((self.nActs, 222))
+        mirrorModes = self._aoClient.aoSystem.sysConf.gen.FFWDSvdMatrix[0]
+        cmdMat[:111,:111] = mirrorModes[0,:,:]
+        cmdMat[111:222,111:222] = mirrorModes[1,:,:]
+        return cmdMat
 
 
     def _initWorkingActs(self):
@@ -126,4 +151,8 @@ class BaseAdOpticaDm():
         '''
         Reading the actuators coordinate from file
         '''
-        return dm._aoClient.aoSystem.sysConf.gen.M2CMatrix.shape[-1]
+        from opticalib import load_fits
+        
+        filepath = os.path.join(fn.CONFIGURATION_FOLDER, actCoordFile)
+        coords = load_fits(filepath)
+        return coords
