@@ -241,6 +241,24 @@ def updateConfigFile(key: str, item: str, value, bpath=_cfold):
     else:
         config["INFLUENCE.FUNCTIONS"][key][item] = str(value)
     dump_yaml_config(config, bpath)
+    
+    
+def gedDmConfig(bpath=_cfold):
+    """
+    Retrieves the DM configuration from the YAML file.
+
+    Parameters
+    ----------
+    bpath : str, optional
+        Base path of the configuration file.
+
+    Returns
+    -------
+    config : dict
+        The DM configuration dictionary.
+    """
+    config = load_yaml_config(bpath)
+    return config["INFLUENCE.FUNCTIONS"]["DM"]
 
 
 def getNActs(bpath=_cfold):

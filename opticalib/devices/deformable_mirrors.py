@@ -16,6 +16,7 @@ from opticalib import typings as _ot
 from opticalib.core.root import OPD_IMAGES_ROOT_FOLDER as _opdi
 from opticalib.ground.osutils import newtn as _ts, save_fits as _sf
 from opticalib.core import exceptions as _oe
+from opticalib.core.read_config import getDmConfig as _dmc
 
 
 class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
@@ -73,7 +74,7 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             self.cmdHistory = tcmdhist
         print("Time History uploaded!")
 
-    def runCmdHistory(self, interf, differential: bool = False, triggered:bool|dict[str,_ot.Any] = False, sequential_delay: int | float = 0.2, save: _ot.Optional[str] = None) -> str:
+    def runCmdHistory(self, interf, differential: bool = False, save: _ot.Optional[str] = None) -> str:
         """
         Runs the loaded command history on the DM. If `triggered` is not False, it must
         be a dictionary containing the low lever arguments for the `aoClient.timeHistoryRun` function.
@@ -94,17 +95,19 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
         save : str, optional
             If provided, the command history will be saved with this name as a timestamp.
         """
-        if triggered:
+        dmifconf = _dmc()
+        triggered = dmifconf["triggerMode"]
+        sequential_delay = dmifconf["sequentialDelay"]
+        if triggered is not False:
             for arg in triggered.keys():
-                if not arg in ["freq", "wait", "delay"]:
+                if not arg in ["frequency", "cmdDelay"]:
                     raise _oe.CommandError(
                         f"Invalid argument '{arg}' in triggered commands."
                     )
             freq = triggered.get("freq", 1.0)
-            wait = 0
             tdelay = triggered.get("delay", 0.8)
-            ins = np.zeros(self.nActs)
-            self._aoClient.timeHistoryRun(freq, wait, tdelay)
+            ins = _np.zeros(self.nActs)
+            self._aoClient.timeHistoryRun(freq, 0, tdelay)
             nframes = self._tCmdHistory.shape[-1]
             tn = interf.capture(nframes)
             self.set_shape(ins)
