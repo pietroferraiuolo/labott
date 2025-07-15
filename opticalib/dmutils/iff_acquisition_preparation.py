@@ -218,7 +218,7 @@ class IFFCapturePreparation:
             modesList = self._modesList
             self._indexingList = _np.arange(0, len(modesList), 1)
         n_frame = len(self._modesList) * n_push_pull
-        cmd_matrixHistory = _np.zeros((self._NActs, n_frame + zeroScheme))
+        cmd_matrixHistory = _np.zeros((self._NActs, n_frame + zeroScheme + 5)) # TODO -> fix it by reading a new configuration entry, like 'paddingZeros'
         k = zeroScheme
         for i in range(nModes):
             for j in range(n_push_pull):
