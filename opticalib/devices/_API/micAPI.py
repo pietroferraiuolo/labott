@@ -31,7 +31,7 @@ class BaseAdOpticaDm():
         self._biasCmd    = self._aoClient.aoSystem.sysConf.gen.biasVectors[0]
         self.nActs       = self._initNActuators()
         self.mirrorModes = self._initMirrorModes()
-        self.actCoord    = self._initActCoord()
+#        self.actCoord    = self._initActCoord()
         self.workingActs = self._initWorkingActs()
         self._aoClient._connect()
 
@@ -121,7 +121,7 @@ class BaseAdOpticaDm():
             Mirror Modes Matrix.
         """
         cmdMat = np.zeros((self.nActs, 222))
-        mirrorModes = self._aoClient.aoSystem.sysConf.gen.FFWDSvdMatrix[0]
+        mirrorModes = np.array(self._aoClient.aoSystem.sysConf.gen.FFWDSvdMatrix[0])
         cmdMat[:111,:111] = mirrorModes[0,:,:]
         cmdMat[111:222,111:222] = mirrorModes[1,:,:]
         return cmdMat

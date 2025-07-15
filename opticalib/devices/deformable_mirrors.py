@@ -107,7 +107,11 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             freq = triggered.get("freq", 1.0)
             tdelay = triggered.get("delay", 0.8)
             ins = _np.zeros(self.nActs)
+<<<<<<< Updated upstream
             self._aoClient.timeHistoryRun(freq, 0, tdelay)
+=======
+            self._aoClient.timeHistoryRun(freq, wait, tdelay)
+>>>>>>> Stashed changes
             nframes = self._tCmdHistory.shape[-1]
             tn = interf.capture(nframes)
             self.set_shape(ins)
