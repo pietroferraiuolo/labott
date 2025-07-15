@@ -146,6 +146,7 @@ class IFFCapturePreparation:
             Dictionary containing all the vectors and matrices needed
         """
         info = {
+            "timedCmdHistory": self.timedCmdHistory,
             "cmdMatrix": self._cmdMatrix,
             "modesVector": self._modesList,
             "regActs": self._regActs,
