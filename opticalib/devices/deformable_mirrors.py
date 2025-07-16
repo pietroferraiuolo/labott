@@ -110,7 +110,8 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             ins = _np.zeros(self.nActs)
             self._aoClient.timeHistoryRun(freq, 0, tdelay)
             nframes = self._tCmdHistory.shape[-1]
-            interf.capture(nframes-2, save)
+            if interf is not None:
+                interf.capture(nframes-2, save)
             self.set_shape(ins)
         else:
             if self.cmdHistory is None:
