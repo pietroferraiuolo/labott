@@ -122,8 +122,13 @@ class BaseAdOpticaDm():
         """
         cmdMat = np.zeros((self.nActs, 222))
         mirrorModes = np.array(self._aoClient.aoSystem.sysConf.gen.FFWDSvdMatrix[0]) # (2,111,111)
-        cmdMat[:111,:111] = mirrorModes[0,:,:] / np.std(mirrorModes[0,:111,0])
-        cmdMat[111:222,111:222] = mirrorModes[1,:,:] / np.std(mirrorModes[1,111:222,0])
+        shell1 = np.zeros((111, 111))
+        shell2 = np.zeros((111, 111))
+        for m in range(111):
+            shell1[:,m] = mirrorModes[0,:,m] / np.std(mirrorModes[0,:111,m])
+            shell2[:,m] = mirrorModes[1,:,m] / np.std(mirrorModes[1,111:222,m])
+        cmdMat[:111,:111] = shell1
+        cmdMat[111:222,111:222] = shell2
         return cmdMat
 
 
