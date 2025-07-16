@@ -486,20 +486,21 @@ def getTriggerFrame(tn: str, amplitude: int | float = None) -> int:
     fileList = _osu.getFileList(tn)
     img0 = _osu.read_phasemap(fileList[0])
     go = i = 1
-    # add the condition where if there are not trigger frames the code is skipped and the
-    # the rest is handled with care
+    thresh = infoT["amplitude"] / _np.sqrt(2*111) # patch for non-normalized cmdmatrix
+    print(f"Trigger threshold: {thresh:.2e}")
     if infoT["zeros"] == 0 and len(infoT["modes"]) == 0:
         trigFrame = 0
         return trigFrame
     while go != 0:
-        thresh = infoT["amplitude"] / 2**0.5
         img1 = _osu.read_phasemap(fileList[i])
         rr2check = _zern.removeZernike(img1 - img0, [1, 2, 3]).std()
+        print(f"Frame {i-1}: std = {rr2check:.2e}")
         if go > infoT["zeros"]+1:
             raise RuntimeError(
-                f"Frame {go}. Heading Zeros exceeded: std= {rr2check:.2e} < {thresh:.2e} =Amp/3"
+                f"Frame {go}. Heading Zeros exceeded: std = {rr2check:.2e} < {thresh:.2e} (Amp/sqrt(3))"
             )
         if rr2check > thresh:
+            print(f"↑ Trigger Frame found!")
             go = 0
         else:
             i += 1
