@@ -258,7 +258,10 @@ def getDmIffConfig(bpath=_cfold):
         The DM configuration dictionary.
     """
     config = load_yaml_config(bpath)
-    return config["INFLUENCE.FUNCTIONS"]["DM"]
+    try:
+        return config["INFLUENCE.FUNCTIONS"]["DM"]
+    except KeyError:
+        return config['DM']
 
 
 def getNActs(bpath=_cfold):

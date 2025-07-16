@@ -10,7 +10,7 @@ except ImportError:
 
 mirrorModesFile = 'ff_v_matrix.fits'
 ffFile          = 'ff_matrix.fits'
-actCoordFile    = 'ActuatorCoordinates.fits'
+actCoordFile    = 'ActuatorsCoordinates.fits'
 nActFile        = 'nActuators.dat'
 
 
@@ -31,7 +31,7 @@ class BaseAdOpticaDm():
         self._biasCmd    = self._aoClient.aoSystem.sysConf.gen.biasVectors[0]
         self.nActs       = self._initNActuators()
         self.mirrorModes = self._initMirrorModes()
-#        self.actCoord    = self._initActCoord()
+        self.actCoord    = self._initActCoord()
         self.workingActs = self._initWorkingActs()
         self._aoClient._connect()
 

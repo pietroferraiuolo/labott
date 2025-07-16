@@ -487,7 +487,7 @@ def getTriggerFrame(tn: str, amplitude: int | float = None) -> int:
     fileList = _osu.getFileList(tn)
     img0 = _osu.read_phasemap(fileList[0])
     go = i = 1
-    thresh = infoT["amplitude"] / _np.sqrt(2*111) # patch for non-normalized cmdmatrix
+    thresh = infoT["amplitude"] / _np.sqrt(3)
     print(f"Trigger threshold: {thresh:.2e}")
     if infoT["zeros"] == 0 and len(infoT["modes"]) == 0:
         trigFrame = 0
