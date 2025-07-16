@@ -293,7 +293,8 @@ def iffRedux(
     The differential algorithm for each mode is the sum over the push-pull
     realizations of the images, and it is performed as follows:
 
-    > \sum_i \dfrac{I_i \cdot t_i - I_{i-1}\cdot t_{i-1}}{A\cdot(n-1)}
+    :math::
+        \\sum_i \\dfrac{I_i \\cdot t_i - I_{i-1}\\cdot t_{i-1}}{A\\cdot(n-1)}
 
     Parameters
     ----------
@@ -450,7 +451,7 @@ def findFrameOffset(
     """
     actCoordFile = _os.path.join(_ifFold, tn, coordfile)
     actCoord = _osu.load_fits(actCoordFile)
-    xy = _fa.findFrameCoord(imglist, actlist, actCoord)
+    xy = _fa.findFrameCoord(imglist, actlist, actCoord) # type: ignore
     dp = xy - _frameCenter
     return dp
 
