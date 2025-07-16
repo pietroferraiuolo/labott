@@ -75,7 +75,7 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             self.cmdHistory = tcmdhist
         print("Time History uploaded!")
 
-    def runCmdHistory(self, interf, differential: bool = False, save: _ot.Optional[str] = None) -> str:
+    def runCmdHistory(self, interf: _ot.Optional[_ot.InterferometerDevice] = None, differential: bool = False, save: _ot.Optional[str] = None) -> None:
         """
         Runs the loaded command history on the DM. If `triggered` is not False, it must
         be a dictionary containing the low lever arguments for the `aoClient.timeHistoryRun` function.
@@ -110,13 +110,13 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             ins = _np.zeros(self.nActs)
             self._aoClient.timeHistoryRun(freq, 0, tdelay)
             nframes = self._tCmdHistory.shape[-1]
-            interf.capture(nframes-2, tn)
+            interf.capture(nframes-2, save)
             self.set_shape(ins)
         else:
             if self.cmdHistory is None:
                 raise _oe.CommandError("No Command History to run!")
             else:
-                tn = _ts.now() if save is None else save
+                tn = _ts() if save is None else save
                 print(f"{tn} - {self.cmdHistory.shape[-1]} images to go.")
                 datafold = _os.path.join(self.baseDataPath, tn)
                 s = self.get_shape() - self._biasCmd
@@ -164,12 +164,12 @@ class AlpaoDm(_api.BaseAlpaoMirror, _api.base_devices.BaseDeformableMirror):
         zero = _np.zeros(self.nActs)
         self.set_shape(zero)
 
-    def uploadCmdHistory(self, cmdhist: _ot.MatrixLike) -> None:
-        if not _ot.isinstance_(cmdhist, "MatrixLike"):
+    def uploadCmdHistory(self, tcmdhist: _ot.MatrixLike) -> None:
+        if not _ot.isinstance_(tcmdhist, "MatrixLike"):
             raise _oe.MatrixError(
-                f"Expecting a 2D Matrix of shape (used_acts, nmodes), got instead: {cmdhist.shape}"
+                f"Expecting a 2D Matrix of shape (used_acts, nmodes), got instead: {tcmdhist.shape}"
             )
-        self.cmdHistory = cmdhist
+        self.cmdHistory = tcmdhist
 
     def runCmdHistory(
         self,
@@ -228,12 +228,12 @@ class SplattDm(_api.base_devices.BaseDeformableMirror):
         self._checkCmdIntegrity(cmd)
         self._dm.set_position(cmd)
 
-    def uploadCmdHistory(self, cmdhist: _ot.MatrixLike) -> None:
-        if not _ot.isinstance_(cmdhist, "MatrixLike"):
+    def uploadCmdHistory(self, tcmdhist: _ot.MatrixLike) -> None:
+        if not _ot.isinstance_(tcmdhist, "MatrixLike"):
             raise _oe.MatrixError(
-                f"Expecting a 2D Matrix of shape (used_acts, nmodes), got instead: {cmdhist.shape}"
+                f"Expecting a 2D Matrix of shape (used_acts, nmodes), got instead: {tcmdhist.shape}"
             )
-        self.cmdHistory = cmdhist
+        self.cmdHistory = tcmdhist
 
     def runCmdHistory(
         self,
@@ -245,7 +245,7 @@ class SplattDm(_api.base_devices.BaseDeformableMirror):
         if self.cmdHistory is None:
             raise _oe.MatrixError("No Command History to run!")
         else:
-            tn = _ts.now() if save is None else save
+            tn = _ts() if save is None else save
             print(f"{tn} - {self.cmdHistory.shape[-1]} images to go.")
             datafold = _os.path.join(self.baseDataPath, tn)
             s = self._dm.get_position_command()  # self._dm.flatPos # self.get_shape()

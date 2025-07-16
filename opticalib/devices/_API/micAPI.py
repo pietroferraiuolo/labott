@@ -122,8 +122,8 @@ class BaseAdOpticaDm():
         """
         cmdMat = np.zeros((self.nActs, 222))
         mirrorModes = np.array(self._aoClient.aoSystem.sysConf.gen.FFWDSvdMatrix[0])
-        cmdMat[:111,:111] = mirrorModes[0,:,:]
-        cmdMat[111:222,111:222] = mirrorModes[1,:,:]
+        cmdMat[:111,:111] = mirrorModes[0,:,:] / np.std(mirrorModes[0,0,:])
+        cmdMat[111:222,111:222] = mirrorModes[1,:,:] / np.std(mirrorModes[1,0,:])
         return cmdMat
 
 

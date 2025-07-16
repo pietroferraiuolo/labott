@@ -81,7 +81,7 @@ class BaseDeformableMirror(ABC):
     """
 
     @abstractmethod
-    def set_shape(self):
+    def set_shape(self, cmd):
         """
         Abstract method to set the shape of the deformable mirror.
         Must be implemented by subclasses.
@@ -97,7 +97,7 @@ class BaseDeformableMirror(ABC):
         pass
 
     @abstractmethod
-    def uploadCmdHistory(self):
+    def uploadCmdHistory(self, tcmdhist):
         """
         Abstract method to upload the command history to the deformable mirror.
         Must be implemented by subclasses.
@@ -105,7 +105,7 @@ class BaseDeformableMirror(ABC):
         pass
 
     @abstractmethod
-    def runCmdHistory(self):
+    def runCmdHistory(self, interf, differential, save):
         """
         Abstract method to run the command history on the deformable mirror.
         Must be implemented by subclasses.

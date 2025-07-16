@@ -187,7 +187,7 @@ class IFFCapturePreparation:
             Command matrix history to be applied, with the correct push-pull
             application, following the desired template.
         """
-        _, _, infoIF = _getAcqInfo()
+        _, _, infoIF, _ = _getAcqInfo()
         if mlist is None:
             mlist = infoIF.get("modes")
         else:

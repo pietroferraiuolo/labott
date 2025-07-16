@@ -56,7 +56,6 @@ from opticalib.core.root import _folds
 from opticalib.ground import osutils as _osu
 from opticalib.ground import zernike as _zern
 from opticalib.core import read_config as _rif
-from astropy.io.fits import Header as _header
 from opticalib import typings as _ot
 
 # from scripts.misc.IFFPackage import actuator_identification_lib as _fa
@@ -120,7 +119,7 @@ def process(
 
 
 def saveCube(
-    tn: str, rebin: int = 1, register: bool = False, cube_header=None
+    tn: str, rebin: int = 1, register: bool = False, cube_header: _ot.Optional[dict[str,_ot.Any]|_ot.Header]=None
 ) -> _ot.CubeData:
     """
     Creates and save a cube from the fits files contained in the tn folder,
@@ -413,7 +412,7 @@ def registrationRedux(tn: str, fileMat: list[str]) -> list[_ot.ImageData]:
     imgList : ArrayLike
         List of the processed registration images.
     """
-    _, infoR, _ = _getAcqInfo(tn)
+    _, infoR, _, _ = _getAcqInfo(tn)
     template = infoR["template"]
     if _np.array_equal(fileMat, _np.array([])) and len(infoR["modesid"]) == 0:
         print("No registration data found")
@@ -481,7 +480,7 @@ def getTriggerFrame(tn: str, amplitude: int | float = None) -> int:
         wich can be inferred through the number of trigger zeros in the iffConfig.ini
         file.
     """
-    infoT, _, _ = _getAcqInfo(tn)
+    infoT, _, _, _ = _getAcqInfo(tn)
     if amplitude is not None:
         infoT["amplitude"] = amplitude
     fileList = _osu.getFileList(tn)
@@ -493,10 +492,10 @@ def getTriggerFrame(tn: str, amplitude: int | float = None) -> int:
         trigFrame = 0
         return trigFrame
     while go != 0:
-        thresh = infoT["amplitude"] / 3
+        thresh = infoT["amplitude"] / 2**0.5
         img1 = _osu.read_phasemap(fileList[i])
         rr2check = _zern.removeZernike(img1 - img0, [1, 2, 3]).std()
-        if go > infoT["zeros"]:
+        if go > infoT["zeros"]+1:
             raise RuntimeError(
                 f"Frame {go}. Heading Zeros exceeded: std= {rr2check:.2e} < {thresh:.2e} =Amp/3"
             )
@@ -530,7 +529,7 @@ def getRegFileMatrix(tn: str) -> tuple[int, _ot.ArrayLike]:
         It has shape (registration_modes, n_push_pull).
     """
     fileList = _osu.getFileList(tn)
-    _, infoR, _ = _getAcqInfo(tn)
+    _, infoR, _, _ = _getAcqInfo(tn)
     timing = _rif.getTiming()
     trigFrame = getTriggerFrame(tn)
     if infoR["zeros"] == 0 and len(infoR["modes"]) == 0:
@@ -560,7 +559,7 @@ def getIffFileMatrix(tn: str) -> _ot.ArrayLike:
         It has shape (modes, n_push_pull)
     """
     fileList = _osu.getFileList(tn)
-    _, _, infoIF = _getAcqInfo(tn)
+    _, _, infoIF, _ = _getAcqInfo(tn)
     regEnd, _ = getRegFileMatrix(tn)
     n_useful_frames = len(infoIF["modes"]) * len(infoIF["template"])
     k = regEnd + infoIF["zeros"] 
@@ -571,7 +570,7 @@ def getIffFileMatrix(tn: str) -> _ot.ArrayLike:
 
 def _getCubeList(
     tnlist: str,
-) -> tuple[_ot.CubeData, _ot.MatrixLike, _ot.ArrayLike, int]:
+) -> tuple[list[_ot.ImageData], list[_ot.MatrixLike], _ot.ArrayLike, int]:
     """
     Retireves the cubes from each tn in the tnlist.
 
@@ -613,14 +612,7 @@ def _getCubeList(
 
 def _getAcqPar(
     tn: str,
-) -> tuple[
-    _np.ndarray[float],
-    _np.ndarray[int],
-    _np.ndarray[int],
-    _np.ndarray[int],
-    _np.ndarray[int],
-    int,
-]:
+) -> tuple[_ot.ArrayLike, _ot.ArrayLike, _ot.ArrayLike, _ot.ArrayLike, _ot.ArrayLike, int]:
     """
     Reads ad returns the acquisition parameters from fits files.
 
@@ -658,7 +650,7 @@ def _getAcqPar(
 
 def _getAcqInfo(
     tn: str = None,
-) -> tuple[dict[str, _ot.Any], dict[str, _ot.Any], dict[str, _ot.Any]]:
+) -> tuple[dict[str, _ot.Any], dict[str, _ot.Any], dict[str, _ot.Any], dict[str, _ot.Any]]:
     """
     Returns the information read from the iffConfig.ini file.
 
@@ -681,7 +673,8 @@ def _getAcqInfo(
     infoT = _rif.getIffConfig("TRIGGER", bpath=path)
     infoR = _rif.getIffConfig("REGISTRATION", bpath=path)
     infoIF = _rif.getIffConfig("IFFUNC", bpath=path)
-    return infoT, infoR, infoIF
+    infoDM = _rif.getDmIffConfig(bpath=path)
+    return infoT, infoR, infoIF, infoDM
 
 
 def _checkStackedCubes(tnlist: str) -> dict[str, _ot.Any]:
@@ -717,7 +710,7 @@ def _checkStackedCubes(tnlist: str) -> dict[str, _ot.Any]:
 
 def __flag(
     tnlist: list[str],
-    modesVectList: list[int] | _np.ndarray[int],
+    modesVectList: list[int] | list[_ot.ArrayLike],
     rebin: int,
     type: int,
 ) -> dict[str, _ot.Any]:
@@ -770,11 +763,11 @@ def __flag(
 
 
 # TODO
-def _ampReorganization(ampVector):
+def _ampReorganization(ampVector: _ot.ArrayLike):
     reorganizaed_amps = ampVector
     return reorganizaed_amps
 
 
-def _modesReorganization(modesVector):
+def _modesReorganization(modesVector: _ot.ArrayLike):
     reorganizaed_modes = modesVector
     return reorganizaed_modes

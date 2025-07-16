@@ -13,8 +13,8 @@ import h5py as _h5py
 from numpy import uint8 as _uint8
 from opticalib.core import root as _fn
 from astropy.io import fits as _fits
-from numpy.ma import masked_array as _masked_array
 from opticalib import typings as _ot
+from numpy.ma import masked_array as _masked_array
 
 _OPTDATA = _fn.OPT_DATA_ROOT_FOLDER
 _OPDIMG = _fn.OPD_IMAGES_ROOT_FOLDER
@@ -270,7 +270,7 @@ def save_fits(
     filepath: str,
     data: _ot.ImageData | _ot.CubeData | _ot.MatrixLike | _ot.ArrayLike | _ot.Any,
     overwrite: bool = True,
-    header: dict[str, any] | _fits.Header = None,
+    header: dict[str,_ot.Any] | _fits.Header = None,
 ) -> None:
     """
     Saves a FITS file.

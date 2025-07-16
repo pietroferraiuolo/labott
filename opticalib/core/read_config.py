@@ -92,7 +92,7 @@ def dump_yaml_config(config, path: str = None):
         yaml.dump(config, f)
 
 
-def getIffConfig(key, bpath=_cfold):
+def getIffConfig(key: str, bpath: str = _cfold):
     """
     Reads the configuration from the YAML file for the IFF acquisition.
     The key passed is the block of information retrieved within the INFLUENCE.FUNCTIONS section.
