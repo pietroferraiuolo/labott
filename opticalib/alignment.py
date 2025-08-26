@@ -368,7 +368,7 @@ class Alignment:
                 n_results = results
         return n_results
 
-    def _zern_routine(self, imglist: _ot.CubeData) -> _ot.MatrixLike:
+    def _zern_routine(self, imglist: list[_ot.ImageData]|_ot.CubeData) -> _ot.MatrixLike:
         """
         Creates the interaction matrix from the provided image list.
 

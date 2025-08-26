@@ -203,7 +203,7 @@ class AccuFiz(_api.BaseInterferometer):
             _os.path.join(dest_fold, "4DSettings.ini"),
         )
 
-    def getCameraSettings(self) -> list[int, int, int, int]:
+    def getCameraSettings(self) -> list[int]:
         """
         Reads che actual interferometer settings from its configuration file.
 
@@ -462,7 +462,7 @@ class PhaseCam(_api.BaseInterferometer):
             _os.path.join(dest_fold, "4DSettings.ini"),
         )
 
-    def getCameraSettings(self) -> list[int, int, int, int]:
+    def getCameraSettings(self) -> list[int]:
         """
         Reads che actual interferometer settings from its configuration file.
 
