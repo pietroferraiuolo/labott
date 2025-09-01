@@ -243,7 +243,7 @@ def updateConfigFile(key: str, item: str, value, bpath=_cfold):
     dump_yaml_config(config, bpath)
     
     
-def getDmIffConfig(bpath=_cfold):
+def getDmIffConfig(bpath: str=_cfold):
     """
     Retrieves the DM configuration from the YAML file.
 

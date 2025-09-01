@@ -26,7 +26,7 @@ def iffDataAcquisition(
     interf: _ot.InterferometerDevice,
     modesList: _ot.Optional[_ot.ArrayLike] = None,
     amplitude: _ot.Optional[float | _ot.ArrayLike] = None,
-    cmdOffset = None,
+    cmdOffset: _ot.Optional[float|_ot.ArrayLike] = None,
     template: _ot.Optional[_ot.ArrayLike] = None,
     shuffle: bool = False,
 ) -> str:

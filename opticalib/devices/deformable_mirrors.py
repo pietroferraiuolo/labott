@@ -67,7 +67,7 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             raise _oe.MatrixError(
                 f"Expecting a 2D Matrix of shape (used_acts, nmodes), got instead: {tcmdhist.shape}"
             )
-        trig = _dmc()
+        trig = _dmc()['triggerMode']
         if trig is not False:
             self._tCmdHistory = tcmdhist.copy()
             self._aoClient.timeHistoryUpload(tcmdhist)
@@ -78,7 +78,7 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
     def runCmdHistory(self, interf: _ot.Optional[_ot.InterferometerDevice] = None, differential: bool = False, save: _ot.Optional[str] = None) -> None:
         """
         Runs the loaded command history on the DM. If `triggered` is not False, it must
-        be a dictionary containing the low lever arguments for the `aoClient.timeHistoryRun` function.
+        be a dictionary containing the low level arguments for the `aoClient.timeHistoryRun` function.
 
         Parameters
         ----------
