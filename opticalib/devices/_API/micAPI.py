@@ -126,7 +126,9 @@ class BaseAdOpticaDm():
         shell2 = np.zeros((111, 111))
         for m in range(111):
             shell1[:,m] = mirrorModes[0,:,m] / np.std(mirrorModes[0,:111,m])
-            shell2[:,m] = mirrorModes[1,:,m] / np.std(mirrorModes[1,111:222,m])
+            #shell2[:,m] = mirrorModes[1,:,m] / np.std(mirrorModes[1,111:222,m])
+            shell2[:,m] = mirrorModes[1,:,m] / np.std(mirrorModes[1,:,m])
+
         cmdMat[:111,:111] = shell1
         cmdMat[111:222,111:222] = shell2
         return cmdMat
