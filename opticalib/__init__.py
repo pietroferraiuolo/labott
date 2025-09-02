@@ -15,7 +15,7 @@ How to Use:
 > img = interf.acquire_map()
 ```
 """
-
+from .__version__ import __version__
 from . import analyzer
 from .ground.osutils import load_fits, save_fits, getFileList, read_phasemap
 from .core.root import (
