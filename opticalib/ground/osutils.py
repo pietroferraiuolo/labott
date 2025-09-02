@@ -20,6 +20,36 @@ _OPTDATA = _fn.OPT_DATA_ROOT_FOLDER
 _OPDIMG = _fn.OPD_IMAGES_ROOT_FOLDER
 
 
+def is_tn(string: str) -> bool:
+    """
+    Check if a given string is a valid tracking number or the full path
+    of a tracking number.
+
+    Parameters
+    ----------
+    string : str
+        The string to check.
+
+    Returns
+    -------
+    bool
+        True if the string is a valid tracking number, False otherwise.
+    """
+    if len(string) != 15:
+        return False
+    date_part = string[:8]
+    time_part = string[9:]
+    if string[8] != "_":
+        return False
+    if not (date_part.isdigit() and time_part.isdigit()):
+        return False
+    try:
+        _time.strptime(date_part + time_part, "%Y%m%d%H%M%S")
+        return True
+    except ValueError:
+        return False
+
+
 def findTracknum(tn: str, complete_path: bool = False) -> str | list[str]:
     """
     Search for the tracking number given in input within all the data path subfolders.

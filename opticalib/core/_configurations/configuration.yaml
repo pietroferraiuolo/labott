@@ -4,16 +4,6 @@ SYSTEM:
     dm: true
     interf: false
 
-    interferometer: true
-    accelerometers: true
-    angleRotator: true
-    m4Exapode: true
-    dp: true
-    parSlider: true
-    par: true
-    rmSlider: true
-    rm: true
-    tempSensors: true
 DEVICES:
   INTERFEROMETER:
     PhaseCam4020:
@@ -48,6 +38,9 @@ INFLUENCE.FUNCTIONS:
     nacts: 88
     timing: 1
     delay: 0.0
+    triggeredMode: # if not using triggerMode, put false and comment next 2 lines
+      frequency: 5.
+      cmdDelay: 0.0 
   TRIGGER:
     numberofzeros: 0
     modeid: []

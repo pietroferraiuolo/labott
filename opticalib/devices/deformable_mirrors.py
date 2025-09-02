@@ -17,6 +17,7 @@ from opticalib.core.root import OPD_IMAGES_ROOT_FOLDER as _opdi
 from opticalib.ground.osutils import newtn as _ts, save_fits as _sf
 from opticalib.core import exceptions as _oe
 from opticalib.core.read_config import getDmIffConfig as _dmc
+import types as _types
 
 
 class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
@@ -181,11 +182,23 @@ class AlpaoDm(_api.BaseAlpaoMirror, _api.base_devices.BaseDeformableMirror):
     ) -> str:
         if self.cmdHistory is None:
             raise _oe.MatrixError("No Command History to run!")
+        s = self.get_shape()
+        if isinstance(interf, tuple):
+            if isinstance(interf[0], (_types.FunctionType, _types.MethodType)):
+                # interf = interf[0](*interf[1:]) That is how to call
+                tn = []
+                for i, cmd in enumerate(self.cmdHistory.T):
+                    if differential:
+                        cmd = cmd + s
+                    self.set_shape(cmd)
+                    if interf is not None:
+                        _time.sleep(delay)
+                        img = interf[0](*interf[1:])
+                        tn.append(img)
         else:
             tn = _ts.now() if save is None else save
             print(f"{tn} - {self.cmdHistory.shape[-1]} images to go.")
             datafold = _os.path.join(self.baseDataPath, tn)
-            s = self.get_shape()
             if not _os.path.exists(datafold) and interf is not None:
                 _os.mkdir(datafold)
             for i, cmd in enumerate(self.cmdHistory.T):

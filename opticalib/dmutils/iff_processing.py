@@ -530,7 +530,11 @@ def getRegFileMatrix(tn: str) -> tuple[int, _ot.ArrayLike]:
         A matrix of images in string format, containing the registration frames.
         It has shape (registration_modes, n_push_pull).
     """
-    fileList = _osu.getFileList(tn)
+    if not _osu.is_tn(tn):
+        fold = tn[:-15]
+        _os.path.isdir(fold)
+    else: fold = None
+    fileList = _osu.getFileList(tn, fold=fold)
     _, infoR, _, _ = _getAcqInfo(tn)
     timing = _rif.getTiming()
     trigFrame = getTriggerFrame(tn)
@@ -560,7 +564,11 @@ def getIffFileMatrix(tn: str) -> _ot.ArrayLike:
         IFF acquisition, that is all the modes with each push-pull realization.
         It has shape (modes, n_push_pull)
     """
-    fileList = _osu.getFileList(tn)
+    if not _osu.is_tn(tn):
+        fold = tn[:-15]
+        _os.path.isdir(fold)
+    else: fold = None
+    fileList = _osu.getFileList(tn, fold=fold)
     _, _, infoIF, _ = _getAcqInfo(tn)
     regEnd, _ = getRegFileMatrix(tn)
     n_useful_frames = len(infoIF["modes"]) * len(infoIF["template"])
