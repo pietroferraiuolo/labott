@@ -24,6 +24,8 @@ setup(
     url=about["__url__"],
     license=about["__license__"],
     packages=find_packages(),
+    # Ensure standalone module used by console_scripts is packaged into wheels
+    py_modules=["setup_calpy"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

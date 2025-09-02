@@ -1,8 +1,7 @@
+# -*- coding: utf-8 -*-
 import os
 import sys
 import shutil
-import subprocess
-import importlib.util
 
 def check_dir(config_path: str) -> str:
     if not os.path.exists(config_path):
@@ -27,34 +26,55 @@ def backend_fallback() -> str:
     """
     import matplotlib
     try:
-        # Prefer Qt event loop integration; IPython accepts --pylab=qt
         matplotlib.use('qt', force=True)
         return 'qt'
     except Exception:
         return "auto"
+    
+def _os_envexp() -> str:
+    """
+    Determine the operating system type and returns the correct `export` cli command.
 
+    Returns
+    -------
+    str
+        'export' for Unix-like systems, 'set' for Windows.
+    """
+    import platform
+    
+    system = platform.system()
+    if system == 'Windows':
+        return 'set'
+    elif system in ['Linux', 'Darwin', 'FreeBSD', 'Unix']:
+        return 'export'
+    else:
+        # Fallback for unknown systems
+        return 'export'
 
 def main():
     """Main function to handle command-line arguments and launch IPython shell with optional configuration.
     """
+    export = _os_envexp()
     home = os.path.expanduser("~")
+    mnt = '/mnt/'
+    media = '/media/'
     backend = backend_fallback()
     init_file = os.path.join(os.path.dirname(__file__), '__init_script__', 'initCalpy.py')
-    # Check if IPython is installed in current interpreter
-    if importlib.util.find_spec("IPython") is None:
-        print("Error: IPython is not installed in this Python environment.")
+    # Check if ipython3 is installed
+    if not shutil.which("ipython3"):
+        print("Error: ipython3 is not installed or not in your PATH.")
         sys.exit(1)
     # if -h/--help is passed, show help message
     if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help']:
         print("""
 CALPY DOCUMENTATION
 `calpy` is a command-line tool that calls an interactive Python 
-shell (IPython) with the option to pass the path to a configuration
+shell (ipython3) with the option to pass the path to a configuration
 file for the `opticalib` package.
 
 Options:
 --------
-no option : Initialize an IPython --pylab=qt shell
+no option : Initialize an ipython3 --pylab='qt' shell
 
 -f <path> : Option to pass the path to a configuration file to be read 
             (e.g., '../opticalibConf/configuration.yaml'). Used to initiate
@@ -69,10 +89,9 @@ no option : Initialize an IPython --pylab=qt shell
 
         """)
         sys.exit(0)
-    elif len(sys.argv) > 2 and sys.argv[1] == '-f' and sys.argv[2]:
+    elif len(sys.argv) > 2 and sys.argv[1] == '-f' and any([sys.argv[2] != '', sys.argv[2] != None]):
         config_path = sys.argv[2]
-        # Use robust absolute path detection (works on Windows and Unix)
-        if not os.path.isabs(config_path):
+        if not any([config_path.startswith(home), config_path.startswith(mnt), config_path.startswith(media)]):
             config_path = os.path.join(home, config_path)
         if not '.yaml' in config_path:
             try:
@@ -87,18 +106,12 @@ no option : Initialize an IPython --pylab=qt shell
             if not os.path.exists(config_path):
                 config_path = os.path.join(os.path.dirname(config_path), 'SysConfig', 'configuration.yaml')
             print("\n Initiating IPython Shell, importing Opticalib...\n")
-            env = os.environ.copy()
-            env["AOCONF"] = config_path
-            # Launch IPython using the current interpreter for cross-platform compatibility
-            args = [sys.executable, "-m", "IPython", f"--pylab={backend}", "-i", init_file]
-            subprocess.run(args, env=env, check=False)
+            os.system(f"{export} AOCONF={config_path} && ipython3 --pylab='{backend}' -i '{init_file}'")
         except OSError as ose:
             print(f"Error: {ose}")
             sys.exit(1)
     elif len(sys.argv) == 1:
-        # Start plain IPython pylab session with Qt integration
-        args = [sys.executable, "-m", "IPython", f"--pylab={backend}"]
-        subprocess.run(args, check=False)
+        os.system("ipython3 --pylab='qt'")
     else: # Handle invalid arguments
         print("Error: Invalid use. Use -h or --help for usage information.")
         sys.exit(1)
