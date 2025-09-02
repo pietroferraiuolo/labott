@@ -1,7 +1,21 @@
 """
-Author(s)
+Module: read_config
+===================
+This module provides utilities for reading, writing, and updating YAML configuration files
+used in the opticalib system. It supports configuration management for devices such as
+deformable mirrors and interferometers, as well as acquisition and alignment settings.
+
+Features
 --------
-- Pietro Ferraiuolo
+- Load and dump YAML configuration files.
+- Retrieve and update configuration blocks for IFF acquisition, DM devices, and interferometers.
+- Copy configuration files for record keeping.
+- Parse and convert configuration values, including numpy arrays.
+- Access alignment and stitching settings as structured objects.
+
+Author(s)
+---------
+- Pietro Ferraiuolo: written in 2025
 - Runa Briguglio
 """
 

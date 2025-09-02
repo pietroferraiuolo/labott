@@ -50,18 +50,46 @@ _ts = _osu.newtn
 
 class Flattening:
     """
-    Class which handles the flattening command computation
+    Class for computing and applying flattening commands to deformable mirrors.
+
+    Overview
+    --------
+    This class manages the process of flattening a deformable mirror using an interaction cube
+    and a reference shape (typically acquired from an interferometer). It supports loading and filtering
+    interaction cubes, aligning and processing images, computing reconstruction matrices, and generating
+    the appropriate command to flatten the mirror surface.
+
+    Key Features
+    ------------
+    - Loads and filters interaction cubes based on Zernike modes.
+    - Aligns input images to the interaction cube mask for accurate command computation.
+    - Computes the reconstruction matrix using SVD, with options to discard modes or set thresholds.
+    - Calculates the flattening command for a given shape and applies it to the deformable mirror.
+    - Saves all relevant data (commands, images, metadata) for traceability and reproducibility.
 
     Public Methods
-    -------
-    computeFlatCmd :
-        Method which computes the flattening command to apply to a given shape,
-        which must be already in memory, through the class instancing or the
-        load_img2shape method
+    --------------
+    - applyFlatCommand(dm, interf, modes2flat, nframes=5, modes2discard=None):
+        Acquires images, computes and applies the flattening command, and saves results.
+    - computeFlatCmd(n_modes):
+        Computes the flattening command for the loaded shape and selected modes.
+    - loadImage2Shape(img, compute=None):
+        Loads a new image to flatten and optionally computes the reconstruction matrix.
+    - computeRecMat(threshold=None):
+        Computes the reconstruction matrix for the loaded image.
+    - filterIntCube(zernModes=None):
+        Filters the interaction cube by removing specified Zernike modes.
+    - loadNewTn(tn):
+        Loads a new tracking number and updates internal data.
 
-    load_image2shape :
-        method to (re)upload and image to shape in the class, after which the
-        reconstructor will be automatically computed for it.
+    Usage Example
+    -------------
+        >>> f = Flattening('20240906_110000')
+        >>> img = interf.acquire_map()
+        >>> f.loadImage2Shape(img)
+        >>> f.computeRecMat()
+        >>> flatCmd = f.computeFlatCmd(10)
+        >>> f.applyFlatCommand(dm, interf, modes2flat=10)
     """
 
     def __init__(self, tn: str):
