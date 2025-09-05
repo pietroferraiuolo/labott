@@ -1,5 +1,9 @@
 opticalib.egg-info/
-opticalib.core._configurations.configuration.yaml
+opticalib/core/_configurations/configuration.yaml
+opticalib/dmutils/stitching.py
+opticalib/dmutils/_stitching_algorithm.py
+.venv/
+notebooks/
 # Byte-compiled / optimized / DLL files
 **/__pycache__/
 *.py[cod]

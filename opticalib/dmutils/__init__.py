@@ -1,8 +1,7 @@
 from . import (
     flattening,
     iff_module,
-    iff_processing,
-    stitching,
+    iff_processing
 )
 from .flattening import Flattening
 from .iff_acquisition_preparation import IFFCapturePreparation
@@ -13,6 +12,5 @@ __all__ = [
     "iff_acquisition_preparation",
     "iff_module",
     "iff_processing",
-    "stitching",
     "flattening",
 ]

@@ -1,5 +1,5 @@
 include README.md
 include requirements.txt
-include opticalib/core/_configurations/configurations.yaml
+include opticalib/core/_configurations/configuration.yaml
 include setup_calpy.py
 recursive-include labott *.py

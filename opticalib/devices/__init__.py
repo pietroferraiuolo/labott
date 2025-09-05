@@ -2,6 +2,7 @@ from .interferometer import PhaseCam, AccuFiz
 from .deformable_mirrors import (
     SplattDm,
     AlpaoDm,
+    AdOpticaDm,
 )
 
-__all__ = ["PhaseCam", "AccuFiz", "SplattDm", "AlpaoDm"]
+__all__ = ["AdOpticaDm", "PhaseCam", "AccuFiz", "SplattDm", "AlpaoDm"]

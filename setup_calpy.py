@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
 import os
 import sys
 import shutil
+import subprocess
+import importlib.util
 
 def check_dir(config_path: str) -> str:
     if not os.path.exists(config_path):
@@ -11,26 +12,49 @@ def check_dir(config_path: str) -> str:
     config_path = os.path.join(config_path, 'configuration.yaml')
     return config_path
 
+def backend_fallback() -> str:
+    """Check if the preferred matplotlib backend is available, fallback if not.
+
+    Parameters
+    ----------
+    preferred : str
+        The preferred backend to use.
+
+    Returns
+    -------
+    str
+        The backend to use.
+    """
+    import matplotlib
+    try:
+        # Prefer Qt event loop integration; IPython accepts --pylab=qt
+        matplotlib.use('qt', force=True)
+        return 'qt'
+    except Exception:
+        return "auto"
+
+
 def main():
+    """Main function to handle command-line arguments and launch IPython shell with optional configuration.
+    """
     home = os.path.expanduser("~")
-    mnt = '/mnt/'
-    media = '/media/'
+    backend = backend_fallback()
     init_file = os.path.join(os.path.dirname(__file__), '__init_script__', 'initCalpy.py')
-    # Check if ipython3 is installed
-    if not shutil.which("ipython3"):
-        print("Error: ipython3 is not installed or not in your PATH.")
+    # Check if IPython is installed in current interpreter
+    if importlib.util.find_spec("IPython") is None:
+        print("Error: IPython is not installed in this Python environment.")
         sys.exit(1)
     # if -h/--help is passed, show help message
     if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help']:
         print("""
 CALPY DOCUMENTATION
 `calpy` is a command-line tool that calls an interactive Python 
-shell (ipython3) with the option to pass the path to a configuration
+shell (IPython) with the option to pass the path to a configuration
 file for the `opticalib` package.
 
 Options:
 --------
-no option : Initialize an ipython3 --pylab='qt' shell
+no option : Initialize an IPython --pylab=qt shell
 
 -f <path> : Option to pass the path to a configuration file to be read 
             (e.g., '../opticalibConf/configuration.yaml'). Used to initiate
@@ -45,9 +69,10 @@ no option : Initialize an ipython3 --pylab='qt' shell
 
         """)
         sys.exit(0)
-    elif len(sys.argv) > 2 and sys.argv[1] == '-f' and any([sys.argv[2] != '', sys.argv[2] != None]):
+    elif len(sys.argv) > 2 and sys.argv[1] == '-f' and sys.argv[2]:
         config_path = sys.argv[2]
-        if not any([config_path.startswith(home), config_path.startswith(mnt), config_path.startswith(media)]):
+        # Use robust absolute path detection (works on Windows and Unix)
+        if not os.path.isabs(config_path):
             config_path = os.path.join(home, config_path)
         if not '.yaml' in config_path:
             try:
@@ -62,12 +87,18 @@ no option : Initialize an ipython3 --pylab='qt' shell
             if not os.path.exists(config_path):
                 config_path = os.path.join(os.path.dirname(config_path), 'SysConfig', 'configuration.yaml')
             print("\n Initiating IPython Shell, importing Opticalib...\n")
-            os.system(f"export AOCONF={config_path} && ipython3 --pylab='qt' -i '{init_file}'")
+            env = os.environ.copy()
+            env["AOCONF"] = config_path
+            # Launch IPython using the current interpreter for cross-platform compatibility
+            args = [sys.executable, "-m", "IPython", f"--pylab={backend}", "-i", init_file]
+            subprocess.run(args, env=env, check=False)
         except OSError as ose:
             print(f"Error: {ose}")
             sys.exit(1)
     elif len(sys.argv) == 1:
-        os.system("ipython3 --pylab='qt'")
+        # Start plain IPython pylab session with Qt integration
+        args = [sys.executable, "-m", "IPython", f"--pylab={backend}"]
+        subprocess.run(args, check=False)
     else: # Handle invalid arguments
         print("Error: Invalid use. Use -h or --help for usage information.")
         sys.exit(1)

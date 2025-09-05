@@ -146,6 +146,7 @@ class IFFCapturePreparation:
             Dictionary containing all the vectors and matrices needed
         """
         info = {
+            "timedCmdHistory": self.timedCmdHistory,
             "cmdMatrix": self._cmdMatrix,
             "modesVector": self._modesList,
             "regActs": self._regActs,
@@ -186,7 +187,7 @@ class IFFCapturePreparation:
             Command matrix history to be applied, with the correct push-pull
             application, following the desired template.
         """
-        _, _, infoIF = _getAcqInfo()
+        _, _, infoIF, _ = _getAcqInfo()
         if mlist is None:
             mlist = infoIF.get("modes")
         else:
@@ -218,7 +219,7 @@ class IFFCapturePreparation:
             modesList = self._modesList
             self._indexingList = _np.arange(0, len(modesList), 1)
         n_frame = len(self._modesList) * n_push_pull
-        cmd_matrixHistory = _np.zeros((self._NActs, n_frame + zeroScheme))
+        cmd_matrixHistory = _np.zeros((self._NActs, n_frame + zeroScheme + 5)) # TODO -> fix it by reading a new configuration entry, like 'paddingZeros'
         k = zeroScheme
         for i in range(nModes):
             for j in range(n_push_pull):
@@ -339,6 +340,9 @@ class IFFCapturePreparation:
         elif mbasename == "hadamard":
             self.modalBaseId = mbasename
             self._modalBase = self._createHadamardMat()
+        elif mbasename == 'mirror':
+            self.modalBaseId = mbasename
+            self._modalBase = self.mirrorModes
         else:
             self.modalBaseId = mbasename
             self._modalBase = self._createUserMat(mbasename)

@@ -18,11 +18,11 @@ How to Use it
 =============
 Instancing the class only with the tn of the interaction cube
 
-    >>> from m4.dmutils import flattening as flt
+    >>> from opticalib.dmutils import flattening as flt
     >>> tn = '20240906_110000' # example tn
     >>> f = flt.Flattening(tn)
     >>> # say we have acquired an image
-    >>> img = interf.acquire_phasemap()
+    >>> img = interf.acquire_map()
     >>> f.load_image2shape(img)
     >>> f.computeRecMat()
     'Computing reconstruction matrix...'
@@ -50,18 +50,46 @@ _ts = _osu.newtn
 
 class Flattening:
     """
-    Class which handles the flattening command computation
+    Class for computing and applying flattening commands to deformable mirrors.
+
+    Overview
+    --------
+    This class manages the process of flattening a deformable mirror using an interaction cube
+    and a reference shape (typically acquired from an interferometer). It supports loading and filtering
+    interaction cubes, aligning and processing images, computing reconstruction matrices, and generating
+    the appropriate command to flatten the mirror surface.
+
+    Key Features
+    ------------
+    - Loads and filters interaction cubes based on Zernike modes.
+    - Aligns input images to the interaction cube mask for accurate command computation.
+    - Computes the reconstruction matrix using SVD, with options to discard modes or set thresholds.
+    - Calculates the flattening command for a given shape and applies it to the deformable mirror.
+    - Saves all relevant data (commands, images, metadata) for traceability and reproducibility.
 
     Public Methods
-    -------
-    computeFlatCmd :
-        Method which computes the flattening command to apply to a given shape,
-        which must be already in memory, through the class instancing or the
-        load_img2shape method
+    --------------
+    - applyFlatCommand(dm, interf, modes2flat, nframes=5, modes2discard=None):
+        Acquires images, computes and applies the flattening command, and saves results.
+    - computeFlatCmd(n_modes):
+        Computes the flattening command for the loaded shape and selected modes.
+    - loadImage2Shape(img, compute=None):
+        Loads a new image to flatten and optionally computes the reconstruction matrix.
+    - computeRecMat(threshold=None):
+        Computes the reconstruction matrix for the loaded image.
+    - filterIntCube(zernModes=None):
+        Filters the interaction cube by removing specified Zernike modes.
+    - loadNewTn(tn):
+        Loads a new tracking number and updates internal data.
 
-    load_image2shape :
-        method to (re)upload and image to shape in the class, after which the
-        reconstructor will be automatically computed for it.
+    Usage Example
+    -------------
+        >>> f = Flattening('20240906_110000')
+        >>> img = interf.acquire_map()
+        >>> f.loadImage2Shape(img)
+        >>> f.computeRecMat()
+        >>> flatCmd = f.computeFlatCmd(10)
+        >>> f.applyFlatCommand(dm, interf, modes2flat=10)
     """
 
     def __init__(self, tn: str):
@@ -156,18 +184,19 @@ class Flattening:
         """
         img = _np.ma.masked_array(self.shape2flat, mask=self._getMasterMask())
         _cmd = -_np.dot(img.compressed(), self._recMat)
+        cmdMat = self._cmdMat.copy()
         if isinstance(n_modes, int):
-            flat_cmd = self._cmdMat[:, :n_modes] @ _cmd[:n_modes]
+            flat_cmd = cmdMat[:, :n_modes] @ _cmd[:n_modes]
         elif isinstance(n_modes, list):
-            _cmdMat = _np.zeros((self._cmdMat.shape[1], len(n_modes)))
+            _cmdMat = _np.zeros((cmdMat.shape[1], len(n_modes)))
             _scmd = _np.zeros(_cmd.shape[0])
             for i, mode in enumerate(n_modes):
-                _cmdMat.T[i] = self._cmdMat.T[mode]
+                _cmdMat.T[i] = cmdMat.T[mode]
                 _scmd[i] = _cmd[mode]
             flat_cmd = _cmdMat @ _cmd
         else:
-            raise TypeError("n_modes must be either an int or a list of int")
-        self.flatCmd = flat_cmd
+            raise TypeError(f"`n_modes` must be either an int or a list of int: {type(n_modes)}")
+        self.flatCmd = flat_cmd.copy()
         return flat_cmd
 
     def loadImage2Shape(
@@ -218,7 +247,9 @@ class Flattening:
         """
         try:
             # DEPRECATED: this will be removed in future versions
-            with open(_os.path.join(self._path, _ifp.flagFile), "r", encoding="utf-8") as f:
+            with open(
+                _os.path.join(self._path, _ifp.flagFile), "r", encoding="utf-8"
+            ) as f:
                 flag = f.read()
             if " filtered " in flag:
                 print("Cube already filtered, skipping...")
@@ -272,7 +303,7 @@ class Flattening:
         master_mask = _np.zeros(cubeMask.shape, dtype=_np.bool_)
         master_mask[_np.where(cubeMask > 0)] = True
         return master_mask
-    
+
     def _alignImgAndCubeMasks(self, img: _ot.ImageData) -> _ot.ImageData:
         """
         Aligns the image mask with the interaction cube mask.
@@ -288,8 +319,13 @@ class Flattening:
             Aligned image.
         """
         cubemask = self._getMasterMask()
-        pad_shape = ((cubemask.shape[0]-img.shape[0])//2, (cubemask.shape[1]-img.shape[1])//2)
-        img = _np.ma.masked_array(_np.pad(img.data, pad_shape), mask=~_np.pad(~img.mask, pad_shape))
+        pad_shape = (
+            (cubemask.shape[0] - img.shape[0]) // 2,
+            (cubemask.shape[1] - img.shape[1]) // 2,
+        )
+        img = _np.ma.masked_array(
+            _np.pad(img.data, pad_shape), mask=~_np.pad(~img.mask, pad_shape)
+        )
         if img.shape != cubemask.shape:
             xdiff = cubemask.shape[1] - img.shape[1]
             ydiff = cubemask.shape[0] - img.shape[0]
@@ -302,9 +338,9 @@ class Flattening:
         img = _np.roll(img, roll, axis=(0, 1))
         if self.filteredModes is not None:
             from opticalib.ground import zernike
+
             img = zernike.removeZernike(img, self.filteredModes)
         return img
-    
 
     def _loadIntCube(self) -> _ot.CubeData:
         """
@@ -386,7 +422,7 @@ class Flattening:
     def __get_mask_center(self, mask):
         """
         Computes the center of the mask, which is used to align images and cubes.
-        
+
         Parameters
         ----------
         mask : ndarray
@@ -401,7 +437,7 @@ class Flattening:
         y_center = (ys.min() + ys.max()) // 2
         x_center = (xs.min() + xs.max()) // 2
         return y_center, x_center
-    
+
     def __update_tn(self, tn: str) -> None:
         """
         Updates the tn and cube path if the tn is to change

@@ -1,0 +1,7 @@
+sphinx>=7.0
+furo>=2024.1.29
+myst-parser>=2.0.0
+sphinx-autodoc-typehints>=2.1.0
+
+# Include project dependencies so autodoc imports succeed
+-r ../requirements.txt

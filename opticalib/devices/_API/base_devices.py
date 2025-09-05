@@ -37,6 +37,42 @@ class BaseInterferometer(ABC):
         Must be implemented by subclasses.
         """
         pass
+    
+    @abstractmethod
+    def intoFullFrame(self, img):
+        """
+        Abstract method to convert the interference pattern into a full frame image.
+        Must be implemented by subclasses.
+        
+        Parameters
+        ----------
+        img: _ot.ImageData
+            The image data to be converted.
+        
+        Returns
+        -------
+        _ot.ImageData
+            The full frame image data.
+        """
+        pass
+    
+    def acquireFullFrame(self, **kwargs):
+        """
+        Wrapper for the consecutive execution of `acquire_mapo` and `intoFullFrame`.
+        
+        Parameters
+        ----------
+        **kwargs: dict
+            Additional keyword arguments to be passed to `acquire_map`.
+            
+        Returns
+        -------
+        _ot.ImageData
+            The full frame image data.
+        """
+        img = self.acquire_map(**kwargs)
+        full_frame = self.intoFullFrame(img)
+        return full_frame
 
 
 class BaseDeformableMirror(ABC):
@@ -45,7 +81,7 @@ class BaseDeformableMirror(ABC):
     """
 
     @abstractmethod
-    def set_shape(self):
+    def set_shape(self, cmd):
         """
         Abstract method to set the shape of the deformable mirror.
         Must be implemented by subclasses.
@@ -61,7 +97,7 @@ class BaseDeformableMirror(ABC):
         pass
 
     @abstractmethod
-    def uploadCmdHistory(self):
+    def uploadCmdHistory(self, tcmdhist):
         """
         Abstract method to upload the command history to the deformable mirror.
         Must be implemented by subclasses.
@@ -69,7 +105,7 @@ class BaseDeformableMirror(ABC):
         pass
 
     @abstractmethod
-    def runCmdHistory(self):
+    def runCmdHistory(self, interf, differential, save):
         """
         Abstract method to run the command history on the deformable mirror.
         Must be implemented by subclasses.

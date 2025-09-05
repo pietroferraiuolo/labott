@@ -13,11 +13,41 @@ import h5py as _h5py
 from numpy import uint8 as _uint8
 from opticalib.core import root as _fn
 from astropy.io import fits as _fits
-from numpy.ma import masked_array as _masked_array
 from opticalib import typings as _ot
+from numpy.ma import masked_array as _masked_array
 
 _OPTDATA = _fn.OPT_DATA_ROOT_FOLDER
 _OPDIMG = _fn.OPD_IMAGES_ROOT_FOLDER
+
+
+def is_tn(string: str) -> bool:
+    """
+    Check if a given string is a valid tracking number or the full path
+    of a tracking number.
+
+    Parameters
+    ----------
+    string : str
+        The string to check.
+
+    Returns
+    -------
+    bool
+        True if the string is a valid tracking number, False otherwise.
+    """
+    if len(string) != 15:
+        return False
+    date_part = string[:8]
+    time_part = string[9:]
+    if string[8] != "_":
+        return False
+    if not (date_part.isdigit() and time_part.isdigit()):
+        return False
+    try:
+        _time.strptime(date_part + time_part, "%Y%m%d%H%M%S")
+        return True
+    except ValueError:
+        return False
 
 
 def findTracknum(tn: str, complete_path: bool = False) -> str | list[str]:
@@ -270,7 +300,7 @@ def save_fits(
     filepath: str,
     data: _ot.ImageData | _ot.CubeData | _ot.MatrixLike | _ot.ArrayLike | _ot.Any,
     overwrite: bool = True,
-    header: dict[str, any] | _fits.Header = None,
+    header: dict[str,_ot.Any] | _fits.Header = None,
 ) -> None:
     """
     Saves a FITS file.

@@ -26,6 +26,7 @@ def iffDataAcquisition(
     interf: _ot.InterferometerDevice,
     modesList: _ot.Optional[_ot.ArrayLike] = None,
     amplitude: _ot.Optional[float | _ot.ArrayLike] = None,
+    cmdOffset: _ot.Optional[float|_ot.ArrayLike] = None,
     template: _ot.Optional[_ot.ArrayLike] = None,
     shuffle: bool = False,
 ) -> str:
@@ -58,6 +59,10 @@ def iffDataAcquisition(
     """
     ifc = _ifa.IFFCapturePreparation(dm)
     tch = ifc.createTimedCmdHistory(modesList, amplitude, template, shuffle)
+    if cmdOffset is not None:
+        cmdOff = cmdOffset[:,_np.newaxis]
+        tch    = tch + cmdOff
+        print('Adding a cmd offset to the timeHistory')
     info = ifc.getInfoToSave()
     tn = _ts()
     iffpath = _os.path.join(_fn.IFFUNCTIONS_ROOT_FOLDER, tn)
@@ -82,9 +87,8 @@ def iffDataAcquisition(
     ):
         if value is not None:
             _rif.updateIffConfig(tn, param, value)
-    delay = _rif.getCmdDelay()
     dm.uploadCmdHistory(tch)
-    dm.runCmdHistory(interf, save=tn, delay=delay)
+    dm.runCmdHistory(interf, save=tn)
     return tn
 
 

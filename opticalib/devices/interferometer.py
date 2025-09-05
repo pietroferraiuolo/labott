@@ -79,7 +79,7 @@ class AccuFiz(_api.BaseInterferometer):
         data2d: numpy masked array
                 detector interferometer image
         """
-        self.acquire_phasemap()
+        self.acquire_map()
         if nframes == 1:
             data, height, _, width = self._i4d.getFringeAmplitudeData()
             data2d = _np.reshape(data, (width, height))
@@ -147,23 +147,26 @@ class AccuFiz(_api.BaseInterferometer):
         )
         return folder_name
 
-    def produce(self, tn: str) -> None:
+    def produce(self, tn: str|list[str]) -> None:
         """
         Parameters
         ----------
         folder_name: string
             name of folder measurements to convert
         """
-        self._i4d.convertRawFramesInDirectoryToMeasurementsInDestinationDirectory(
-            _os.path.join(_folds.PRODUCE_FOLDER_NAME_4D_PC, tn),
-            _os.path.join(_folds.CAPTURE_FOLDER_NAME_4D_PC, tn),
-        )
-        _sh.move(
-            _os.path.join(_folds.PRODUCE_FOLDER_NAME_LOCAL_PC, tn),
-            _folds.OPD_IMAGES_ROOT_FOLDER,
-        )
-        rename4D(tn)
-        self.copy4DSettings(tn)
+        if not isinstance(tn, list):
+            tn = [tn]
+        for t in tn:
+            self._i4d.convertRawFramesInDirectoryToMeasurementsInDestinationDirectory(
+                _os.path.join(_folds.PRODUCE_FOLDER_NAME_4D_PC, t),
+                _os.path.join(_folds.CAPTURE_FOLDER_NAME_4D_PC, t),
+            )
+            _sh.move(
+                _os.path.join(_folds.PRODUCE_FOLDER_NAME_LOCAL_PC, t),
+                _folds.OPD_IMAGES_ROOT_FOLDER,
+            )
+            rename4D(t)
+            self.copy4DSettings(t)
 
     def setTriggerMode(self, enable: bool) -> None:
         """
@@ -203,7 +206,7 @@ class AccuFiz(_api.BaseInterferometer):
             _os.path.join(dest_fold, "4DSettings.ini"),
         )
 
-    def getCameraSettings(self) -> list[int, int, int, int]:
+    def getCameraSettings(self) -> list[int]:
         """
         Reads che actual interferometer settings from its configuration file.
 
@@ -265,6 +268,7 @@ class AccuFiz(_api.BaseInterferometer):
         fullmask[offx : offx + sx, offy : offy + sy] = img.mask
         fullimg = _np.ma.masked_array(fullimg, fullmask)
         return fullimg
+
 
 
 class PhaseCam(_api.BaseInterferometer):
@@ -337,7 +341,7 @@ class PhaseCam(_api.BaseInterferometer):
         data2d: numpy masked array
                 detector interferometer image
         """
-        self.acquire_phasemap()
+        self.acquire_map()
         if nframes == 1:
             data, height, _, width = self._i4d.getFringeAmplitudeData()
             data2d = _np.reshape(data, (width, height))
@@ -405,23 +409,26 @@ class PhaseCam(_api.BaseInterferometer):
         )
         return folder_name
 
-    def produce(self, tn: str) -> None:
+    def produce(self, tn: str|list[str]) -> None:
         """
         Parameters
         ----------
         folder_name: string
             name of folder measurements to convert
         """
-        self._i4d.convertRawFramesInDirectoryToMeasurementsInDestinationDirectory(
-            _os.path.join(_folds.PRODUCE_FOLDER_NAME_4D_PC, tn),
-            _os.path.join(_folds.CAPTURE_FOLDER_NAME_4D_PC, tn),
-        )
-        _sh.move(
-            _os.path.join(_folds.PRODUCE_FOLDER_NAME_LOCAL_PC, tn),
-            _folds.OPD_IMAGES_ROOT_FOLDER,
-        )
-        rename4D(tn)
-        self.copy4DSettings(tn)
+        if not isinstance(tn, list):
+            tn = [tn]
+        for t in tn:
+            self._i4d.convertRawFramesInDirectoryToMeasurementsInDestinationDirectory(
+                _os.path.join(_folds.PRODUCE_FOLDER_NAME_4D_PC, t),
+                _os.path.join(_folds.CAPTURE_FOLDER_NAME_4D_PC, t),
+            )
+            _sh.move(
+                _os.path.join(_folds.PRODUCE_FOLDER_NAME_LOCAL_PC, t),
+                _folds.OPD_IMAGES_ROOT_FOLDER,
+            )
+            rename4D(t)
+            self.copy4DSettings(t)
 
     def setTriggerMode(self, enable: bool) -> None:
         """
@@ -461,7 +468,7 @@ class PhaseCam(_api.BaseInterferometer):
             _os.path.join(dest_fold, "4DSettings.ini"),
         )
 
-    def getCameraSettings(self) -> list[int, int, int, int]:
+    def getCameraSettings(self) -> list[int]:
         """
         Reads che actual interferometer settings from its configuration file.
 

@@ -51,6 +51,8 @@ class _InterfProtocol(Protocol):
     def acquire_map(
         self, nframes: int, delay: int | float, rebin: int
     ) -> ImageData: ...
+    def capture(self, numberOfFrames: int, folder_name: str = None) -> str: ...
+    def produce(self, tn: str): ...
 
 
 InterferometerDevice = TypeVar("InterferometerDevice", bound=_InterfProtocol)
@@ -75,6 +77,38 @@ class _DMProtocol(Protocol):
 DeformableMirrorDevice = TypeVar("DeformableMirrorDevice", bound=_DMProtocol)
 
 GenericDevice = TypeVar("GenericDevice")
+
+def array_str_formatter(array: ArrayLike|list[ArrayLike]) -> str|list[str]:
+    """
+    Formats an array-like object into a string representation.
+
+    Parameters
+    ----------
+    arr : ArrayLike os list[ArrayLike]
+        The array-like object to be formatted.
+
+    Returns
+    -------
+    array_strs : str
+        The string representation of the array(s).
+    """
+    if isinstance(array, list):
+        if not all([isinstance(l,_np.ndarray) for l in array]):
+            array = [_np.array(l) for l in array]
+    else:
+        array = [array]
+    array_strs = []
+    for arr in array:
+        if arr.dtype == int:
+            separator = ','
+        else:
+            separator = ', '
+        if any([a>=1e3 for a in arr]) or any([a<=1e-3 for a in arr]):
+            array_strs.append(_np.array2string(arr, separator=separator, precision=2, formatter={'float_kind': lambda x: f"{x:.2e}"}))
+        else:
+            array_strs.append(_np.array2string(arr, separator=separator, precision=3, formatter={'float_kind': lambda x: f"{x:.2f}"}))
+    return array_strs[0] if len(array_strs) == 1 else array_strs
+
 
 ################################
 ## Custom `isinstance` checks ##

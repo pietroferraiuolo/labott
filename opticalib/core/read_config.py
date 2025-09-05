@@ -1,7 +1,21 @@
 """
-Author(s)
+Module: read_config
+===================
+This module provides utilities for reading, writing, and updating YAML configuration files
+used in the opticalib system. It supports configuration management for devices such as
+deformable mirrors and interferometers, as well as acquisition and alignment settings.
+
+Features
 --------
-- Pietro Ferraiuolo
+- Load and dump YAML configuration files.
+- Retrieve and update configuration blocks for IFF acquisition, DM devices, and interferometers.
+- Copy configuration files for record keeping.
+- Parse and convert configuration values, including numpy arrays.
+- Access alignment and stitching settings as structured objects.
+
+Author(s)
+---------
+- Pietro Ferraiuolo: written in 2025
 - Runa Briguglio
 """
 
@@ -92,7 +106,7 @@ def dump_yaml_config(config, path: str = None):
         yaml.dump(config, f)
 
 
-def getIffConfig(key, bpath=_cfold):
+def getIffConfig(key: str, bpath: str = _cfold):
     """
     Reads the configuration from the YAML file for the IFF acquisition.
     The key passed is the block of information retrieved within the INFLUENCE.FUNCTIONS section.
@@ -241,6 +255,27 @@ def updateConfigFile(key: str, item: str, value, bpath=_cfold):
     else:
         config["INFLUENCE.FUNCTIONS"][key][item] = str(value)
     dump_yaml_config(config, bpath)
+    
+    
+def getDmIffConfig(bpath: str=_cfold):
+    """
+    Retrieves the DM configuration from the YAML file.
+
+    Parameters
+    ----------
+    bpath : str, optional
+        Base path of the configuration file.
+
+    Returns
+    -------
+    config : dict
+        The DM configuration dictionary.
+    """
+    config = load_yaml_config(bpath)
+    try:
+        return config["INFLUENCE.FUNCTIONS"]["DM"]
+    except KeyError:
+        return config['DM']
 
 
 def getNActs(bpath=_cfold):
@@ -299,7 +334,7 @@ def getCmdDelay(bpath=_cfold):
     """
     config = load_yaml_config(bpath)
     dm_config = config["INFLUENCE.FUNCTIONS"]["DM"]
-    cmdDelay = float(dm_config["delay"])
+    cmdDelay = float(dm_config["sequentialDelay"])
     return cmdDelay
 
 
@@ -337,7 +372,7 @@ def _parse_val(val):
     return val
 
 
-def getDmAddress(device_name: str):
+def getDmConfig(device_name: str):
     """
     Retrieves the DM address from the YAML configuration file.
 
@@ -359,9 +394,7 @@ def getDmAddress(device_name: str):
         ]
     except KeyError:
         raise DeviceNotFoundError(device_name)
-    ip = config["ip"]
-    port = config["port"]
-    return ip, port
+    return config
 
 
 def getInterfConfig(device_name: str):
