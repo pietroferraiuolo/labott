@@ -193,6 +193,8 @@ def stackCubes(tnlist: str) -> None:
     stacked_cube : masked_array
         Final cube, stacked along the 3th axis.
     """
+    # TODO: aggiungere variabile `cubeNames: str|list[str]` che deve matchare
+    # `len(tnlist)` e che contiene il nome del file da caricare per ogni tn
     new_tn = _ts()
     stacked_cube_fold = _os.path.join(_fn.INTMAT_ROOT_FOLDER, new_tn)
     if not _os.path.exists(stacked_cube_fold):
