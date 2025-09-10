@@ -171,7 +171,7 @@ def zernikeFit(
     """
     img1 = image.data
     mask = _np.invert(image.mask).astype(int)
-    xx, yy = _geo.qpupil(mask) if qpupil else _geo.qpupil_circle(image)
+    _,_,_, xx, yy = _geo.qpupil(mask) if qpupil else _geo.qpupil_circle(image)
     sx, sy = img1.shape
     pixsc = xx[1, 0] - xx[0, 0]
     rpix = 1/pixsc

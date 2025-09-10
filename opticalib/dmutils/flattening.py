@@ -187,13 +187,13 @@ class Flattening:
         cmdMat = self._cmdMat.copy()
         if isinstance(n_modes, int):
             flat_cmd = cmdMat[:, :n_modes] @ _cmd[:n_modes]
-        elif isinstance(n_modes, list):
-            _cmdMat = _np.zeros((cmdMat.shape[1], len(n_modes)))
-            _scmd = _np.zeros(_cmd.shape[0])
+        elif isinstance(n_modes, (_np.ndarray,list)):
+            _cmdMat = _np.zeros((cmdMat.shape[0], len(n_modes)))
+            _scmd = _np.zeros(len(n_modes))#_cmd.shape[0])
             for i, mode in enumerate(n_modes):
                 _cmdMat.T[i] = cmdMat.T[mode]
                 _scmd[i] = _cmd[mode]
-            flat_cmd = _cmdMat @ _cmd
+            flat_cmd = _cmdMat @ _scmd
         else:
             raise TypeError(f"`n_modes` must be either an int or a list of int: {type(n_modes)}")
         self.flatCmd = flat_cmd.copy()
