@@ -20,10 +20,10 @@ class FitsArray(_np.ndarray):
 
     def __new__(
         cls,
-        data: list | ArrayLike,
+        data: ArrayLike,
         *,
         mask: ArrayLike = None,
-        header: dict | _fits.Header = None
+        header: dict[str,int|float|str|bool] | _fits.Header = None
     ):
         """
         Create a new instance of the FitsArray class.
@@ -88,6 +88,22 @@ class FitsArray(_np.ndarray):
         else:
             hdu_list = _fits.HDUList([hdu])
         hdu_list.writeto(filename, overwrite=overwrite, *args)
+        
+    def tonumpy(self):
+        """
+        Convert the FitsArray to a regular numpy array, or to a masked array if a mask
+        is available.
+
+        Returns
+        -------
+        numpy.ndarray | numpy.ma.MaskedArray
+            The data as a regular numpy (masked) array.
+        """
+        data = self.copy()
+        if hasattr(self, "mask"):
+            mask = self._mask
+            return _np.ma.masked_array(data, mask=mask)
+        return _np.asarray(data)
 
 
 # class FitsArrayMasked(_np.ma.MaskedArray):
