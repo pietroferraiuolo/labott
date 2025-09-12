@@ -118,8 +118,9 @@ class Flattening:
         dm: _ot.DeformableMirrorDevice,
         interf: _ot.InterferometerDevice,
         modes2flat: int | _ot.ArrayLike,
-        nframes: int = 5,
         modes2discard: _ot.Optional[int] = None,
+        cmdOffset: _ot.Optional[_ot.ArrayLike] = None,
+        nframes: int = 5
     ) -> None:
         f"""
         Computes, applies and saves the computed flat command to the DM, given
@@ -144,7 +145,11 @@ class Flattening:
         self.computeRecMat(modes2discard)
         deltacmd = self.computeFlatCmd(modes2flat)
         cmd = dm.get_shape()
-        dm.set_shape(deltacmd, differential=True)
+        # TODO
+        ## Modifiche DP: da sistemare poi
+        #dm.set_shape(deltacmd, differential=True)
+        for i in range(1,5):
+            dm.set_shape(cmdOffset + deltacmd*0.2*i)
         imgflat = interf.acquire_map(nframes, rebin=self.rebin)
         files = [
             "flatCommand.fits",
