@@ -1,5 +1,5 @@
 """
-Author(s) 
+Author(s)
 ---------
     - Pietro Ferraiuolo : written in 2024
 
@@ -195,7 +195,9 @@ class Flattening:
                 _scmd[i] = _cmd[mode]
             flat_cmd = _cmdMat @ _cmd
         else:
-            raise TypeError(f"`n_modes` must be either an int or a list of int: {type(n_modes)}")
+            raise TypeError(
+                f"`n_modes` must be either an int or a list of int: {type(n_modes)}"
+            )
         self.flatCmd = flat_cmd.copy()
         return flat_cmd
 

@@ -101,7 +101,7 @@ class SPLATTEngine:
         from opticalib.core.read_config import getDmConfig
 
         try:
-            config  = getDmConfig("Splatt")
+            config = getDmConfig("Splatt")
             rip, rport = config.get("ip"), config.get("port")
             if (ip, port) == (None, None):
                 ip, port = (rip, rport)

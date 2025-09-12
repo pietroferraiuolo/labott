@@ -36,7 +36,7 @@ def create_folder_tree(BASE_DATA_PATH: str) -> None:
     ALIGNMENT_ROOT_FOLDER = _os.path.join(OPT_DATA_ROOT_FOLDER, "Alignment")
     CONTROL_MATRIX_FOLDER = _os.path.join(ALIGNMENT_ROOT_FOLDER, "ControlMatrices")
     ALIGN_CALIBRATION_ROOT_FOLDER: str = _os.path.join(
-    ALIGNMENT_ROOT_FOLDER, "Calibration"
+        ALIGNMENT_ROOT_FOLDER, "Calibration"
     )
     for p in [
         BASE_DATA_PATH,
@@ -108,9 +108,7 @@ MODALBASE_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "ModalBases")
 IFFUNCTIONS_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "IFFunctions")
 INTMAT_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "IntMatrices")
 CONTROL_MATRIX_FOLDER: str = _os.path.join(ALIGNMENT_ROOT_FOLDER, "ControlMatrices")
-ALIGN_CALIBRATION_ROOT_FOLDER: str = _os.path.join(
-    ALIGNMENT_ROOT_FOLDER, "Calibration"
-)
+ALIGN_CALIBRATION_ROOT_FOLDER: str = _os.path.join(ALIGNMENT_ROOT_FOLDER, "Calibration")
 ALIGN_RESULTS_ROOT_FOLDER: str = _os.path.join(ALIGNMENT_ROOT_FOLDER, "Results")
 
 create_folder_tree(BASE_DATA_PATH)
@@ -208,7 +206,7 @@ class _folds:
     @property
     def print_all(self):
         """Print all the folders"""
-        for key,value in self.__dict__.items():
+        for key, value in self.__dict__.items():
             print(f"{key:<30} = {value}")
 
     def _update_interf_paths(self):

@@ -36,7 +36,7 @@ class BaseAlpaoMirror:
         Checks the integrity of the command vector.
         """
         at = amp_threshold
-        stdt = _np.sqrt(at)/2
+        stdt = _np.sqrt(at) / 2
         mcmd = _np.max(cmd)
         if mcmd > at:
             raise CommandError(f"Command value {mcmd} is greater than {at:.2f}")

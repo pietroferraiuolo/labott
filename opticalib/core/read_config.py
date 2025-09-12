@@ -255,9 +255,9 @@ def updateConfigFile(key: str, item: str, value, bpath=_cfold):
     else:
         config["INFLUENCE.FUNCTIONS"][key][item] = str(value)
     dump_yaml_config(config, bpath)
-    
-    
-def getDmIffConfig(bpath: str=_cfold):
+
+
+def getDmIffConfig(bpath: str = _cfold):
     """
     Retrieves the DM configuration from the YAML file.
 
@@ -275,7 +275,7 @@ def getDmIffConfig(bpath: str=_cfold):
     try:
         return config["INFLUENCE.FUNCTIONS"]["DM"]
     except KeyError:
-        return config['DM']
+        return config["DM"]
 
 
 def getNActs(bpath=_cfold):

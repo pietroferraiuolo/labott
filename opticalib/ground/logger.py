@@ -37,7 +37,7 @@ import logging.handlers as _lh
 def set_up_logger(filename: str, logging_level: int = _l.DEBUG) -> _l.Logger:
     """
     Set up a rotating file logger.
-    
+
     This function configures a logger to write log messages to a file with
     rotation. The log file will be encoded in UTF-8 and will rotate when it
     reaches a specified size, keeping a specified number of backup files.

@@ -29,13 +29,13 @@ Given an IPython shell with the tower initialized (`pyott -i`):
 
 At this point, the calibration is complete and and `InteractionMatrix.FITS`
 was created, saved and stored in the Alignment class. It is ready to compute
-and apply corrections. 
+and apply corrections.
 
 >>> modes2correct = [3,4] # Reference Mirror DoF
 >>> zern2correct = [0,1] # tip $ tilt
 >>> align.correct_alignment(modes2correct, zern2correct, apply=True)
 
-If we already have an InteractionMatrix.FITS file, we can load it and apply 
+If we already have an InteractionMatrix.FITS file, we can load it and apply
 corrections based off the loaded calibration. All to do is to pass a tracking
 number to the `correct_alignment` method:
 
@@ -48,7 +48,7 @@ And the alignment is done.
 Notes
 -----
 Note that the calibration process can be done uploading to the class
-a calibrated parabola, so that a different algorithm for the Zernike fitting is 
+a calibrated parabola, so that a different algorithm for the Zernike fitting is
 performed. This can be done through the `reload_calibrated_parabola` method.
 
 >>> tn_parabola = '20241122_160000' # example, tracking number
@@ -201,7 +201,9 @@ class Alignment:
         if self.intMat is not None:
             intMat = self.intMat
         else:
-            raise AttributeError("No internal matrix found. Please calibrate the alignment first.")
+            raise AttributeError(
+                "No internal matrix found. Please calibrate the alignment first."
+            )
         reduced_intMat = intMat[_np.ix_(zern2correct, modes2correct)]
         reduced_cmdMat = self.cmdMat[:, modes2correct]
         recMat = self._create_rec_mat(reduced_intMat)
@@ -314,10 +316,10 @@ class Alignment:
         surf = _rfits(filepath)
         self._surface = surf
         print(f"Correctly loaded '{filepath}'")
-        
+
     def load_calibration(self, tn: str) -> None:
         """
-        Loads the alignment calibration InteractionMatrix.fits based on the 
+        Loads the alignment calibration InteractionMatrix.fits based on the
         provided tracking number.
 
         Parameters
@@ -368,7 +370,9 @@ class Alignment:
                 n_results = results
         return n_results
 
-    def _zern_routine(self, imglist: list[_ot.ImageData]|_ot.CubeData) -> _ot.MatrixLike:
+    def _zern_routine(
+        self, imglist: list[_ot.ImageData] | _ot.CubeData
+    ) -> _ot.MatrixLike:
         """
         Creates the interaction matrix from the provided image list.
 
@@ -548,8 +552,8 @@ class Alignment:
         image = _np.ma.masked_array(image, mask=master_mask) / 6
         template.pop(0)
         return image
-    
-    def __loadIntMat(self, calibtn: str|None) -> _ot.MatrixLike:
+
+    def __loadIntMat(self, calibtn: str | None) -> _ot.MatrixLike:
         """
         Loads the interaction matrix from a FITS file based on the provided tracking number.
 
@@ -562,7 +566,7 @@ class Alignment:
         -------
         intMat : MatrixLike
             The loaded interaction matrix.
-        
+
         Raises
         ------
         FileNotFoundError
@@ -570,12 +574,15 @@ class Alignment:
         """
         if calibtn is None:
             return None
-        filename = _os.path.join(_fn.ALIGN_CALIBRATION_ROOT_FOLDER, calibtn, "InteractionMatrix.fits")
+        filename = _os.path.join(
+            _fn.ALIGN_CALIBRATION_ROOT_FOLDER, calibtn, "InteractionMatrix.fits"
+        )
         if not _os.path.exists(filename):
-            raise FileNotFoundError(f"Interaction matrix file '{filename}' does not exist.")
+            raise FileNotFoundError(
+                f"Interaction matrix file '{filename}' does not exist."
+            )
         intMat = _rfits(filename)
         return intMat
-
 
     @staticmethod
     def __get_callables(
