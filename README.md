@@ -50,4 +50,4 @@ tn = dmutils.iff_module.iffDataAcquisition(dm, interf) # Optional paramenters ar
 ```
 
 ## Documentation
-For the API references, check [here](docs/_build/html/index.html), while for the configuration file documentation check [here](./opticalib/core/_configurations/DOCS.md)
+For the API references, check [here](docs/opticalib.pdf) (work in progress...), while for the configuration file documentation check [here](./opticalib/core/_configurations/DOCS.md)
