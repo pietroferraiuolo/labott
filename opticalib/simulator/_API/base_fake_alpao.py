@@ -12,7 +12,6 @@ from opticalib.core.read_config import load_yaml_config as cl
 ######################################
 
 _alpao_list = os.path.join(os.path.dirname(os.path.abspath(__file__)), "alpao_list.yaml")
-print(_alpao_list)
 
 def IffFile(nActs: int):
     """

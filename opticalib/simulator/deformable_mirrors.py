@@ -88,9 +88,11 @@ class AlpaoDm(BaseFakeAlpao):
         if self.cmdHistory is None:
             raise Exception("No Command History to run!")
         else:
+            if all([interf is not None, interf._live is True, interf._surf is False]):
+                interf.toggleSurfaceView()
             tn = osu.newtn() if save is None else save
             print(f"{tn} - {self.cmdHistory.shape[-1]} images to go.")
-            datafold = os.path.join(fp.OPD_IMAGES_FOLDER, tn)
+            datafold = os.path.join(fp.OPD_IMAGES_ROOT_FOLDER, tn)
             s = self.get_shape()
             if not os.path.exists(datafold):
                 os.mkdir(datafold)
@@ -101,7 +103,7 @@ class AlpaoDm(BaseFakeAlpao):
                 self.set_shape(cmd, modal=modal)
                 if interf is not None:
                     time.sleep(delay)
-                    img = interf.acquire_phasemap(rebin=rebin)
+                    img = interf.acquire_map(rebin=rebin)
                     path = os.path.join(datafold, f"image_{i:05d}.fits")
                     osu.save_fits(path, img)
         self.set_shape(s)

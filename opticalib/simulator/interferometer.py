@@ -1,8 +1,8 @@
 import numpy as _np
 import matplotlib.pyplot as _plt
-from opticalib.ground import geometry as _geo
 from opticalib.ground import zernike as zern
 from opticalib import typings as _t
+from opticalib.analyzer import modeRebinner as rebinned
 from matplotlib.animation import FuncAnimation as _FuncAnimation
 
 _conf = {
@@ -104,7 +104,7 @@ class Interferometer:
                 shape_txt.set_text("")
             else:
                 pv = (_np.max(new_img) - _np.min(new_img)) * 1e6
-                rms = _geo.rms(new_img) * 1e6
+                rms = _np.std(new_img) * 1e6
                 pv_txt.set_text(
                     r"PV={:.3f} $\mu m$".format(pv)
                     + " " * 10
@@ -164,7 +164,7 @@ class Interferometer:
         image = _np.ma.dstack(imglist)
         image = _np.mean(image, axis=2)
         masked_img = _np.ma.masked_array(image, mask=self._dm.mask)
-        fimage = _geo.rebinned(masked_img, rebin)
+        fimage = rebinned(masked_img, rebin)
         if self.full_frame:
             fimage = self.intoFullFrame(fimage)
         if self.shapesRemoved is not None:
