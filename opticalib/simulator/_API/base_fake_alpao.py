@@ -1,8 +1,8 @@
 import os
-import numpy as np
-from tps import ThinPlateSpline
+import xupy as xp
+np = xp.np
 from abc import ABC, abstractmethod
-from opticalib import folders as fp
+from opticalib import folders as fp, typings as _t
 from opticalib.ground import osutils as osu, zernike as zern
 from opticalib.core.read_config import load_yaml_config as cl
 
@@ -11,8 +11,75 @@ from opticalib.core.read_config import load_yaml_config as cl
 ##       simulated Alpao            ##
 ######################################
 
-_alpao_list = os.path.join(os.path.abspath(__file__), "alpao_list.yaml")
+_alpao_list = os.path.join(os.path.dirname(os.path.abspath(__file__)), "alpao_list.yaml")
+print(_alpao_list)
 
+def IffFile(nActs: int):
+    """
+    Returns the file path for the influence functions of a given DM.
+
+    Parameters
+    ----------
+    nActs : int
+        Number of actuators in the DM.
+
+    Returns
+    -------
+    str
+        File path for the influence functions.
+    """
+    bpath = os.path.join(fp.IFFUNCTIONS_ROOT_FOLDER, f"DM{nActs}")
+    if not os.path.exists(bpath):
+        os.makedirs(bpath)
+    return os.path.join(bpath, 'iff_cube.fits')
+
+def IntMatFile(nActs: int):
+    """
+    Returns the file path for the interaction matrix of a given DM.
+
+    Parameters
+    ----------
+    nActs : int
+        Number of actuators in the DM.
+
+    Returns
+    -------
+    str
+        File path for the interaction matrix.
+    """
+    return os.path.join(fp.IFFUNCTIONS_ROOT_FOLDER, f"DM{nActs}", 'int_matrix.fits')
+
+def RecMatFile(nActs: int):
+    """
+    Returns the file path for the reconstruction matrix of a given DM.
+
+    Parameters
+    ----------
+    nActs : int
+        Number of actuators in the DM.
+
+    Returns
+    -------
+    str
+        File path for the reconstruction matrix.
+    """
+    return os.path.join(fp.IFFUNCTIONS_ROOT_FOLDER, f"DM{nActs}", 'rec_matrix.fits')
+
+def ZernMatFile(nActs: int):
+    """
+    Returns the file path for the Zernike matrix of a given DM.
+
+    Parameters
+    ----------
+    nActs : int
+        Number of actuators in the DM.
+
+    Returns
+    -------
+    str
+        File path for the Zernike matrix.
+    """
+    return os.path.join(fp.IFFUNCTIONS_ROOT_FOLDER, f"DM{nActs}", 'zern_matrix.fits')
 
 def getDmCoordinates(nacts: int):
     """
@@ -29,7 +96,7 @@ def getDmCoordinates(nacts: int):
         Array of coordinates of the actuators.
     """
     dms = cl(_alpao_list)[f"DM{nacts}"]
-    nacts_row_sequence = eval(dms["coords"])
+    nacts_row_sequence = dms["coords"]
     n_dim = nacts_row_sequence[-1]
     upper_rows = nacts_row_sequence[:-1]
     lower_rows = [l for l in reversed(upper_rows)]
@@ -131,7 +198,7 @@ def generate_zernike_matrix(noll_ids, img_mask, scale_length: float = None):
     return ZernMat
 
 
-def _project_zernike_on_mask(noll_number: int, mask, scale_length: float = None):
+def _project_zernike_on_mask(noll_number: int, mask: _t.ImageData, scale_length: float = None):
     """
     Project the Zernike polynomials identified by the Noll number in input
     on a given mask.
@@ -146,6 +213,9 @@ def _project_zernike_on_mask(noll_number: int, mask, scale_length: float = None)
         Noll index of the desired Zernike polynomial.
     mask : matrix bool
         Mask of the desired image.
+    scale_length : float, optional
+        The scale length to use for the Zernike fit.
+        The default is the maximum of the image mask shape.
 
     Returns
     -------
@@ -169,9 +239,6 @@ def _project_zernike_on_mask(noll_number: int, mask, scale_length: float = None)
     mode = np.fromfunction(
         lambda i, j: zern._zernikel(noll_number, rho(i, j), phi(i, j)), [X, Y]
     )
-    # masked_mode = np.ma.masked_array(mode,mask)
-    # plt.figure();plt.imshow(masked_mode,origin='lower');plt.title('Zernike ' + str(noll_number))
-    # masked_data = masked_mode.data[~masked_mode.mask]
     masked_data = mode[~mask]
     # Normalization of the masked data: null mean and unit STD
     if noll_number > 1:
@@ -209,7 +276,7 @@ class BaseFakeAlpao(ABC):
         self._load_matrices()
 
     @abstractmethod
-    def set_shape(self, command: np.array, differential: bool = False):
+    def set_shape(self, command: _t.ArrayLike, differential: bool = False):
         """
         Applies the DM to a wavefront.
 
@@ -239,12 +306,32 @@ class BaseFakeAlpao(ABC):
             Current shape of the DM.
         """
         raise NotImplementedError
+    
+    @abstractmethod
+    def uploadCmdHistory(self, timed_command_history: _t.MatrixLike):
+        """
+        Uploads a history of commands to the DM.
+
+        Parameters
+        ----------
+        timed_command_history : _t.MatrixLike
+            A 2D array where each column represents a command to be applied to the DM.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def runCmdHistory(self):
+        """
+        Executes the uploaded command history on the DM.
+        """
+        raise NotImplementedError
+    
 
     def _load_matrices(self):
         """
         Loads the required matrices for the deformable mirror's operations.
         """
-        if not os.path.exists(fp.INFLUENCE_FUNCTIONS_FILE(self.nActs)):
+        if not os.path.exists(IffFile(self.nActs)):
             print(
                 f"First time simulating DM {self.nActs}. Generating influence functions..."
             )
@@ -252,7 +339,7 @@ class BaseFakeAlpao(ABC):
         else:
             print(f"Loaded influence functions.")
             self._iffCube = np.ma.masked_array(
-                osu.load_fits(fp.INFLUENCE_FUNCTIONS_FILE(self.nActs))
+                osu.load_fits(IffFile(self.nActs))
             )
         self._create_int_and_rec_matrices()
         self._create_zernike_matrix()
@@ -261,38 +348,39 @@ class BaseFakeAlpao(ABC):
         """
         Create the Zernike matrix for the DM.
         """
-        if not os.path.exists(fp.ZERNMAT_FILE(self.nActs)):
+        if not os.path.exists(ZernMatFile(self.nActs)):
             n_zern = self.nActs
             print("Computing Zernike matrix...")
-            self.ZM = zern.generate_zernike_matrix(n_zern, self.mask)
-            osu.save_fits(fp.ZERNMAT_FILE(self.nActs), self.ZM)
+            self.ZM = xp.asnumpy(generate_zernike_matrix(n_zern, self.mask))
+            osu.save_fits(ZernMatFile(self.nActs), self.ZM)
         else:
             print(f"Loaded Zernike matrix.")
-            self.ZM = osu.load_fits(fp.ZERNMAT_FILE(self.nActs))
+            self.ZM = osu.load_fits(ZernMatFile(self.nActs))
 
     def _create_int_and_rec_matrices(self):
         """
         Create the interaction matrices for the DM.
         """
-        if not os.path.exists(fp.INTMAT_FILE(self.nActs)):
+        if not os.path.exists(IntMatFile(self.nActs)):
             print("Computing interaction matrix...")
-            self.IM = np.array(
+            im = xp.array(
                 [
                     (self._iffCube[:, :, i].data)[self.mask == 0]
                     for i in range(self._iffCube.shape[2])
                 ]
             )
-            osu.save_fits(fp.INTMAT_FILE(self.nActs), self.IM)
+            self.IM = xp.asnumpy(im)
+            osu.save_fits(IntMatFile(self.nActs), self.IM)
         else:
             print(f"Loaded interaction matrix.")
-            self.IM = osu.load_fits(fp.INTMAT_FILE(self.nActs))
-        if not os.path.exists(fp.RECMAT_FILE(self.nActs)):
+            self.IM = osu.load_fits(IntMatFile(self.nActs))
+        if not os.path.exists(RecMatFile(self.nActs)):
             print("Computing reconstruction matrix...")
-            self.RM = np.linalg.pinv(self.IM)
-            osu.save_fits(fp.RECMAT_FILE(self.nActs), self.RM)
+            self.RM = xp.asnumpy(xp.linalg.pinv(im))
+            osu.save_fits(RecMatFile(self.nActs), self.RM)
         else:
             print(f"Loaded reconstruction matrix.")
-            self.RM = osu.load_fits(fp.RECMAT_FILE(self.nActs))
+            self.RM = osu.load_fits(RecMatFile(self.nActs))
 
     def _simulate_Zonal_Iff_Acquisition(self):
         """
@@ -317,7 +405,6 @@ class BaseFakeAlpao(ABC):
         pix_coords[:, 0] = np.repeat(np.arange(max_x), max_y)
         pix_coords[:, 1] = np.tile(np.arange(max_y), max_x)
         # Convert actuator coordinates to pixel coordinates.
-        # Note: self.coords is of shape (2, nActs) where first row is x and second is y.
         act_coords = self.actCoords.T  # shape: (n_acts, 2)
         act_pix_coords = np.zeros((n_acts, 2), dtype=int)
         act_pix_coords[:, 0] = (
@@ -327,36 +414,41 @@ class BaseFakeAlpao(ABC):
             act_coords[:, 0] / np.max(act_coords[:, 0]) * max_y
         ).astype(
             int
-        )  # corrected to use act_coords[:, 0]
-        # Prepare an image cube to store the influence functions.
+        )
         img_cube = np.zeros((max_x, max_y, n_acts))
-        amps = np.ones(n_acts)
         # For each actuator, compute the influence function with a TPS interpolation.
-
-        ## prove con multiprocessing ##
-        # import multiprocessing as mp
-        # _tps = _TPS(alpha=0.0, act_pix_coords=act_pix_coords, pix_coords=pix_coords)
-        # ncores = mp.cpu_count()
-        # with mp.Pool(ncores) as pool:
-        #     img_cube = pool.map(_tps.fit, range(n_acts))
-        # img_cube = np.ma.dstack(img_cube)
-
-        ## ##
-
-        for k in range(n_acts):
-            print(f"{k+1}/{n_acts}", end="\r", flush=True)
-            # Create a command vector with a single nonzero element.
-            act_data = np.zeros(n_acts)
-            act_data[k] = amps[k]
-            tps = ThinPlateSpline(alpha=0.0)
-            tps.fit(act_pix_coords, act_data)
-            flat_img = tps.transform(pix_coords)
-            img_cube[:, :, k] = flat_img.reshape((max_x, max_y))
+        if xp.on_gpu:
+            for k in range(n_acts):
+                import torch # type: ignore
+                from torch_tps import ThinPlateSpline # type: ignore
+                print(f"{k+1}/{n_acts}", end='\r', flush=True)
+                # Create a command vector with a single nonzero element.
+                act_data = np.zeros(n_acts)
+                act_data[k] = 1
+                act_data = torch.asarray(act_data, device='cuda', dtype=torch.float32)
+                act_pix_coords_t = torch.asarray(act_pix_coords, device='cuda', dtype=torch.float32)
+                pix_coords_t = torch.asarray(pix_coords, device='cuda', dtype=torch.float32)
+                tps = ThinPlateSpline(alpha=0.0)
+                tps.fit(act_pix_coords_t, act_data)
+                flat_img = tps.transform(pix_coords_t)
+                flat_img = flat_img.cpu().numpy()
+                img_cube[:, :, k] = flat_img.reshape((max_x, max_y))
+        else:
+            for k in range(n_acts):
+                from tps import ThinPlateSpline
+                print(f"{k+1}/{n_acts}", end='\r', flush=True)
+                # Create a command vector with a single nonzero element.
+                act_data = np.zeros(n_acts)
+                act_data[k] = 1
+                tps = ThinPlateSpline(alpha=0.0)
+                tps.fit(act_pix_coords, act_data)
+                flat_img = tps.transform(pix_coords)
+                img_cube[:, :, k] = flat_img.reshape((max_x, max_y))
         # Create a cube mask that tiles the local mirror mask for each actuator.
         cube_mask = np.tile(self.mask, n_acts).reshape(img_cube.shape, order="F")
         cube = np.ma.masked_array(img_cube, mask=cube_mask)
         # Save the cube to a FITS file.
-        fits_file = fp.INFLUENCE_FUNCTIONS_FILE(self.nActs)
+        fits_file = IffFile(self.nActs)
         osu.save_fits(fits_file, cube)
         self._iffCube = cube
 
@@ -374,19 +466,3 @@ class BaseFakeAlpao(ABC):
             act_coords[:, 0] / np.max(act_coords[:, 0]) * max_y
         ).astype(int)
         return act_pix_coords
-
-
-class _TPS:
-
-    def __init__(self, alpha: float, act_pix_coords, pix_coords):
-        self.alpha = alpha
-        self.act_pix_coords = act_pix_coords
-        self.pix_coords = pix_coords
-
-    def fit(self, k: int):
-        act_data = np.zeros(self.act_pix_coords.shape[0])
-        act_data[k] = 1.0
-        tps = ThinPlateSpline(alpha=self.alpha)
-        tps.fit(self.act_pix_coords, act_data)
-        flat_img = tps.transform(self.pix_coords)
-        return flat_img

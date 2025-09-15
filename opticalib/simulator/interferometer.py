@@ -2,6 +2,7 @@ import numpy as _np
 import matplotlib.pyplot as _plt
 from opticalib.ground import geometry as _geo
 from opticalib.ground import zernike as zern
+from opticalib import typings as _t
 from matplotlib.animation import FuncAnimation as _FuncAnimation
 
 _conf = {
@@ -16,7 +17,7 @@ _conf = {
 
 class Interferometer:
 
-    def __init__(self, dm):
+    def __init__(self, dm: _t.DeformableMirrorDevice):
         self.model = "4DAccuFiz"
         self.full_frame = False
         self.shapesRemoved = None
@@ -32,9 +33,9 @@ class Interferometer:
 
     def live(
         self,
-        shape2remove=None,
-        framerate=10,
-        **kwargs,
+        zernike2remove: list[int] = None,
+        framerate: int = 10,
+        **kwargs: dict[str,_t.Any],
     ):
         """
         Runs the live-view animation for the simulated Interferometer
@@ -44,8 +45,10 @@ class Interferometer:
         ----------
         shape2remove : np.array, optional
             Zernike modes to be removed from the wavefront.
+        framerate : int, optional
+            Framerate of the live-view animation.
         **kwargs : dict, optional
-            Additional keyword arguments for customization.
+            Additional keyword arguments for imshow customization.
 
         Returns
         -------
@@ -56,8 +59,8 @@ class Interferometer:
             alive).
         """
         self._fps = framerate
-        if shape2remove is not None:
-            self.shapeRemoval(shape2remove)
+        if zernike2remove is not None:
+            self.shapeRemoval(zernike2remove)
         global _anim
         cmap = kwargs.get("cmap", "gray")
 
@@ -70,7 +73,7 @@ class Interferometer:
         fig.subplots_adjust(top=0.9, bottom=0.1, left=0.05, right=0.95)
         fig.canvas.manager.set_window_title(f"Live View - Alpao DM {self._dm.nActs}")
         simg = self._dm._wavefront(
-            zernike=shape2remove, surf=self._surf, noisy=self._noisy
+            zernike=zernike2remove, surf=self._surf, noisy=self._noisy
         )
         if self.full_frame:
             simg = self.intoFullFrame(simg)
@@ -136,9 +139,16 @@ class Interferometer:
 
         return fig, self._anim
 
-    def acquire_map(self, nframes: int = 1, rebin=1):
+    def acquire_map(self, nframes: int = 1, rebin: int = 1):
         """
         Acquires the phase map of the interferometer.
+        
+        Parameters
+        ----------
+        nframes : int, optional
+            Number of frames to be averaged.
+        rebin : int, optional
+            Rebin factor to reduce the resolution of the image.
 
         Returns
         -------
@@ -166,7 +176,7 @@ class Interferometer:
                 self._surf = False
         return fimage
 
-    def intoFullFrame(self, img=None):
+    def intoFullFrame(self, img: _t.ImageData = None):
         """
         Converts the image to a full frame image of 2000x2000 pxs.
 
@@ -193,10 +203,32 @@ class Interferometer:
         new_mask = full_frame == 0
         full_frame = _np.ma.masked_array(full_frame, mask=new_mask)
         return full_frame
+    
+    def acquireFullFrame(self, **kwargs: dict[str,_t.Any]):
+        """
+        Acquires the phase map of the interferometer in full frame mode.
+        
+        Parameters
+        ----------
+        nframes : int, optional
+            Number of frames to be averaged.
+        rebin : int, optional
+            Rebin factor to reduce the resolution of the image.
+        
+
+        Returns
+        -------
+        np.array
+            Full frame phase map of the interferometer.
+        """
+        return self.intoFullFrame(self.acquire_map(**kwargs))
+
 
     # --------------------------------------------------------------------------
     # Series of functions to control the behaviour of the live interferometer
-    def toggleShapeRemoval(self, modes):
+    # --------------------------------------------------------------------------
+    
+    def toggleShapeRemoval(self, modes: list[int]):
         """
         Removes the acquired shape by the define Zernike modes.
 

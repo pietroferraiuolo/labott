@@ -12,3 +12,4 @@ thin-plate-spline
 ruamel.yaml
 tqdm
 arte
+torch-tps

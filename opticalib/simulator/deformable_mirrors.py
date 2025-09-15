@@ -2,9 +2,9 @@ import os
 import time
 import numpy as np
 from matplotlib import pyplot as plt
-from opticalib import folders as fp
+from opticalib import folders as fp, typings as _t
 from opticalib.ground import osutils as osu, zernike as zern
-from .base_fake_alpao import BaseFakeAlpao
+from ._API.base_fake_alpao import BaseFakeAlpao
 
 
 class AlpaoDm(BaseFakeAlpao):
@@ -18,7 +18,7 @@ class AlpaoDm(BaseFakeAlpao):
         self._live = False
         self._produce_random_shape()
 
-    def set_shape(self, command, differential: bool = False, modal: bool = False):
+    def set_shape(self, command: _t.ArrayLike, differential: bool = False, modal: bool = False):
         """
         Applies the given command to the deformable mirror.
 
@@ -49,7 +49,7 @@ class AlpaoDm(BaseFakeAlpao):
         """
         return self._actPos.copy()
 
-    def uploadCmdHistory(self, cmdhist):
+    def uploadCmdHistory(self, cmdhist: _t.MatrixLike):
         """
         Upload the command history to the deformable mirror memory.
         Ready to run the `runCmdHistory` method.
@@ -58,7 +58,7 @@ class AlpaoDm(BaseFakeAlpao):
 
     def runCmdHistory(
         self,
-        interf=None,
+        interf: _t.InterferometerDevice=None,
         save: str = None,
         rebin: int = 1,
         modal: bool = False,
@@ -107,7 +107,7 @@ class AlpaoDm(BaseFakeAlpao):
         self.set_shape(s)
         return tn
 
-    def visualize_shape(self, cmd=None):
+    def visualize_shape(self, cmd: _t.ArrayLike=None):
         """
         Visualizes the command amplitudes on the mirror's actuators.
 
@@ -135,7 +135,7 @@ class AlpaoDm(BaseFakeAlpao):
         plt.colorbar()
         plt.show()
 
-    def _mirror_command(self, cmd, diff, modal):
+    def _mirror_command(self, cmd: _t.ArrayLike, diff: bool, modal: bool):
         """
         Applies the given command to the deformable mirror.
 
@@ -143,9 +143,10 @@ class AlpaoDm(BaseFakeAlpao):
         ----------
         cmd : np.array
             Command to be processed by the deformable mirror.
-
         diff : bool
             If True, process the command differentially.
+        modal : bool
+            If True, process the command in modal space.
 
         Returns
         -------
@@ -161,7 +162,7 @@ class AlpaoDm(BaseFakeAlpao):
         self._shape[self._idx] += np.dot(cmd_amp, self.IM)
         self._actPos += cmd_amp
 
-    def _wavefront(self, **kwargs):
+    def _wavefront(self, **kwargs: dict[str,_t.Any]) -> np.array:
         """
         Current shape of the mirror's surface. Only used for the interferometer's
         live viewer (see `interferometer.py`).
@@ -193,7 +194,7 @@ class AlpaoDm(BaseFakeAlpao):
             Ilambda = 632.8e-9
             phi = np.random.uniform(-0.25 * np.pi, 0.25 * np.pi) if noisy else 0
             wf = np.sin(2 * np.pi / Ilambda * img + phi)
-            A = _geo.rms(img) / _geo.rms(wf)
+            A = np.std(img) / np.std(wf)
             wf *= A
             img = wf
         return img
@@ -211,7 +212,7 @@ class AlpaoDm(BaseFakeAlpao):
         try:
             shape = osu.load_fits(
                 os.path.join(
-                    fp.CONFIGURATION_ROOT_FOLDER, f"dm{self.nActs}_baseShape.fits"
+                    fp.IFFUNCTIONS_ROOT_FOLDER, f"DM{self.nActs}", f"baseShape.fits"
                 )
             )
             self._shape = np.ma.masked_array(shape)
@@ -229,7 +230,7 @@ class AlpaoDm(BaseFakeAlpao):
             self.set_shape(cmd, modal=True)
             osu.save_fits(
                 os.path.join(
-                    fp.CONFIGURATION_ROOT_FOLDER, f"dm{self.nActs}_baseShape.fits"
+                    fp.IFFUNCTIONS_ROOT_FOLDER, f"DM{self.nActs}", f"baseShape.fits"
                 ),
                 self._shape,
             )
