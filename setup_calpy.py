@@ -61,9 +61,15 @@ no option : Initialize an IPython --pylab=qt shell
             the opticalib package.
 
 -f <path> --create : Create the configuration file in the specified path, 
-                     as well as the complete folder tree. The `data_path`
-                     variable in the created configuration file is autom-
-                     atically set to the path of the configuration file.
+                     as well as the complete folder tree and enters the 
+                     ipython session. The `data_path` variable in the 
+                     created configuration file is automatically set to 
+                     the path of the configuration file.
+
+-c <path> : Create the configuration file in the specified path, as well as 
+            the complete folder tree, and exit. The `data_path` variable in
+            the created configuration file is automatically set to the path 
+            of the configuration file.
 
 -h |--help : Shows this help message
 
@@ -80,7 +86,7 @@ no option : Initialize an IPython --pylab=qt shell
             except OSError as ose:
                 print(f"Error: {ose}")
                 sys.exit(1)
-        if '--create' in sys.argv:
+        if '--create' in sys.argv or '-c' in sys.argv:
             from opticalib.core.root import create_configuration_file
             create_configuration_file(config_path, data_path=True)
         try:
@@ -95,6 +101,21 @@ no option : Initialize an IPython --pylab=qt shell
         except OSError as ose:
             print(f"Error: {ose}")
             sys.exit(1)
+    elif len(sys.argv) > 2 and sys.argv[1] == '-c' and sys.argv[2]:
+        config_path = sys.argv[2]
+        # Use robust absolute path detection (works on Windows and Unix)
+        if not os.path.isabs(config_path):
+            config_path = os.path.join(home, config_path)
+        if not '.yaml' in config_path:
+            try:
+                config_path = check_dir(config_path)
+            except OSError as ose:
+                print(f"Error: {ose}")
+                sys.exit(1)
+        from opticalib.core.root import create_configuration_file
+        create_configuration_file(config_path, data_path=True)
+        print(f"Configuration file created at: {config_path}")
+        sys.exit(0)
     elif len(sys.argv) == 1:
         # Start plain IPython pylab session with Qt integration
         args = [sys.executable, "-m", "IPython", f"--pylab={backend}"]
