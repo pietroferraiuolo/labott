@@ -118,8 +118,9 @@ class Flattening:
         dm: _ot.DeformableMirrorDevice,
         interf: _ot.InterferometerDevice,
         modes2flat: int | _ot.ArrayLike,
-        nframes: int = 5,
         modes2discard: _ot.Optional[int] = None,
+        cmdOffset: _ot.Optional[_ot.ArrayLike] = None,
+        nframes: int = 5
     ) -> None:
         f"""
         Computes, applies and saves the computed flat command to the DM, given
@@ -144,7 +145,11 @@ class Flattening:
         self.computeRecMat(modes2discard)
         deltacmd = self.computeFlatCmd(modes2flat)
         cmd = dm.get_shape()
-        dm.set_shape(deltacmd, differential=True)
+        # TODO
+        ## Modifiche DP: da sistemare poi
+        #dm.set_shape(deltacmd, differential=True)
+        for i in range(1,5):
+            dm.set_shape(cmdOffset + deltacmd*0.2*i)
         imgflat = interf.acquire_map(nframes, rebin=self.rebin)
         files = [
             "flatCommand.fits",
@@ -187,13 +192,13 @@ class Flattening:
         cmdMat = self._cmdMat.copy()
         if isinstance(n_modes, int):
             flat_cmd = cmdMat[:, :n_modes] @ _cmd[:n_modes]
-        elif isinstance(n_modes, list):
-            _cmdMat = _np.zeros((cmdMat.shape[1], len(n_modes)))
-            _scmd = _np.zeros(_cmd.shape[0])
+        elif isinstance(n_modes, (_np.ndarray,list)):
+            _cmdMat = _np.zeros((cmdMat.shape[0], len(n_modes)))
+            _scmd = _np.zeros(len(n_modes))#_cmd.shape[0])
             for i, mode in enumerate(n_modes):
                 _cmdMat.T[i] = cmdMat.T[mode]
                 _scmd[i] = _cmd[mode]
-            flat_cmd = _cmdMat @ _cmd
+            flat_cmd = _cmdMat @ _scmd
         else:
             raise TypeError(
                 f"`n_modes` must be either an int or a list of int: {type(n_modes)}"
