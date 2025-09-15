@@ -18,7 +18,7 @@ _conf = {
 class Interferometer:
 
     def __init__(self, dm: _t.DeformableMirrorDevice):
-        self.model = "4DAccuFiz"
+        self.model = "4D"
         self.full_frame = False
         self.shapesRemoved = None
         self._dm = dm

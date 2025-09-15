@@ -164,7 +164,7 @@ def pixel_scale(nacts: int):
     return float(dm["pixel_scale"])
 
 
-def generate_zernike_matrix(noll_ids, img_mask, scale_length: float = None):
+def generate_zernike_matrix(noll_ids: list[int], img_mask: _t.ImageData, scale_length: float = None):
     """
     Generates the interaction matrix of the Zernike modes with Noll index
     in noll_ids on the mask in input
@@ -173,10 +173,8 @@ def generate_zernike_matrix(noll_ids, img_mask, scale_length: float = None):
     ----------
     noll_ids : ndarray(int) [Nzern,]
         Array of Noll indices to fit.
-
     img_mask : matrix bool
         Mask of the desired image.
-
     scale_length : float, optional
         The scale length to use for the Zernike fit.
         The default is the maximum of the image mask shape.
@@ -185,7 +183,6 @@ def generate_zernike_matrix(noll_ids, img_mask, scale_length: float = None):
     -------
     ZernMat : ndarray(float) [Npix,Nzern]
         The Zernike interaction matrix of the given indices on the given mask.
-
     """
     n_pix = np.sum(1 - img_mask)
     if isinstance(noll_ids, int):
@@ -416,6 +413,8 @@ class BaseFakeAlpao(ABC):
         )
         img_cube = np.zeros((max_x, max_y, n_acts))
         # For each actuator, compute the influence function with a TPS interpolation.
+        
+        # if GPU is available, use it
         if xp.on_gpu:
             for k in range(n_acts):
                 import torch # type: ignore
@@ -443,6 +442,7 @@ class BaseFakeAlpao(ABC):
                 tps.fit(act_pix_coords, act_data)
                 flat_img = tps.transform(pix_coords)
                 img_cube[:, :, k] = flat_img.reshape((max_x, max_y))
+        
         # Create a cube mask that tiles the local mirror mask for each actuator.
         cube_mask = np.tile(self.mask, n_acts).reshape(img_cube.shape, order="F")
         cube = np.ma.masked_array(img_cube, mask=cube_mask)
