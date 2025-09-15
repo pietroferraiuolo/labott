@@ -1,0 +1,709 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="opticalib.core.root" href="opticalib.core.root.html" /><link rel="prev" title="opticalib.core.exceptions" href="opticalib.core.exceptions.html" />
+
+    <!-- Generated with Sphinx 8.3.0 and Furo 2024.08.06 -->
+        <title>opticalib.core.read_config - opticalib 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">opticalib 1.0.0</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">opticalib 1.0.0</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../readme.html">About</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../api.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="opticalib.html">opticalib</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of opticalib</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="opticalib.alignment.html">opticalib.alignment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="opticalib.analyzer.html">opticalib.analyzer</a></li>
+<li class="toctree-l3 current has-children"><a class="reference internal" href="opticalib.core.html">opticalib.core</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of opticalib.core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="opticalib.core.exceptions.html">opticalib.core.exceptions</a></li>
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">opticalib.core.read_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.core.root.html">opticalib.core.root</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="opticalib.devices.html">opticalib.devices</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of opticalib.devices</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.devices.deformable_mirrors.html">opticalib.devices.deformable_mirrors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.devices.interferometer.html">opticalib.devices.interferometer</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="opticalib.dmutils.html">opticalib.dmutils</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of opticalib.dmutils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.dmutils.actuator_identification_lib.html">opticalib.dmutils.actuator_identification_lib</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.dmutils.flattening.html">opticalib.dmutils.flattening</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.dmutils.iff_acquisition_preparation.html">opticalib.dmutils.iff_acquisition_preparation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.dmutils.iff_module.html">opticalib.dmutils.iff_module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.dmutils.iff_processing.html">opticalib.dmutils.iff_processing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.dmutils.pupil_calibration.html">opticalib.dmutils.pupil_calibration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.dmutils.stitching.html">opticalib.dmutils.stitching</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="opticalib.ground.html">opticalib.ground</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of opticalib.ground</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.ground.computerec.html">opticalib.ground.computerec</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.ground.geo.html">opticalib.ground.geo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.ground.logger.html">opticalib.ground.logger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.ground.osutils.html">opticalib.ground.osutils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.ground.roi.html">opticalib.ground.roi</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opticalib.ground.zernike.html">opticalib.ground.zernike</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="opticalib.typings.html">opticalib.typings</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/generated/opticalib.core.read_config.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="module-opticalib.core.read_config">
+<span id="opticalib-core-read-config"></span><h1>opticalib.core.read_config<a class="headerlink" href="#module-opticalib.core.read_config" title="Link to this heading">¶</a></h1>
+<section id="module-read-config">
+<h2>Module: read_config<a class="headerlink" href="#module-read-config" title="Link to this heading">¶</a></h2>
+<p>This module provides utilities for reading, writing, and updating YAML configuration files
+used in the opticalib system. It supports configuration management for devices such as
+deformable mirrors and interferometers, as well as acquisition and alignment settings.</p>
+<section id="features">
+<h3>Features<a class="headerlink" href="#features" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Load and dump YAML configuration files.</p></li>
+<li><p>Retrieve and update configuration blocks for IFF acquisition, DM devices, and interferometers.</p></li>
+<li><p>Copy configuration files for record keeping.</p></li>
+<li><p>Parse and convert configuration values, including numpy arrays.</p></li>
+<li><p>Access alignment and stitching settings as structured objects.</p></li>
+</ul>
+</section>
+<section id="author-s">
+<h3>Author(s)<a class="headerlink" href="#author-s" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Pietro Ferraiuolo: written in 2025</p></li>
+<li><p>Runa Briguglio</p></li>
+</ul>
+</section>
+</section>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#opticalib.core.read_config.copyIffConfigFile" title="opticalib.core.read_config.copyIffConfigFile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">copyIffConfigFile</span></code></a>(tn[, old_path])</p></td>
+<td><p>Copies the YAML configuration file to the new folder for record keeping of the configuration used on data acquisition.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#opticalib.core.read_config.dump_yaml_config" title="opticalib.core.read_config.dump_yaml_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dump_yaml_config</span></code></a>(config[, path])</p></td>
+<td><p>Writes the configuration dictionary back to the YAML file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#opticalib.core.read_config.getAlignmentConfig" title="opticalib.core.read_config.getAlignmentConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getAlignmentConfig</span></code></a>()</p></td>
+<td><p>Reads the alignment settings in the configuration file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#opticalib.core.read_config.getCmdDelay" title="opticalib.core.read_config.getCmdDelay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getCmdDelay</span></code></a>([bpath])</p></td>
+<td><p>Retrieves the command delay from the YAML configuration file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#opticalib.core.read_config.getDmConfig" title="opticalib.core.read_config.getDmConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getDmConfig</span></code></a>(device_name)</p></td>
+<td><p>Retrieves the DM address from the YAML configuration file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#opticalib.core.read_config.getDmIffConfig" title="opticalib.core.read_config.getDmIffConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getDmIffConfig</span></code></a>([bpath])</p></td>
+<td><p>Retrieves the DM configuration from the YAML file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#opticalib.core.read_config.getIffConfig" title="opticalib.core.read_config.getIffConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getIffConfig</span></code></a>(key[, bpath])</p></td>
+<td><p>Reads the configuration from the YAML file for the IFF acquisition.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#opticalib.core.read_config.getInterfConfig" title="opticalib.core.read_config.getInterfConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getInterfConfig</span></code></a>(device_name)</p></td>
+<td><p>Retrieves the interferometer address from the YAML configuration file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#opticalib.core.read_config.getNActs" title="opticalib.core.read_config.getNActs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getNActs</span></code></a>([bpath])</p></td>
+<td><p>Retrieves the number of actuators from the YAML configuration file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#opticalib.core.read_config.getStitchingConfig" title="opticalib.core.read_config.getStitchingConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getStitchingConfig</span></code></a>()</p></td>
+<td><p>Reads the stitching settings in the configuration file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#opticalib.core.read_config.getTiming" title="opticalib.core.read_config.getTiming"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTiming</span></code></a>([bpath])</p></td>
+<td><p>Retrieves timing information from the YAML configuration file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#opticalib.core.read_config.load_yaml_config" title="opticalib.core.read_config.load_yaml_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_yaml_config</span></code></a>([path])</p></td>
+<td><p>Loads the YAML configuration file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#opticalib.core.read_config.updateConfigFile" title="opticalib.core.read_config.updateConfigFile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">updateConfigFile</span></code></a>(key, item, value[, bpath])</p></td>
+<td><p>Updates the YAML configuration file for the IFF acquisition.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#opticalib.core.read_config.updateIffConfig" title="opticalib.core.read_config.updateIffConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">updateIffConfig</span></code></a>(tn, item, value)</p></td>
+<td><p>Updates the YAML configuration file for the IFF acquisition.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="opticalib.core.read_config.copyIffConfigFile">
+<span class="sig-prename descclassname"><span class="pre">opticalib.core.read_config.</span></span><span class="sig-name descname"><span class="pre">copyIffConfigFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">old_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/pietrof/.tmp_opticalibData/SysConfig'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opticalib/core/read_config.html#copyIffConfigFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#opticalib.core.read_config.copyIffConfigFile" title="Link to this definition">¶</a></dt>
+<dd><p>Copies the YAML configuration file to the new folder for record keeping of the
+configuration used on data acquisition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tn</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Tracking number for the new data.</p></li>
+<li><p><strong>old_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Base path where the YAML configuration file resides.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>res</strong> – Path where the file was copied.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="opticalib.core.read_config.dump_yaml_config">
+<span class="sig-prename descclassname"><span class="pre">opticalib.core.read_config.</span></span><span class="sig-name descname"><span class="pre">dump_yaml_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opticalib/core/read_config.html#dump_yaml_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#opticalib.core.read_config.dump_yaml_config" title="Link to this definition">¶</a></dt>
+<dd><p>Writes the configuration dictionary back to the YAML file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) – The configuration dictionary to write.</p></li>
+<li><p><strong>bpath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Base path of the file to write. Default points to the configuration root folder.</p></li>
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="opticalib.core.read_config.getAlignmentConfig">
+<span class="sig-prename descclassname"><span class="pre">opticalib.core.read_config.</span></span><span class="sig-name descname"><span class="pre">getAlignmentConfig</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opticalib/core/read_config.html#getAlignmentConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#opticalib.core.read_config.getAlignmentConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Reads the alignment settings in the configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> – The alignment configuration as a class, for backwards compatibility.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>class</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="opticalib.core.read_config.getCmdDelay">
+<span class="sig-prename descclassname"><span class="pre">opticalib.core.read_config.</span></span><span class="sig-name descname"><span class="pre">getCmdDelay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/pietrof/.tmp_opticalibData/SysConfig'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opticalib/core/read_config.html#getCmdDelay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#opticalib.core.read_config.getCmdDelay" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieves the command delay from the YAML configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>bpath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Base path of the configuration file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>cmdDelay</strong> – Command delay for the interferometer synchronization.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="opticalib.core.read_config.getDmConfig">
+<span class="sig-prename descclassname"><span class="pre">opticalib.core.read_config.</span></span><span class="sig-name descname"><span class="pre">getDmConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opticalib/core/read_config.html#getDmConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#opticalib.core.read_config.getDmConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieves the DM address from the YAML configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Name of the DM device.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>ip</strong> (<em>str</em>) – DM ip address.</p></li>
+<li><p><strong>port</strong> (<em>int</em>) – DM port.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="opticalib.core.read_config.getDmIffConfig">
+<span class="sig-prename descclassname"><span class="pre">opticalib.core.read_config.</span></span><span class="sig-name descname"><span class="pre">getDmIffConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/pietrof/.tmp_opticalibData/SysConfig'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opticalib/core/read_config.html#getDmIffConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#opticalib.core.read_config.getDmIffConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieves the DM configuration from the YAML file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>bpath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Base path of the configuration file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>config</strong> – The DM configuration dictionary.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="opticalib.core.read_config.getIffConfig">
+<span class="sig-prename descclassname"><span class="pre">opticalib.core.read_config.</span></span><span class="sig-name descname"><span class="pre">getIffConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/pietrof/.tmp_opticalibData/SysConfig'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opticalib/core/read_config.html#getIffConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#opticalib.core.read_config.getIffConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Reads the configuration from the YAML file for the IFF acquisition.
+The key passed is the block of information retrieved within the INFLUENCE.FUNCTIONS section.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – <dl class="simple">
+<dt>Key value of the block of information to read. Can be</dt><dd><ul>
+<li><p>’TRIGGER’</p></li>
+<li><p>’REGISTRATION’</p></li>
+<li><p>’IFFUNC’</p></li>
+</ul>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>bpath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Base path of the file to read. Default points to the configuration root folder.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p><strong>info</strong> –</p>
+<dl class="simple">
+<dt>A dictionary containing the configuration info:</dt><dd><ul class="simple">
+<li><p>zeros</p></li>
+<li><p>modes</p></li>
+<li><p>amplitude</p></li>
+<li><p>template</p></li>
+<li><p>modalBase</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="opticalib.core.read_config.getInterfConfig">
+<span class="sig-prename descclassname"><span class="pre">opticalib.core.read_config.</span></span><span class="sig-name descname"><span class="pre">getInterfConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opticalib/core/read_config.html#getInterfConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#opticalib.core.read_config.getInterfConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieves the interferometer address from the YAML configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>ip</strong> (<em>str</em>) – Interferometer ip address.</p></li>
+<li><p><strong>port</strong> (<em>int</em>) – Interferometer port.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>device_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="opticalib.core.read_config.getNActs">
+<span class="sig-prename descclassname"><span class="pre">opticalib.core.read_config.</span></span><span class="sig-name descname"><span class="pre">getNActs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/pietrof/.tmp_opticalibData/SysConfig'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opticalib/core/read_config.html#getNActs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#opticalib.core.read_config.getNActs" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieves the number of actuators from the YAML configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>bpath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Base path of the configuration file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>nacts</strong> – Number of DM actuators.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="opticalib.core.read_config.getStitchingConfig">
+<span class="sig-prename descclassname"><span class="pre">opticalib.core.read_config.</span></span><span class="sig-name descname"><span class="pre">getStitchingConfig</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opticalib/core/read_config.html#getStitchingConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#opticalib.core.read_config.getStitchingConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Reads the stitching settings in the configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> – The defined stitching parameters.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="opticalib.core.read_config.getTiming">
+<span class="sig-prename descclassname"><span class="pre">opticalib.core.read_config.</span></span><span class="sig-name descname"><span class="pre">getTiming</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/pietrof/.tmp_opticalibData/SysConfig'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opticalib/core/read_config.html#getTiming"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#opticalib.core.read_config.getTiming" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieves timing information from the YAML configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>bpath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Base path of the configuration file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>timing</strong> – Timing used for synchronization.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="opticalib.core.read_config.load_yaml_config">
+<span class="sig-prename descclassname"><span class="pre">opticalib.core.read_config.</span></span><span class="sig-name descname"><span class="pre">load_yaml_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opticalib/core/read_config.html#load_yaml_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#opticalib.core.read_config.load_yaml_config" title="Link to this definition">¶</a></dt>
+<dd><p>Loads the YAML configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Base path of the file to read. Default points to the configuration root folder.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>config</strong> – The configuration dictionary.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="opticalib.core.read_config.updateConfigFile">
+<span class="sig-prename descclassname"><span class="pre">opticalib.core.read_config.</span></span><span class="sig-name descname"><span class="pre">updateConfigFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/pietrof/.tmp_opticalibData/SysConfig'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opticalib/core/read_config.html#updateConfigFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#opticalib.core.read_config.updateConfigFile" title="Link to this definition">¶</a></dt>
+<dd><p>Updates the YAML configuration file for the IFF acquisition.
+The key passed is within the INFLUENCE.FUNCTIONS section.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Key of the block to update (e.g., ‘TRIGGER’, ‘REGISTRATION’, ‘IFFUNC’).</p></li>
+<li><p><strong>item</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The configuration item to update.</p></li>
+<li><p><strong>value</strong> (<em>any</em>) – New value to update.</p></li>
+<li><p><strong>bpath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Base path of the configuration file.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="opticalib.core.read_config.updateIffConfig">
+<span class="sig-prename descclassname"><span class="pre">opticalib.core.read_config.</span></span><span class="sig-name descname"><span class="pre">updateIffConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opticalib/core/read_config.html#updateIffConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#opticalib.core.read_config.updateIffConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Updates the YAML configuration file for the IFF acquisition.
+The item passed is within the INFLUENCE.FUNCTIONS/IFFUNC section.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tn</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Tracking number of the <cite>iffConfig.yaml</cite> copied from the original
+<cite>configuration.yaml</cite> file.</p></li>
+<li><p><strong>item</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The configuration item to update.</p></li>
+<li><p><strong>value</strong> (<em>any</em>) – New value to update.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="opticalib.core.root.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">opticalib.core.root</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="opticalib.core.exceptions.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">opticalib.core.exceptions</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, opticalib contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">opticalib.core.read_config</a><ul>
+<li><a class="reference internal" href="#module-read-config">Module: read_config</a><ul>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#author-s">Author(s)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#opticalib.core.read_config.copyIffConfigFile"><code class="docutils literal notranslate"><span class="pre">copyIffConfigFile()</span></code></a></li>
+<li><a class="reference internal" href="#opticalib.core.read_config.dump_yaml_config"><code class="docutils literal notranslate"><span class="pre">dump_yaml_config()</span></code></a></li>
+<li><a class="reference internal" href="#opticalib.core.read_config.getAlignmentConfig"><code class="docutils literal notranslate"><span class="pre">getAlignmentConfig()</span></code></a></li>
+<li><a class="reference internal" href="#opticalib.core.read_config.getCmdDelay"><code class="docutils literal notranslate"><span class="pre">getCmdDelay()</span></code></a></li>
+<li><a class="reference internal" href="#opticalib.core.read_config.getDmConfig"><code class="docutils literal notranslate"><span class="pre">getDmConfig()</span></code></a></li>
+<li><a class="reference internal" href="#opticalib.core.read_config.getDmIffConfig"><code class="docutils literal notranslate"><span class="pre">getDmIffConfig()</span></code></a></li>
+<li><a class="reference internal" href="#opticalib.core.read_config.getIffConfig"><code class="docutils literal notranslate"><span class="pre">getIffConfig()</span></code></a></li>
+<li><a class="reference internal" href="#opticalib.core.read_config.getInterfConfig"><code class="docutils literal notranslate"><span class="pre">getInterfConfig()</span></code></a></li>
+<li><a class="reference internal" href="#opticalib.core.read_config.getNActs"><code class="docutils literal notranslate"><span class="pre">getNActs()</span></code></a></li>
+<li><a class="reference internal" href="#opticalib.core.read_config.getStitchingConfig"><code class="docutils literal notranslate"><span class="pre">getStitchingConfig()</span></code></a></li>
+<li><a class="reference internal" href="#opticalib.core.read_config.getTiming"><code class="docutils literal notranslate"><span class="pre">getTiming()</span></code></a></li>
+<li><a class="reference internal" href="#opticalib.core.read_config.load_yaml_config"><code class="docutils literal notranslate"><span class="pre">load_yaml_config()</span></code></a></li>
+<li><a class="reference internal" href="#opticalib.core.read_config.updateConfigFile"><code class="docutils literal notranslate"><span class="pre">updateConfigFile()</span></code></a></li>
+<li><a class="reference internal" href="#opticalib.core.read_config.updateIffConfig"><code class="docutils literal notranslate"><span class="pre">updateIffConfig()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

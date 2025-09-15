@@ -1,0 +1,1142 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
+
+    <!-- Generated with Sphinx 8.3.0 and Furo 2024.08.06 -->
+        <title>opticalib.dmutils.iff_processing - opticalib 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">opticalib 1.0.0</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
+  
+  
+  <span class="sidebar-brand-text">opticalib 1.0.0</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">About</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../api.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../generated/opticalib.html">opticalib</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of opticalib</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../generated/opticalib.alignment.html">opticalib.alignment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../generated/opticalib.analyzer.html">opticalib.analyzer</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../generated/opticalib.core.html">opticalib.core</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of opticalib.core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.core.exceptions.html">opticalib.core.exceptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.core.read_config.html">opticalib.core.read_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.core.root.html">opticalib.core.root</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../generated/opticalib.devices.html">opticalib.devices</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of opticalib.devices</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.devices.deformable_mirrors.html">opticalib.devices.deformable_mirrors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.devices.interferometer.html">opticalib.devices.interferometer</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../generated/opticalib.dmutils.html">opticalib.dmutils</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of opticalib.dmutils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.dmutils.actuator_identification_lib.html">opticalib.dmutils.actuator_identification_lib</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.dmutils.flattening.html">opticalib.dmutils.flattening</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.dmutils.iff_acquisition_preparation.html">opticalib.dmutils.iff_acquisition_preparation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.dmutils.iff_module.html">opticalib.dmutils.iff_module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.dmutils.iff_processing.html">opticalib.dmutils.iff_processing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.dmutils.pupil_calibration.html">opticalib.dmutils.pupil_calibration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.dmutils.stitching.html">opticalib.dmutils.stitching</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../generated/opticalib.ground.html">opticalib.ground</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of opticalib.ground</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.ground.computerec.html">opticalib.ground.computerec</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.ground.geo.html">opticalib.ground.geo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.ground.logger.html">opticalib.ground.logger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.ground.osutils.html">opticalib.ground.osutils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.ground.roi.html">opticalib.ground.roi</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../generated/opticalib.ground.zernike.html">opticalib.ground.zernike</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../generated/opticalib.typings.html">opticalib.typings</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for opticalib.dmutils.iff_processing</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Author(s):</span>
+<span class="sd">----------</span>
+<span class="sd">    - Pietro Ferraiuolo</span>
+<span class="sd">    - Runa Briguglio</span>
+<span class="sd">    </span>
+<span class="sd">Written in June 2024</span>
+
+<span class="sd">Description</span>
+<span class="sd">-----------</span>
+<span class="sd">Module containing all the functions necessary to process the data acquired for </span>
+<span class="sd">the Influence Function measurements done on M4.</span>
+
+<span class="sd">High-level Functions</span>
+<span class="sd">--------------------</span>
+<span class="sd">process(tn, registration=False) </span>
+<span class="sd">    Function that processes the data contained in the OPDImages/tn folder. by p</span>
+<span class="sd">    erforming the differential algorithm, it procudes fits images for each comm</span>
+<span class="sd">    anded mode into the IFFunctions/tn folder, and creates a cube from these in</span>
+<span class="sd">    to INTMatrices/tn. If &#39;registration is not False&#39;, upon createing the cube,</span>
+<span class="sd">    the registration algorithm is performed.</span>
+
+<span class="sd">stackCubes(tnlist)</span>
+<span class="sd">    Function that, given as imput a tracking number list containing cubes data,</span>
+<span class="sd">    will stack the found cubes into a new one with a new tracking number, into </span>
+<span class="sd">    INTMatrices/new_tn. A &#39;flag.txt&#39; file will be created to give more informat</span>
+<span class="sd">    ion on the process.</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">In order for the module to work properly, the tower initialization must be run</span>
+<span class="sd">so that the folder names configuration file is populated. </span>
+<span class="sd">From the IPython console</span>
+
+<span class="sd">&gt;&gt;&gt; run &#39;/path/to/m4/initOTT.py&#39;</span>
+<span class="sd">&gt;&gt;&gt; from m4.dmutils import iff_processing as ifp</span>
+
+<span class="sd">Example</span>
+<span class="sd">-------</span>
+<span class="sd">&gt;&gt;&gt; tn1 = &#39;20160516_114916&#39;</span>
+<span class="sd">&gt;&gt;&gt; tn2 = &#39;20160516_114917&#39; # A copy of tn1 (simulated) data</span>
+<span class="sd">&gt;&gt;&gt; ifp.process(tn1)</span>
+<span class="sd">Cube saved in &#39;.../m4/data/M4Data/OPTData/INTMatrices/20160516_114916/IMcube.fits&#39;</span>
+<span class="sd">&gt;&gt;&gt; ifp.process(tn2)</span>
+<span class="sd">Cube saved in &#39;.../m4/data/M4Data/OPTData/INTMatrices/20160516_114917/IMcube.fits&#39;</span>
+<span class="sd">&gt;&gt;&gt; tnlist = [tn1, tn2]</span>
+<span class="sd">&gt;&gt;&gt; ifp.stackCubes(tnlist)</span>
+<span class="sd">Stacekd cube and matrices saved in &#39;.../m4/data/M4Data/OPTData/INTMatrices/&#39;new_tn&#39;/IMcube.fits&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_sh</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">configparser</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_cp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">opticalib.core.root</span><span class="w"> </span><span class="kn">import</span> <span class="n">_folds</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">opticalib.ground</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">osutils</span> <span class="k">as</span> <span class="n">_osu</span><span class="p">,</span>
+        <span class="n">zernike</span> <span class="k">as</span> <span class="n">_zern</span><span class="p">,</span>
+        <span class="n">roi</span> <span class="k">as</span> <span class="n">_roi</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">opticalib.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_config</span> <span class="k">as</span> <span class="n">_rif</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">opticalib</span><span class="w"> </span><span class="kn">import</span> <span class="n">typings</span> <span class="k">as</span> <span class="n">_ot</span>
+
+<span class="c1"># from scripts.misc.IFFPackage import actuator_identification_lib as _fa</span>
+
+<span class="n">_fn</span> <span class="o">=</span> <span class="n">_folds</span><span class="p">()</span>
+<span class="n">_config</span> <span class="o">=</span> <span class="n">_cp</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">()</span>
+<span class="n">_imgFold</span> <span class="o">=</span> <span class="n">_fn</span><span class="o">.</span><span class="n">OPD_IMAGES_ROOT_FOLDER</span>
+<span class="n">_ifFold</span> <span class="o">=</span> <span class="n">_fn</span><span class="o">.</span><span class="n">IFFUNCTIONS_ROOT_FOLDER</span>
+<span class="n">_intMatFold</span> <span class="o">=</span> <span class="n">_fn</span><span class="o">.</span><span class="n">INTMAT_ROOT_FOLDER</span>
+<span class="n">_confFold</span> <span class="o">=</span> <span class="n">_fn</span><span class="o">.</span><span class="n">CONFIGURATION_FOLDER</span>
+<span class="n">_frameCenter</span> <span class="o">=</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">]</span>
+<span class="n">_ts</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">newtn</span>
+
+<span class="n">ampVecFile</span> <span class="o">=</span> <span class="s2">&quot;ampVector.fits&quot;</span>
+<span class="n">modesVecFile</span> <span class="o">=</span> <span class="s2">&quot;modesVector.fits&quot;</span>
+<span class="n">templateFile</span> <span class="o">=</span> <span class="s2">&quot;template.fits&quot;</span>
+<span class="n">regisActFile</span> <span class="o">=</span> <span class="s2">&quot;regActs.fits&quot;</span>
+<span class="n">shuffleFile</span> <span class="o">=</span> <span class="s2">&quot;shuffle.dat&quot;</span>
+<span class="n">indexListFile</span> <span class="o">=</span> <span class="s2">&quot;indexList.fits&quot;</span>
+<span class="n">coordfile</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># TODO</span>
+<span class="n">cmdMatFile</span> <span class="o">=</span> <span class="s2">&quot;cmdMatrix.fits&quot;</span>
+<span class="n">cubeFile</span> <span class="o">=</span> <span class="s2">&quot;IMCube.fits&quot;</span>
+<span class="n">flagFile</span> <span class="o">=</span> <span class="s2">&quot;flag.txt&quot;</span>
+
+
+<div class="viewcode-block" id="process">
+<a class="viewcode-back" href="../../../generated/opticalib.dmutils.iff_processing.html#opticalib.dmutils.iff_processing.process">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span>
+        <span class="n">tn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">register</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">roi</span><span class="p">:</span><span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">rebin</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    High level function with processes the data contained in the given tracking</span>
+<span class="sd">    number OPDimages folder, performing the differential algorithm and saving</span>
+<span class="sd">    the final cube.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tn : str</span>
+<span class="sd">        Tracking number of the data in the OPDImages folder.</span>
+<span class="sd">    register : bool, optional</span>
+<span class="sd">        Parameter which enables the registration option. The default is False.</span>
+<span class="sd">    save_and_rebin_cube : bool | int | tuple, optional</span>
+<span class="sd">        If a bool is passed, the value is used to save the cube. If an int is</span>
+<span class="sd">        passed, the value is used to rebin and save the cube. If a tuple is passed, the</span>
+<span class="sd">        first value is used to save the cube, and the second to rebin it. The</span>
+<span class="sd">        default is (False, 1).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ampVector</span><span class="p">,</span> <span class="n">modesVector</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">registrationActs</span><span class="p">,</span> <span class="n">shuffle</span> <span class="o">=</span> <span class="n">_getAcqPar</span><span class="p">(</span><span class="n">tn</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">regMat</span> <span class="o">=</span> <span class="n">getRegFileMatrix</span><span class="p">(</span><span class="n">tn</span><span class="p">,</span> <span class="n">roi</span><span class="p">)</span>
+    <span class="n">modesMat</span> <span class="o">=</span> <span class="n">getIffFileMatrix</span><span class="p">(</span><span class="n">tn</span><span class="p">,</span> <span class="n">roi</span><span class="p">)</span>
+    <span class="n">new_fold</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_intMatFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">new_fold</span><span class="p">):</span>
+        <span class="n">_os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">new_fold</span><span class="p">)</span>
+    <span class="n">actImgList</span> <span class="o">=</span> <span class="n">registrationRedux</span><span class="p">(</span><span class="n">tn</span><span class="p">,</span> <span class="n">regMat</span><span class="p">)</span>
+    <span class="n">modesMatReorg</span> <span class="o">=</span> <span class="n">_modesReorganization</span><span class="p">(</span><span class="n">modesMat</span><span class="p">)</span>
+    <span class="n">iffRedux</span><span class="p">(</span><span class="n">tn</span><span class="p">,</span> <span class="n">modesMatReorg</span><span class="p">,</span> <span class="n">ampVector</span><span class="p">,</span> <span class="n">modesVector</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">shuffle</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">register</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">regMat</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">findFrameOffset</span><span class="p">(</span><span class="n">tn</span><span class="p">,</span> <span class="n">actImgList</span><span class="p">,</span> <span class="n">registrationActs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">register</span>
+    <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+        <span class="n">saveCube</span><span class="p">(</span><span class="n">tn</span><span class="p">,</span> <span class="n">rebin</span><span class="o">=</span><span class="n">rebin</span><span class="p">,</span> <span class="n">register</span><span class="o">=</span><span class="n">dx</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="saveCube">
+<a class="viewcode-back" href="../../../generated/opticalib.dmutils.iff_processing.html#opticalib.dmutils.iff_processing.saveCube">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">saveCube</span><span class="p">(</span>
+    <span class="n">tn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rebin</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">register</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">cube_header</span><span class="p">:</span> <span class="n">_ot</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span><span class="n">_ot</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span><span class="o">|</span><span class="n">_ot</span><span class="o">.</span><span class="n">Header</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_ot</span><span class="o">.</span><span class="n">CubeData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates and save a cube from the fits files contained in the tn folder,</span>
+<span class="sd">    along with the command matrix and the modes vector fits.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tn : str</span>
+<span class="sd">        Tracking number of the IFFunctions data folder from which create the cu</span>
+<span class="sd">        be.</span>
+<span class="sd">    rebin : int</span>
+<span class="sd">        Rebinning factor to apply to the images before stacking them into the</span>
+<span class="sd">        cube.</span>
+<span class="sd">    register : int or tuple, optional</span>
+<span class="sd">        If not False, and int or a tuple of int must be passed as value, and</span>
+<span class="sd">        the registration algorithm is performed on the images before stacking them</span>
+<span class="sd">        into the cube. Default is False.</span>
+<span class="sd">    cube_header : dict | Header, optional</span>
+<span class="sd">        Header to be used for the cube. If None, a default header is created.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cube : masked_array</span>
+<span class="sd">        Data cube of the images, with shape (npx, npx, nmodes).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">opticalib.analyzer</span><span class="w"> </span><span class="kn">import</span> <span class="n">cubeRebinner</span><span class="p">,</span> <span class="n">createCube</span>
+
+    <span class="n">old_fold</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_ifFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
+    <span class="n">filelist</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">getFileList</span><span class="p">(</span><span class="n">fold</span><span class="o">=</span><span class="n">old_fold</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;mode_&quot;</span><span class="p">)</span>
+    <span class="n">cube</span> <span class="o">=</span> <span class="n">createCube</span><span class="p">(</span><span class="n">filelist</span><span class="p">,</span> <span class="n">register</span><span class="o">=</span><span class="n">register</span><span class="p">)</span>
+    <span class="c1"># Rebinning the cube</span>
+    <span class="k">if</span> <span class="n">rebin</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">cube</span> <span class="o">=</span> <span class="n">cubeRebinner</span><span class="p">(</span><span class="n">cube</span><span class="p">,</span> <span class="n">rebin</span><span class="p">)</span>
+    <span class="c1"># Saving the cube</span>
+    <span class="n">new_fold</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_intMatFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">new_fold</span><span class="p">):</span>
+        <span class="n">_os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">new_fold</span><span class="p">)</span>
+    <span class="n">cube_path</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_fold</span><span class="p">,</span> <span class="n">cubeFile</span><span class="p">)</span>
+    <span class="n">_osu</span><span class="o">.</span><span class="n">save_fits</span><span class="p">(</span><span class="n">cube_path</span><span class="p">,</span> <span class="n">cube</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">cube_header</span><span class="p">)</span>
+    <span class="c1"># Copying the cmdMatrix and the ModesVector into the INTMAT Folder</span>
+    <span class="n">cmat</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">load_fits</span><span class="p">(</span><span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_ifFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="s2">&quot;cmdMatrix.fits&quot;</span><span class="p">))</span>
+    <span class="n">mvec</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">load_fits</span><span class="p">(</span><span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_ifFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="s2">&quot;modesVector.fits&quot;</span><span class="p">))</span>
+    <span class="n">_osu</span><span class="o">.</span><span class="n">save_fits</span><span class="p">(</span>
+        <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_intMatFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="s2">&quot;cmdMatrix.fits&quot;</span><span class="p">),</span> <span class="n">cmat</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="n">_osu</span><span class="o">.</span><span class="n">save_fits</span><span class="p">(</span>
+        <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_intMatFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="s2">&quot;modesVector.fits&quot;</span><span class="p">),</span> <span class="n">mvec</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="c1"># Creating the flag file</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_intMatFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">flagFile</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Cube created from &#39;</span><span class="si">{</span><span class="n">old_fold</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39; data.</span><span class="se">\n</span><span class="s2">Rebin=</span><span class="si">{</span><span class="n">rebin</span><span class="si">}</span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cube saved in &#39;</span><span class="si">{</span><span class="n">cube_path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Shape: </span><span class="si">{</span><span class="n">cube</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cube</span></div>
+
+
+
+<div class="viewcode-block" id="stackCubes">
+<a class="viewcode-back" href="../../../generated/opticalib.dmutils.iff_processing.html#opticalib.dmutils.iff_processing.stackCubes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stackCubes</span><span class="p">(</span><span class="n">tnlist</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stack the cubes sontained in the corresponding tracking number folder, creating</span>
+<span class="sd">    a new cube, along with stacked command matrix and modes vector.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tnlist : list of str</span>
+<span class="sd">        List containing the tracking numbers of the cubes to stack.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    stacked_cube : masked_array</span>
+<span class="sd">        Final cube, stacked along the 3th axis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: aggiungere variabile `cubeNames: str|list[str]` che deve matchare</span>
+    <span class="c1"># `len(tnlist)` e che contiene il nome del file da caricare per ogni tn</span>
+    <span class="n">new_tn</span> <span class="o">=</span> <span class="n">_ts</span><span class="p">()</span>
+    <span class="n">stacked_cube_fold</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_fn</span><span class="o">.</span><span class="n">INTMAT_ROOT_FOLDER</span><span class="p">,</span> <span class="n">new_tn</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">stacked_cube_fold</span><span class="p">):</span>
+        <span class="n">_os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">stacked_cube_fold</span><span class="p">)</span>
+    <span class="n">cube_parameters</span> <span class="o">=</span> <span class="n">_getCubeList</span><span class="p">(</span><span class="n">tnlist</span><span class="p">)</span>
+    <span class="n">flag</span> <span class="o">=</span> <span class="n">_checkStackedCubes</span><span class="p">(</span><span class="n">tnlist</span><span class="p">)</span>
+    <span class="c1"># Stacking the cube and the matrices</span>
+    <span class="n">stacked_cube</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">cube_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">stacked_cmat</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">cube_parameters</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">stacked_mvec</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">cube_parameters</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="c1"># Saving everithing to a new file into a new tn</span>
+    <span class="n">save_cube</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stacked_cube_fold</span><span class="p">,</span> <span class="n">cubeFile</span><span class="p">)</span>
+    <span class="n">save_cmat</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stacked_cube_fold</span><span class="p">,</span> <span class="s2">&quot;cmdMatrix.fits&quot;</span><span class="p">)</span>
+    <span class="n">save_mvec</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stacked_cube_fold</span><span class="p">,</span> <span class="s2">&quot;modesVector.fits&quot;</span><span class="p">)</span>
+    <span class="n">_osu</span><span class="o">.</span><span class="n">save_fits</span><span class="p">(</span><span class="n">save_cube</span><span class="p">,</span> <span class="n">stacked_cube</span><span class="p">)</span>
+    <span class="n">_osu</span><span class="o">.</span><span class="n">save_fits</span><span class="p">(</span><span class="n">save_cmat</span><span class="p">,</span> <span class="n">stacked_cmat</span><span class="p">)</span>
+    <span class="n">_osu</span><span class="o">.</span><span class="n">save_fits</span><span class="p">(</span><span class="n">save_mvec</span><span class="p">,</span> <span class="n">stacked_mvec</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span>
+        <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stacked_cube_fold</span><span class="p">,</span> <span class="n">flagFile</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;UTF-8&quot;</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">flag</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stacked cube and matrices saved in </span><span class="si">{</span><span class="n">new_tn</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="filterZernikeCube">
+<a class="viewcode-back" href="../../../generated/opticalib.dmutils.iff_processing.html#opticalib.dmutils.iff_processing.filterZernikeCube">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">filterZernikeCube</span><span class="p">(</span>
+    <span class="n">tn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">zern_modes</span><span class="p">:</span> <span class="n">_ot</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">cube_header</span><span class="p">:</span> <span class="n">_ot</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_ot</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">_ot</span><span class="o">.</span><span class="n">Header</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">_ot</span><span class="o">.</span><span class="n">CubeData</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function which filters out the desired zernike modes from a cube.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tn : str</span>
+<span class="sd">        Tracking number of the cube to filter.</span>
+<span class="sd">    zern_modes : list, optional</span>
+<span class="sd">        List of zernike modes to filter out. The default is [1,2,3]</span>
+<span class="sd">        (piston, tip and tilt).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ffcube : masked array</span>
+<span class="sd">        Filtered cube.</span>
+<span class="sd">    new_tn : str</span>
+<span class="sd">        Tracking Number of the new folder where the filtered cube is saved.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">new_tn</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_intMatFold</span><span class="p">,</span> <span class="n">_ts</span><span class="p">())</span>
+    <span class="n">_os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">new_tn</span><span class="p">)</span>
+    <span class="n">oldCube</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_intMatFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">cubeFile</span><span class="p">)</span>
+    <span class="n">ocFlag</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_intMatFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">flagFile</span><span class="p">)</span>
+    <span class="n">newCube</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_tn</span><span class="p">,</span> <span class="n">cubeFile</span><span class="p">)</span>
+    <span class="n">newFlag</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_tn</span><span class="p">,</span> <span class="n">flagFile</span><span class="p">)</span>
+    <span class="n">CmdMat</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_intMatFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">cmdMatFile</span><span class="p">)</span>
+    <span class="n">ModesVec</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_intMatFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">modesVecFile</span><span class="p">)</span>
+    <span class="n">cube</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">load_fits</span><span class="p">(</span><span class="n">oldCube</span><span class="p">)</span>
+    <span class="n">zern2filter</span> <span class="o">=</span> <span class="n">zern_modes</span> <span class="k">if</span> <span class="n">zern_modes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+    <span class="n">fcube</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cube</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">filtered</span> <span class="o">=</span> <span class="n">_zern</span><span class="o">.</span><span class="n">removeZernike</span><span class="p">(</span><span class="n">cube</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">zern2filter</span><span class="p">)</span>
+        <span class="n">fcube</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filtered</span><span class="p">)</span>
+    <span class="n">ffcube</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">fcube</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cube_header</span><span class="p">:</span>
+            <span class="n">zern2filter</span> <span class="o">=</span> <span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">zern2filter</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span>
+            <span class="n">cube_header</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;FILTERED&quot;</span><span class="p">:</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;whether the cube has zernike removed or not&quot;</span><span class="p">),</span>
+                    <span class="s2">&quot;ZREMOVED&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">zern2filter</span><span class="p">,</span> <span class="s2">&quot;the zernike modes removed&quot;</span><span class="p">),</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="n">_osu</span><span class="o">.</span><span class="n">save_fits</span><span class="p">(</span><span class="n">newCube</span><span class="p">,</span> <span class="n">ffcube</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">cube_header</span><span class="p">)</span>
+        <span class="n">_sh</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">CmdMat</span><span class="p">,</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_tn</span><span class="p">,</span> <span class="n">cmdMatFile</span><span class="p">))</span>
+        <span class="n">_sh</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">ModesVec</span><span class="p">,</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_tn</span><span class="p">,</span> <span class="n">modesVecFile</span><span class="p">))</span>
+        <span class="c1"># DEPRECATION : Flag file deprecated and will be removed in the future</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ocFlag</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">oflag</span><span class="p">:</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">oflag</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">flag</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">flag</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Zernike modes filtered = </span><span class="si">{</span><span class="n">zern2filter</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">newFlag</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">nflag</span><span class="p">:</span>
+            <span class="n">nflag</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Filtered cube saved at </span><span class="si">{</span><span class="n">new_tn</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ffcube</span><span class="p">,</span> <span class="n">new_tn</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="iffRedux">
+<a class="viewcode-back" href="../../../generated/opticalib.dmutils.iff_processing.html#opticalib.dmutils.iff_processing.iffRedux">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">iffRedux</span><span class="p">(</span>
+    <span class="n">tn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">fileMat</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+    <span class="n">ampVect</span><span class="p">:</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">modeList</span><span class="p">:</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">template</span><span class="p">:</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reduction function that performs the push-pull analysis on each mode, saving</span>
+<span class="sd">    out the final processed image for each mode.&lt;br&gt;</span>
+<span class="sd">    The differential algorithm for each mode is the sum over the push-pull</span>
+<span class="sd">    realizations of the images, and it is performed as follows:</span>
+
+<span class="sd">    :math::</span>
+<span class="sd">        \\sum_i \\dfrac{I_i \\cdot t_i - I_{i-1}\\cdot t_{i-1}}{A\\cdot(n-1)}</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tn : str</span>
+<span class="sd">        Tracking number of the data in the OPDImages folder.</span>
+<span class="sd">    fileMat : ndarray</span>
+<span class="sd">        A matrix of images in string format, in which each row is a mode and the</span>
+<span class="sd">        columns are its template realization.</span>
+<span class="sd">    ampVect : float | ArrayLike</span>
+<span class="sd">        Vector containing the amplitude for each commanded mode.</span>
+<span class="sd">    modeList : int | ArrayLike</span>
+<span class="sd">        Vector conaining the list of commanded modes.</span>
+<span class="sd">    template : int | ArrayLike</span>
+<span class="sd">        Template for the push-pull command actuation.</span>
+<span class="sd">    shuffle : int, optional</span>
+<span class="sd">        A value different from 0 activates the shuffle option, and the imput</span>
+<span class="sd">        value is the number of repetition for each mode&#39;s push-pull packet. The</span>
+<span class="sd">        default is 0, which means the shuffle is OFF.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fold</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_ifFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
+    <span class="n">nmodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">modeList</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nmodes</span><span class="p">):</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">pushPullRedux</span><span class="p">(</span><span class="n">fileMat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> <span class="n">template</span><span class="p">,</span> <span class="n">shuffle</span><span class="p">)</span>
+        <span class="n">norm_img</span> <span class="o">=</span> <span class="n">img</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ampVect</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">img_name</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fold</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;mode_</span><span class="si">{</span><span class="n">modeList</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">:</span><span class="s2">04d</span><span class="si">}</span><span class="s2">.fits&quot;</span><span class="p">)</span>
+        <span class="c1"># header = _header()</span>
+        <span class="c1"># header[&quot;MODEID&quot;] = modeList[i]</span>
+        <span class="c1"># header[&quot;AMP&quot;] = (ampVect[i], &#39;mode amplitude&#39;)</span>
+        <span class="c1"># header[&quot;TEMPLATE&quot;] = str(template)</span>
+        <span class="n">_osu</span><span class="o">.</span><span class="n">save_fits</span><span class="p">(</span><span class="n">img_name</span><span class="p">,</span> <span class="n">norm_img</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="pushPullRedux">
+<a class="viewcode-back" href="../../../generated/opticalib.dmutils.iff_processing.html#opticalib.dmutils.iff_processing.pushPullRedux">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pushPullRedux</span><span class="p">(</span>
+    <span class="n">fileVec</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">template</span><span class="p">:</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">shuffle</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ImageData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs the basic operation of processing PushPull data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fileVec : string | array</span>
+<span class="sd">        It is a row in the fileMat (the organized matrix of the images filename),</span>
+<span class="sd">        corresponding to all the realizations of the same mode (or act), with a</span>
+<span class="sd">        given template. If shuffle option has been used, the fileMat (and fileVec)</span>
+<span class="sd">        shall be reorganized before running the script.</span>
+<span class="sd">    template: int | ArrayLike</span>
+<span class="sd">        Template for the PushPull acquisition.</span>
+<span class="sd">    shuffle: int, optional</span>
+<span class="sd">        A value different from 0 activates the shuffle option, and the imput</span>
+<span class="sd">        value is the number of repetition for each mode&#39;s templated sampling.</span>
+<span class="sd">        The default value is 0, which means the shuffle option is OFF.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    image: masked_array</span>
+<span class="sd">        Final processed mode&#39;s image.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">image_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">template</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">ima</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">read_phasemap</span><span class="p">(</span><span class="n">fileVec</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">image_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ima</span><span class="p">)</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ima</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ima</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="n">shuffle</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">template</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">image_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">template</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">master_mask</span> <span class="o">=</span> <span class="n">image_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_list</span><span class="p">)):</span>
+                <span class="n">opd2add</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">image_list</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">*</span> <span class="n">template</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">+</span> <span class="n">image_list</span><span class="p">[</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">template</span><span class="p">[</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">master_mask2add</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">mask_or</span><span class="p">(</span>
+                    <span class="n">image_list</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">image_list</span><span class="p">[</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">master_mask</span> <span class="o">=</span> <span class="n">master_mask2add</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">master_mask</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">mask_or</span><span class="p">(</span><span class="n">master_mask</span><span class="p">,</span> <span class="n">master_mask2add</span><span class="p">)</span>
+                <span class="n">image</span> <span class="o">+=</span> <span class="n">opd2add</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Shuffle option&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">shuffle</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="n">opd2add</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">image_list</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="n">x</span><span class="p">]</span> <span class="o">*</span> <span class="n">template</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+                    <span class="o">+</span> <span class="n">image_list</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">template</span><span class="p">[</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">master_mask2add</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">mask_or</span><span class="p">(</span>
+                    <span class="n">image_list</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">image_list</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">master_mask</span> <span class="o">=</span> <span class="n">master_mask2add</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">master_mask</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">na</span><span class="o">.</span><span class="n">mask_or</span><span class="p">(</span><span class="n">master_mask</span><span class="p">,</span> <span class="n">master_mask2add</span><span class="p">)</span>
+                <span class="n">image</span> <span class="o">+=</span> <span class="n">opd2add</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">master_mask</span><span class="p">)</span> <span class="o">/</span> <span class="n">_np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+        <span class="p">((</span><span class="n">template</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>  <span class="c1">#!!!</span>
+    <span class="k">return</span> <span class="n">image</span></div>
+
+
+
+<div class="viewcode-block" id="registrationRedux">
+<a class="viewcode-back" href="../../../generated/opticalib.dmutils.iff_processing.html#opticalib.dmutils.iff_processing.registrationRedux">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">registrationRedux</span><span class="p">(</span><span class="n">tn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fileMat</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">_ot</span><span class="o">.</span><span class="n">ImageData</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reduction function that performs the push-pull analysis on the registration</span>
+<span class="sd">    data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fileMat : ndarray</span>
+<span class="sd">        A matrix of images in string format, in which each row is a mode and the</span>
+<span class="sd">        columns are its template realization.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    imgList : ArrayLike</span>
+<span class="sd">        List of the processed registration images.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">infoR</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_getAcqInfo</span><span class="p">(</span><span class="n">tn</span><span class="p">)</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">infoR</span><span class="p">[</span><span class="s2">&quot;template&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">_np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">fileMat</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">([]))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">infoR</span><span class="p">[</span><span class="s2">&quot;modesid&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No registration data found&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">nActs</span> <span class="o">=</span> <span class="n">fileMat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">imglist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nActs</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">pushPullRedux</span><span class="p">(</span><span class="n">fileMat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> <span class="n">template</span><span class="p">)</span>
+        <span class="n">imglist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="c1"># cube = _np.ma.masked_array(imglist)</span>
+    <span class="c1"># _osu.save_fits(_os.path.join(_intMatFold, tn, &quot;regActCube.fits&quot;), cube)</span>
+    <span class="k">return</span> <span class="n">imglist</span></div>
+
+
+
+<div class="viewcode-block" id="findFrameOffset">
+<a class="viewcode-back" href="../../../generated/opticalib.dmutils.iff_processing.html#opticalib.dmutils.iff_processing.findFrameOffset">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">findFrameOffset</span><span class="p">(</span>
+    <span class="n">tn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">imglist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_ot</span><span class="o">.</span><span class="n">ImageData</span><span class="p">],</span> <span class="n">actlist</span><span class="p">:</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function computes the position difference between the current frame and</span>
+<span class="sd">    a reference one.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tn : str</span>
+<span class="sd">        Tracking number</span>
+<span class="sd">    imglist : list | masked arrays</span>
+<span class="sd">        List of the actuator images to be used</span>
+<span class="sd">    actlist: int | array</span>
+<span class="sd">        List of actuators (index)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dp: float</span>
+<span class="sd">        Position difference</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">actCoordFile</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_ifFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">coordfile</span><span class="p">)</span>
+    <span class="n">actCoord</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">load_fits</span><span class="p">(</span><span class="n">actCoordFile</span><span class="p">)</span>
+    <span class="n">xy</span> <span class="o">=</span> <span class="n">_fa</span><span class="o">.</span><span class="n">findFrameCoord</span><span class="p">(</span><span class="n">imglist</span><span class="p">,</span> <span class="n">actlist</span><span class="p">,</span> <span class="n">actCoord</span><span class="p">)</span> <span class="c1"># type: ignore</span>
+    <span class="n">dp</span> <span class="o">=</span> <span class="n">xy</span> <span class="o">-</span> <span class="n">_frameCenter</span>
+    <span class="k">return</span> <span class="n">dp</span></div>
+
+
+
+<div class="viewcode-block" id="getTriggerFrame">
+<a class="viewcode-back" href="../../../generated/opticalib.dmutils.iff_processing.html#opticalib.dmutils.iff_processing.getTriggerFrame">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">getTriggerFrame</span><span class="p">(</span><span class="n">tn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">roi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Analyze the tracking number&#39;s images list and search for the trigger frame.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tn : str</span>
+<span class="sd">        Tracking number of the data in the OPDImages folder.</span>
+<span class="sd">    amplitude : int or float, optional</span>
+<span class="sd">        Amplitude of the commanded trigger mode, which serves as the check value</span>
+<span class="sd">        for finding the frame. If no value is passed it is loaded from the iffConfig.ini</span>
+<span class="sd">        file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    trigFrame : int</span>
+<span class="sd">        Index which identifies the trigger frame in the images folder file list.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    RuntimeError</span>
+<span class="sd">        Error raised if the file iteration goes beyon the expected trigger frame</span>
+<span class="sd">        wich can be inferred through the number of trigger zeros in the iffConfig.ini</span>
+<span class="sd">        file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">infoT</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_getAcqInfo</span><span class="p">(</span><span class="n">tn</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">amplitude</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">infoT</span><span class="p">[</span><span class="s2">&quot;amplitude&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">amplitude</span>
+    <span class="n">fileList</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">getFileList</span><span class="p">(</span><span class="n">tn</span><span class="p">)</span>
+    <span class="n">img0</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">read_phasemap</span><span class="p">(</span><span class="n">fileList</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">go</span> <span class="o">=</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">thresh</span> <span class="o">=</span> <span class="n">infoT</span><span class="p">[</span><span class="s2">&quot;amplitude&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">_np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trigger threshold: </span><span class="si">{</span><span class="n">thresh</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">infoT</span><span class="p">[</span><span class="s2">&quot;zeros&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">infoT</span><span class="p">[</span><span class="s2">&quot;modes&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">trigFrame</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">trigFrame</span>
+    <span class="n">listout</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="n">go</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">img1</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">read_phasemap</span><span class="p">(</span><span class="n">fileList</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rois</span> <span class="o">=</span> <span class="n">_roi</span><span class="o">.</span><span class="n">roiGenerator</span><span class="p">(</span><span class="n">img0</span><span class="p">)</span>
+            <span class="n">roi2use</span> <span class="o">=</span> <span class="n">rois</span><span class="p">[</span><span class="n">roi</span><span class="p">]</span>
+            <span class="n">_</span><span class="o">=</span><span class="n">rois</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rois</span><span class="p">:</span>
+                <span class="n">img1</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">r</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">img0</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">r</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">rr2check</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">_zern</span><span class="o">.</span><span class="n">removeZernike</span><span class="p">(</span><span class="n">img1</span> <span class="o">-</span> <span class="n">img0</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Frame </span><span class="si">{</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2">: std = </span><span class="si">{</span><span class="n">rr2check</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">go</span> <span class="o">&gt;</span> <span class="n">infoT</span><span class="p">[</span><span class="s2">&quot;zeros&quot;</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Frame </span><span class="si">{</span><span class="n">go</span><span class="si">}</span><span class="s2">. Heading Zeros exceeded: std = </span><span class="si">{</span><span class="n">rr2check</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2"> &lt; </span><span class="si">{</span><span class="n">thresh</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2"> (Amp/sqrt(3))&quot;</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="n">rr2check</span> <span class="o">&gt;</span> <span class="n">thresh</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;↑ Trigger Frame found!&quot;</span><span class="p">)</span>
+            <span class="n">go</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">go</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">img0</span> <span class="o">=</span> <span class="n">img1</span>
+    <span class="n">trigFrame</span> <span class="o">=</span> <span class="n">i</span>
+    <span class="k">return</span> <span class="n">trigFrame</span></div>
+
+
+
+<div class="viewcode-block" id="getRegFileMatrix">
+<a class="viewcode-back" href="../../../generated/opticalib.dmutils.iff_processing.html#opticalib.dmutils.iff_processing.getRegFileMatrix">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">getRegFileMatrix</span><span class="p">(</span><span class="n">tn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">roi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Search for the registration frames in the images file list, and creates the</span>
+<span class="sd">    registration file matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tn : str</span>
+<span class="sd">        Tracking number of the data in the OPDImages folder.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    regEnd : int</span>
+<span class="sd">        Index which identifies the last registration frame in the images file</span>
+<span class="sd">        list.</span>
+<span class="sd">    regMat : ndarray</span>
+<span class="sd">        A matrix of images in string format, containing the registration frames.</span>
+<span class="sd">        It has shape (registration_modes, n_push_pull).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_osu</span><span class="o">.</span><span class="n">is_tn</span><span class="p">(</span><span class="n">tn</span><span class="p">):</span>
+        <span class="n">fold</span> <span class="o">=</span> <span class="n">tn</span><span class="p">[:</span><span class="o">-</span><span class="mi">15</span><span class="p">]</span>
+        <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">fold</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="n">fold</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">fileList</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">getFileList</span><span class="p">(</span><span class="n">tn</span><span class="p">,</span> <span class="n">fold</span><span class="o">=</span><span class="n">fold</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">infoR</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_getAcqInfo</span><span class="p">(</span><span class="n">tn</span><span class="p">)</span>
+    <span class="n">timing</span> <span class="o">=</span> <span class="n">_rif</span><span class="o">.</span><span class="n">getTiming</span><span class="p">()</span>
+    <span class="n">trigFrame</span> <span class="o">=</span> <span class="n">getTriggerFrame</span><span class="p">(</span><span class="n">tn</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">infoR</span><span class="p">[</span><span class="s2">&quot;zeros&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">infoR</span><span class="p">[</span><span class="s2">&quot;modes&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">regStart</span> <span class="o">=</span> <span class="n">regEnd</span> <span class="o">=</span> <span class="p">(</span><span class="n">trigFrame</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">trigFrame</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">regStart</span> <span class="o">=</span> <span class="n">trigFrame</span> <span class="o">+</span> <span class="n">infoR</span><span class="p">[</span><span class="s2">&quot;zeros&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">timing</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="n">trigFrame</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">regEnd</span> <span class="o">=</span> <span class="n">regStart</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">infoR</span><span class="p">[</span><span class="s2">&quot;modes&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">infoR</span><span class="p">[</span><span class="s2">&quot;template&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="n">timing</span>
+    <span class="n">regList</span> <span class="o">=</span> <span class="n">fileList</span><span class="p">[</span><span class="n">regStart</span><span class="p">:</span><span class="n">regEnd</span><span class="p">]</span>
+    <span class="n">regMat</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">regList</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">infoR</span><span class="p">[</span><span class="s2">&quot;modes&quot;</span><span class="p">]),</span> <span class="nb">len</span><span class="p">(</span><span class="n">infoR</span><span class="p">[</span><span class="s2">&quot;template&quot;</span><span class="p">])))</span>
+    <span class="k">return</span> <span class="n">regEnd</span><span class="p">,</span> <span class="n">regMat</span></div>
+
+
+
+<div class="viewcode-block" id="getIffFileMatrix">
+<a class="viewcode-back" href="../../../generated/opticalib.dmutils.iff_processing.html#opticalib.dmutils.iff_processing.getIffFileMatrix">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">getIffFileMatrix</span><span class="p">(</span><span class="n">tn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">roi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates the iffMat</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tn : str</span>
+<span class="sd">        Tracking number of the data in the OPDImages folder.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    iffMat : ndarray</span>
+<span class="sd">        A matrix of images in string format, conatining all the images for the</span>
+<span class="sd">        IFF acquisition, that is all the modes with each push-pull realization.</span>
+<span class="sd">        It has shape (modes, n_push_pull)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_osu</span><span class="o">.</span><span class="n">is_tn</span><span class="p">(</span><span class="n">tn</span><span class="p">):</span>
+        <span class="n">fold</span> <span class="o">=</span> <span class="n">tn</span><span class="p">[:</span><span class="o">-</span><span class="mi">15</span><span class="p">]</span>
+        <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">fold</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="n">fold</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">fileList</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">getFileList</span><span class="p">(</span><span class="n">tn</span><span class="p">,</span> <span class="n">fold</span><span class="o">=</span><span class="n">fold</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">infoIF</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_getAcqInfo</span><span class="p">(</span><span class="n">tn</span><span class="p">)</span>
+    <span class="n">regEnd</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">getRegFileMatrix</span><span class="p">(</span><span class="n">tn</span><span class="p">,</span> <span class="n">roi</span><span class="p">)</span>
+    <span class="n">n_useful_frames</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">infoIF</span><span class="p">[</span><span class="s2">&quot;modes&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">infoIF</span><span class="p">[</span><span class="s2">&quot;template&quot;</span><span class="p">])</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">regEnd</span> <span class="o">+</span> <span class="n">infoIF</span><span class="p">[</span><span class="s2">&quot;zeros&quot;</span><span class="p">]</span> 
+    <span class="n">iffList</span> <span class="o">=</span> <span class="n">fileList</span><span class="p">[</span><span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="o">+</span> <span class="n">n_useful_frames</span><span class="p">]</span>
+    <span class="n">iffMat</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">iffList</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">infoIF</span><span class="p">[</span><span class="s2">&quot;modes&quot;</span><span class="p">]),</span> <span class="nb">len</span><span class="p">(</span><span class="n">infoIF</span><span class="p">[</span><span class="s2">&quot;template&quot;</span><span class="p">])))</span>
+    <span class="k">return</span> <span class="n">iffMat</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_getCubeList</span><span class="p">(</span>
+    <span class="n">tnlist</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">_ot</span><span class="o">.</span><span class="n">ImageData</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">_ot</span><span class="o">.</span><span class="n">MatrixLike</span><span class="p">],</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retireves the cubes from each tn in the tnlist.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tnlist : list of str</span>
+<span class="sd">        List containing the tracking number of the cubes to stack.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cubeList : list of masked_array</span>
+<span class="sd">        List containing the cubes to stack.</span>
+<span class="sd">    matrixList : list of ndarray</span>
+<span class="sd">        List containing the command matrices for each cube.</span>
+<span class="sd">    modesVectList : list of ndarray</span>
+<span class="sd">        List containing the modes vectors for each cube.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cubeList</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">matrixList</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">modesVectList</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">rebins</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">tn</span> <span class="ow">in</span> <span class="n">tnlist</span><span class="p">:</span>
+        <span class="n">fold</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_intMatFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
+        <span class="n">cube_name</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fold</span><span class="p">,</span> <span class="s2">&quot;IMCube.fits&quot;</span><span class="p">)</span>
+        <span class="n">matrix_name</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fold</span><span class="p">,</span> <span class="s2">&quot;cmdMatrix.fits&quot;</span><span class="p">)</span>
+        <span class="n">modesVec_name</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fold</span><span class="p">,</span> <span class="s2">&quot;modesVector.fits&quot;</span><span class="p">)</span>
+        <span class="n">flag_file</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fold</span><span class="p">,</span> <span class="s2">&quot;flag.txt&quot;</span><span class="p">)</span>
+        <span class="n">cubeList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_osu</span><span class="o">.</span><span class="n">load_fits</span><span class="p">(</span><span class="n">cube_name</span><span class="p">))</span>
+        <span class="n">matrixList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_osu</span><span class="o">.</span><span class="n">load_fits</span><span class="p">(</span><span class="n">matrix_name</span><span class="p">))</span>
+        <span class="n">modesVectList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_osu</span><span class="o">.</span><span class="n">load_fits</span><span class="p">(</span><span class="n">modesVec_name</span><span class="p">))</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">flag_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;UTF-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">rebins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">flag</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">rebin</span> <span class="o">==</span> <span class="n">rebins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">rebin</span> <span class="ow">in</span> <span class="n">rebins</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cubes have different rebinning factors&quot;</span><span class="p">)</span>
+    <span class="n">rebin</span> <span class="o">=</span> <span class="n">rebins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">cubeList</span><span class="p">,</span> <span class="n">matrixList</span><span class="p">,</span> <span class="n">modesVectList</span><span class="p">,</span> <span class="n">rebin</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_getAcqPar</span><span class="p">(</span>
+    <span class="n">tn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads ad returns the acquisition parameters from fits files.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tn : str</span>
+<span class="sd">        Tracking number of the data in the OPDImages folder.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ampVector : float | ArrayLike</span>
+<span class="sd">        Vector containg the amplitude of each commanded mode.</span>
+<span class="sd">    modesVector : int | ArrayLike</span>
+<span class="sd">        Vector containing the list of commanded modes.</span>
+<span class="sd">    template : int | ArrayLike</span>
+<span class="sd">        Sampling template ampplied on each mode.</span>
+<span class="sd">    indexList : int | ArrayLike</span>
+<span class="sd">        Indexing of the modes inside the commanded matrix.</span>
+<span class="sd">    registrationActs : int | ArrayLike</span>
+<span class="sd">        Vector containing the commanded actuators for the registration.</span>
+<span class="sd">    shuffle : int</span>
+<span class="sd">        Shuffle information. If it&#39;s nor 0, the values indicates the number of</span>
+<span class="sd">        template sampling repetition for each mode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_ifFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
+    <span class="n">ampVector</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">load_fits</span><span class="p">(</span><span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">ampVecFile</span><span class="p">))</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">load_fits</span><span class="p">(</span><span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">templateFile</span><span class="p">))</span>
+    <span class="n">modesVector</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">load_fits</span><span class="p">(</span><span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">modesVecFile</span><span class="p">))</span>
+    <span class="n">indexList</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">load_fits</span><span class="p">(</span><span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">indexListFile</span><span class="p">))</span>
+    <span class="n">registrationActs</span> <span class="o">=</span> <span class="n">_osu</span><span class="o">.</span><span class="n">load_fits</span><span class="p">(</span><span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">regisActFile</span><span class="p">))</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">shuffleFile</span><span class="p">),</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;UTF-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">shf</span><span class="p">:</span>
+        <span class="n">shuffle</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">shf</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">ampVector</span><span class="p">,</span> <span class="n">modesVector</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">indexList</span><span class="p">,</span> <span class="n">registrationActs</span><span class="p">,</span> <span class="n">shuffle</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_getAcqInfo</span><span class="p">(</span>
+    <span class="n">tn</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_ot</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_ot</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_ot</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_ot</span><span class="o">.</span><span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the information read from the iffConfig.ini file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tn : str, optional</span>
+<span class="sd">        Tracking number of the data in the IFFunctions folder. The default is None,</span>
+<span class="sd">        which points to configuration root folder.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    infoT : dict</span>
+<span class="sd">        Information read about the TRIGGER options.</span>
+<span class="sd">    infoR : dict</span>
+<span class="sd">        Information read about the REGISTRATION options.</span>
+<span class="sd">    infoIF : dict</span>
+<span class="sd">        Information read about the IFFUNC option.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_ifFold</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span> <span class="k">if</span> <span class="n">tn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_fn</span><span class="o">.</span><span class="n">CONFIGURATION_FOLDER</span>
+    <span class="n">infoT</span> <span class="o">=</span> <span class="n">_rif</span><span class="o">.</span><span class="n">getIffConfig</span><span class="p">(</span><span class="s2">&quot;TRIGGER&quot;</span><span class="p">,</span> <span class="n">bpath</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">infoR</span> <span class="o">=</span> <span class="n">_rif</span><span class="o">.</span><span class="n">getIffConfig</span><span class="p">(</span><span class="s2">&quot;REGISTRATION&quot;</span><span class="p">,</span> <span class="n">bpath</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">infoIF</span> <span class="o">=</span> <span class="n">_rif</span><span class="o">.</span><span class="n">getIffConfig</span><span class="p">(</span><span class="s2">&quot;IFFUNC&quot;</span><span class="p">,</span> <span class="n">bpath</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">infoDM</span> <span class="o">=</span> <span class="n">_rif</span><span class="o">.</span><span class="n">getDmIffConfig</span><span class="p">(</span><span class="n">bpath</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">infoT</span><span class="p">,</span> <span class="n">infoR</span><span class="p">,</span> <span class="n">infoIF</span><span class="p">,</span> <span class="n">infoDM</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_checkStackedCubes</span><span class="p">(</span><span class="n">tnlist</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_ot</span><span class="o">.</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inspect the cubes to stack, to check whether there are shared modes, or not.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tnlist : list of str</span>
+<span class="sd">        List containing the tracking number of the cubes to stack.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    flag : dict</span>
+<span class="sd">        Dictionary containing the flagging information about the stacked cube,</span>
+<span class="sd">        to be later dump into the &#39;flag.txt&#39; file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">modesVectList</span><span class="p">,</span> <span class="n">rebin</span> <span class="o">=</span> <span class="n">_getCubeList</span><span class="p">(</span><span class="n">tnlist</span><span class="p">)</span>
+    <span class="n">nmodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">modesVectList</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">nvects</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">modesVectList</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nvects</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nvects</span><span class="p">):</span>
+            <span class="n">common_modes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">modesVectList</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">modesVectList</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+    <span class="n">c_nmodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">common_modes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">c_nmodes</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nmodes</span><span class="p">):</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">__flag</span><span class="p">(</span><span class="n">tnlist</span><span class="p">,</span> <span class="n">modesVectList</span><span class="p">,</span> <span class="n">rebin</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">c_nmodes</span> <span class="o">==</span> <span class="n">nmodes</span><span class="p">:</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">__flag</span><span class="p">(</span><span class="n">tnlist</span><span class="p">,</span> <span class="n">modesVectList</span><span class="p">,</span> <span class="n">rebin</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">__flag</span><span class="p">(</span><span class="n">tnlist</span><span class="p">,</span> <span class="n">modesVectList</span><span class="p">,</span> <span class="n">rebin</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">flag</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">__flag</span><span class="p">(</span>
+    <span class="n">tnlist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">modesVectList</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">],</span>
+    <span class="n">rebin</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_ot</span><span class="o">.</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates the dictionary to dump into the &#39;flag.txt&#39; file accordingly to</span>
+<span class="sd">    sequentially stacked cubes with no repeated modes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tnlist : list of str</span>
+<span class="sd">        List containing the tracking number of the cubes to stack.</span>
+<span class="sd">    modesVectList : list of ndarray</span>
+<span class="sd">        A list containing the modes vectors for each cube.</span>
+<span class="sd">    type : int</span>
+<span class="sd">        Type of stacked cube created.</span>
+<span class="sd">        0 for sequential, 1 for mean, 2 for shared modes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    config : dict</span>
+<span class="sd">        Dictionary containing the flagging information about the stacked cube.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c_type</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;Sequentially stacked cubes&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Mean of cubes&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;!!!Warning: repeated modes in stacked cube&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">tn</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tnlist</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">_np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span>
+            <span class="n">modesVectList</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">_np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">modesVectList</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">modesVectList</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="p">):</span>
+            <span class="n">text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="si">{</span><span class="n">tn</span><span class="si">}</span><span class="s2">, modes </span><span class="si">{</span><span class="n">modesVectList</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">modesVectList</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="si">{</span><span class="n">tn</span><span class="si">}</span><span class="s2">, modes </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">modesVectList</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
+    <span class="n">flag</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Flag&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;Rebin&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">rebin</span><span class="p">),</span>
+            <span class="s2">&quot;Cube type&quot;</span><span class="p">:</span> <span class="n">c_type</span><span class="p">[</span><span class="nb">type</span><span class="p">],</span>
+            <span class="s2">&quot;Source cubes&quot;</span><span class="p">:</span> <span class="n">text</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">_config</span><span class="p">[</span><span class="s2">&quot;Flag&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">flag</span><span class="p">[</span><span class="s2">&quot;Flag&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">_config</span><span class="p">[</span><span class="s2">&quot;Flag&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="n">_config</span>
+
+
+<span class="c1"># TODO</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_ampReorganization</span><span class="p">(</span><span class="n">ampVector</span><span class="p">:</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">):</span>
+    <span class="n">reorganizaed_amps</span> <span class="o">=</span> <span class="n">ampVector</span>
+    <span class="k">return</span> <span class="n">reorganizaed_amps</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_modesReorganization</span><span class="p">(</span><span class="n">modesVector</span><span class="p">:</span> <span class="n">_ot</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">):</span>
+    <span class="n">reorganizaed_modes</span> <span class="o">=</span> <span class="n">modesVector</span>
+    <span class="k">return</span> <span class="n">reorganizaed_modes</span>
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, opticalib contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

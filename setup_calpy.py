@@ -114,7 +114,6 @@ no option : Initialize an IPython --pylab=qt shell
                 sys.exit(1)
         from opticalib.core.root import create_configuration_file
         create_configuration_file(config_path, data_path=True)
-        print(f"Configuration file created at: {config_path}")
         sys.exit(0)
     elif len(sys.argv) == 1:
         # Start plain IPython pylab session with Qt integration
