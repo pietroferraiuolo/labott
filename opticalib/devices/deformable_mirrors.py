@@ -255,6 +255,7 @@ class SplattDm(_api.base_devices.BaseDeformableMirror):
         delay: int | float = 0.2,
         save: _ot.Optional[str] = None,
         differential: bool = True,
+        read_nuffers: bool = False,
     ) -> str:
         if self.cmdHistory is None:
             raise _oe.MatrixError("No Command History to run!")
@@ -263,6 +264,8 @@ class SplattDm(_api.base_devices.BaseDeformableMirror):
             print(f"{tn} - {self.cmdHistory.shape[-1]} images to go.")
             datafold = _os.path.join(self.baseDataPath, tn)
             s = self._dm.get_position_command()  # self._dm.flatPos # self.get_shape()
+            if read_buffers is True:
+                delay = 0.0
             if not _os.path.exists(datafold) and interf is not None:
                 _os.mkdir(datafold)
             for i, cmd in enumerate(self.cmdHistory.T):
@@ -270,6 +273,11 @@ class SplattDm(_api.base_devices.BaseDeformableMirror):
                 if differential:
                     cmd = cmd + s
                 self.set_shape(cmd)
+                if read_buffers is True:
+                    pos,cur,bufTN = self._dm.read_buffers(external=true, n_samples=300)
+                    path = _os.path.join(datafold, f'buffer_{i:05d}.fits')
+                    hdr_dict = {'BUF_TN': str(bufTN)}
+                    _sf(path, [pos,cur], hdr_dict)
                 if interf is not None:
                     _time.sleep(delay)
                     img = interf.acquire_map()
@@ -277,6 +285,9 @@ class SplattDm(_api.base_devices.BaseDeformableMirror):
                     _sf(path, img)
         self.set_shape(s)
         return tn
+
+    def plot_command(self, cmd):
+        self._dm.plot_splatt_vec(cmd)
 
     def sendBufferCommand(
         self, cmd: _ot.ArrayLike, differential: bool = False, delay: int | float = 1.0
@@ -296,6 +307,10 @@ class SplattDm(_api.base_devices.BaseDeformableMirror):
     @property
     def nActuators(self) -> int:
         return self.nActs
+
+    def integratePosition(self, Nits:int = 3):
+        self._dm._eng.send(f'splattIntegrateMeasPos({Nits})')
+
 
     def _checkCmdIntegrity(self, cmd: _ot.ArrayLike) -> None:
         pos = cmd + self._dm.flatPos

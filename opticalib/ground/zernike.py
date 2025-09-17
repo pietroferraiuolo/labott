@@ -171,7 +171,7 @@ def zernikeFit(
     """
     img1 = image.data
     mask = _np.invert(image.mask).astype(int)
-    xx, yy = _geo.qpupil(mask) if qpupil else _geo.qpupil_circle(image)
+    _,_,_, xx, yy = _geo.qpupil(mask) if qpupil else _geo.qpupil_circle(image)
     sx, sy = img1.shape
     pixsc = xx[1, 0] - xx[0, 0]
     rpix = 1/pixsc
@@ -182,8 +182,8 @@ def zernikeFit(
     zgen = ZernikeGenerator(cmask)
 
     # mm = mask == 1
-    mm = zgen._boolean_mask == 0
-    img2 = _np.ma.masked_array(img1, mask=zgen._boolean_mask)
+    mm = zgen._boolean_mask.copy() 
+    img2 = _np.ma.masked_array(img1, mask=mm)
     #TO BE REMOVED old_coeffs = _osurf_fit(xx[mm], yy[mm], img1[mm], zernike_index_vector)
     coeffs, mat = _surf_fit(img2, zgen, zernike_index_vector)
     #TO BE REMOVED print(old_coeffs)
@@ -220,8 +220,10 @@ def zernikeFitAuxmask(
         tmp = auxmask
     cmask = CircularMask.fromMaskedArray(tmp, mask=tmp.mask)
     zgen = ZernikeGenerator(cmask)
-    zgen._boolean_mask = auxmask == 0
-    img2 = _np.ma.masked_array(image.data, mask=zgen._boolean_mask)
+    _ = zgen.getZernike(1)#to initialize the ZGen
+    #img2 = _np.ma.masked_array(image.data, mask=auxmask ==0)  #same error as surf Fit. we want that the image2Fit has its own valid mask, not the auxmask. the auxmask is requested only to compute the Zernike
+    img2 = image.copy()
+
     coeffs, mat= _surf_fit(img2, zgen, zernike_index_vector)
     return coeffs, mat
 
@@ -279,14 +281,19 @@ def _surf_fit(
     mat : numpy array
         Matrix of Zernike polynomials.
     """
-    tmp = _np.ma.masked_array(zz.data, zgen._boolean_mask)
+    #tmp = _np.ma.masked_array(zz.data, zgen._boolean_mask)
+    tmp = zz.copy()  #_np.ma.masked_array(zz.data, zgen._boolean_mask)
+
+    tmp_mask = tmp.mask ==0
 
     if ordering not in ["noll"]:
         raise ValueError("ordering currently supported is only 'noll'")
     mat = []
     for zmode in zlist:
-        mat.append(zgen.getZernike(zmode).compressed())
-    A = _np.array(mat).T
+        vv = zgen.getZernike(zmode)
+        mat.append(vv[tmp_mask])
+    mat = _np.array(mat)
+    A = mat.T
     B = _np.transpose(tmp.compressed())
     coeffs= _np.linalg.lstsq(A, B, rcond=None)[0]
     return coeffs, A

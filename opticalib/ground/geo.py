@@ -95,7 +95,7 @@ def qpupil(mask, xx=None, yy=None, nocircle=0):
         yy = yy / ((maxv - minv) / 2)
         r = _np.mean([r1, r2])
         my = [minv, maxv]
-    return xx, yy
+    return x0, y0, r,xx, yy
 
 def draw_mask(img, cx, cy, r, out=0):
     """ Function to create circular mask

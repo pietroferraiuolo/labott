@@ -53,8 +53,11 @@ import numpy as _np
 import shutil as _sh
 import configparser as _cp
 from opticalib.core.root import _folds
-from opticalib.ground import osutils as _osu
-from opticalib.ground import zernike as _zern
+from opticalib.ground import (
+        osutils as _osu,
+        zernike as _zern,
+        roi as _roi
+)
 from opticalib.core import read_config as _rif
 from opticalib import typings as _ot
 
@@ -82,7 +85,7 @@ flagFile = "flag.txt"
 
 
 def process(
-    tn: str, register: bool = False, save: bool = False, rebin: int = 1
+        tn: str, register: bool = False, roi:int = None, save: bool = False, rebin: int = 1
 ) -> None:
     """
     High level function with processes the data contained in the given tracking
@@ -102,8 +105,8 @@ def process(
         default is (False, 1).
     """
     ampVector, modesVector, template, _, registrationActs, shuffle = _getAcqPar(tn)
-    _, regMat = getRegFileMatrix(tn)
-    modesMat = getIffFileMatrix(tn)
+    _, regMat = getRegFileMatrix(tn, roi)
+    modesMat = getIffFileMatrix(tn, roi)
     new_fold = _os.path.join(_intMatFold, tn)
     if not _os.path.exists(new_fold):
         _os.mkdir(new_fold)
@@ -193,6 +196,8 @@ def stackCubes(tnlist: str) -> None:
     stacked_cube : masked_array
         Final cube, stacked along the 3th axis.
     """
+    # TODO: aggiungere variabile `cubeNames: str|list[str]` che deve matchare
+    # `len(tnlist)` e che contiene il nome del file da caricare per ogni tn
     new_tn = _ts()
     stacked_cube_fold = _os.path.join(_fn.INTMAT_ROOT_FOLDER, new_tn)
     if not _os.path.exists(stacked_cube_fold):
@@ -456,7 +461,7 @@ def findFrameOffset(
     return dp
 
 
-def getTriggerFrame(tn: str, amplitude: int | float = None) -> int:
+def getTriggerFrame(tn: str, amplitude: int | float = None, roi: int = None) -> int:
     """
     Analyze the tracking number's images list and search for the trigger frame.
 
@@ -492,14 +497,21 @@ def getTriggerFrame(tn: str, amplitude: int | float = None) -> int:
     if infoT["zeros"] == 0 and len(infoT["modes"]) == 0:
         trigFrame = 0
         return trigFrame
+    listout = []
     while go != 0:
         img1 = _osu.read_phasemap(fileList[i])
-        rr2check = _zern.removeZernike(img1 - img0, [1, 2, 3]).std()
+        if not roi is None:
+            rois = _roi.roiGenerator(img0)
+            roi2use = rois[roi]
+            _=rois.pop(roi)
+            for r in rois:
+                img1.mask[r==0] = True
+                img0.mask[r==0] = True
+        rr2check = _np.nanstd(_zern.removeZernike(img1 - img0, [1, 2, 3]))
         print(f"Frame {i-1}: std = {rr2check:.2e}")
         if go > infoT["zeros"]+1:
-            raise RuntimeError(
-                f"Frame {go}. Heading Zeros exceeded: std = {rr2check:.2e} < {thresh:.2e} (Amp/sqrt(3))"
-            )
+            msg = f"Frame {go}. Heading Zeros exceeded: std = {rr2check:.2e} < {thresh:.2e} (Amp/sqrt(3))"
+            raise RuntimeError(msg )
         if rr2check > thresh:
             print(f"↑ Trigger Frame found!")
             go = 0
@@ -511,7 +523,7 @@ def getTriggerFrame(tn: str, amplitude: int | float = None) -> int:
     return trigFrame
 
 
-def getRegFileMatrix(tn: str) -> tuple[int, _ot.ArrayLike]:
+def getRegFileMatrix(tn: str, roi: int = None) -> tuple[int, _ot.ArrayLike]:
     """
     Search for the registration frames in the images file list, and creates the
     registration file matrix.
@@ -537,7 +549,7 @@ def getRegFileMatrix(tn: str) -> tuple[int, _ot.ArrayLike]:
     fileList = _osu.getFileList(tn, fold=fold)
     _, infoR, _, _ = _getAcqInfo(tn)
     timing = _rif.getTiming()
-    trigFrame = getTriggerFrame(tn)
+    trigFrame = getTriggerFrame(tn, roi=roi)
     if infoR["zeros"] == 0 and len(infoR["modes"]) == 0:
         regStart = regEnd = (trigFrame + 1) if trigFrame != 0 else 0
     else:
@@ -548,7 +560,7 @@ def getRegFileMatrix(tn: str) -> tuple[int, _ot.ArrayLike]:
     return regEnd, regMat
 
 
-def getIffFileMatrix(tn: str) -> _ot.ArrayLike:
+def getIffFileMatrix(tn: str, roi: int = None) -> _ot.ArrayLike:
     """
     Creates the iffMat
 
@@ -570,7 +582,7 @@ def getIffFileMatrix(tn: str) -> _ot.ArrayLike:
     else: fold = None
     fileList = _osu.getFileList(tn, fold=fold)
     _, _, infoIF, _ = _getAcqInfo(tn)
-    regEnd, _ = getRegFileMatrix(tn)
+    regEnd, _ = getRegFileMatrix(tn, roi)
     n_useful_frames = len(infoIF["modes"]) * len(infoIF["template"])
     k = regEnd + infoIF["zeros"] 
     iffList = fileList[k: k+ n_useful_frames]

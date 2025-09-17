@@ -14,12 +14,14 @@ This module contains the class `Alignment`, which manages, alone, both the calib
 and the correction of the alignment of the system. The class is initialized with the
 mechanical and acquisition devices used for alignment. These devices, which, for example, in
 the case of the M4 project are the OTT and the interferometer, are passed as arguments
-and configured through the `_systemConfiguration.py` configuration file, (for more information,
-check the documentation init).
+and configured through the `configuration.yaml` file, under the `ALIGNMENT` section.
 
-Given an IPython shell with the tower initialized (`pyott -i`):
+Usage Example
+-------------
+Given the OTT (with Parabola, Reference Mirror and M4 Hexapode) as mechanical device
+and the interferometer as acquisition device, we can initialize the class as follows:
 
->>> from m4.utils.alignment import Alignment
+>>> from opticalib.alignment import Alignment
 >>> align = Alignment(ott, interf)
 >>> # At this point the alignment is ready to be calibrated, given the command amplitude
 >>> amps = [0,7, 10, 10, 6, 6, 4, 4] # example, verosimilar, amplitudes
@@ -27,7 +29,7 @@ Given an IPython shell with the tower initialized (`pyott -i`):
 >>> [...]
 >>> "Ready for Alignment..."
 
-At this point, the calibration is complete and and `InteractionMatrix.FITS`
+At this point, the calibration is complete and and `InteractionMatrix.fits` file
 was created, saved and stored in the Alignment class. It is ready to compute
 and apply corrections. 
 
@@ -35,7 +37,7 @@ and apply corrections.
 >>> zern2correct = [0,1] # tip $ tilt
 >>> align.correct_alignment(modes2correct, zern2correct, apply=True)
 
-If we already have an InteractionMatrix.FITS file, we can load it and apply 
+If we already have an `InteractionMatrix.fits` file, we can load it and apply 
 corrections based off the loaded calibration. All to do is to pass a tracking
 number to the `correct_alignment` method:
 

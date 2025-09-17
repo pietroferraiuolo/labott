@@ -1,7 +1,7 @@
 import Pyro4
 import numpy as np
 from opticalib.core.exceptions import DeviceNotFoundError
-
+import matplotlib.pyplot as plt
 
 class SPLATTEngine:
 
@@ -12,7 +12,10 @@ class SPLATTEngine:
         self.nActs = int(self._eng.read("sys_data.mirrNAct"))
         self.actCoords = np.array(self._eng.read("mirrorData.coordAct"))
         self.mirrorModes = np.array(self._eng.read("sys_data.ff_v"))
-        self.ffMatrix = np.array(self._eng.read("sys_data.ff_matrix"))
+        try:
+            self.ffMatrix = np.array(self._eng.read("sys_data.ff_matrix_int"))
+        except:
+            self.ffMatrix = np.array(self._eng.read("sys_data.ff_matrix"))
         self._bits2meters = float(self._eng.read("2^-sys_data.coeffs.Scale_F_Lin"))
         self._N2bits = float(self._eng.read("sys_data.coeffs.Force2DAC_V"))
         self._shellset = True
@@ -71,6 +74,71 @@ class SPLATTEngine:
         mean_cur = np.array(self._eng.read("mean(cur,2)"))
         mean_cur = np.reshape(mean_cur, self.nActs)
         return mean_pos, mean_cur, buf_tn
+
+    def plot_splatt_vec(self, values, min_val:float=None, max_val:float=None):
+
+        if min_val is None:
+            min_val = min(values)
+        if max_val is None:
+            max_val = max(values)
+        margin = 0.03
+        markerSize = 800
+        x = self.actCoords[:,0]
+        y = self.actCoords[:,1]
+        indices = np.arange(self.nActs)+1
+        plt.figure()
+        plt.scatter(x, y, c=values, vmin=min_val, vmax=max_val,  s=markerSize, edgecolor='k')
+        plt.colorbar()
+        plt.xlim([min(x)-margin,max(x)+margin])
+        plt.ylim([min(y)-margin,max(y)+margin])
+        for i in range(nActs):
+            plt.text(x[i]*2/3, y[i]+margin*2/3, str(indices[i]))
+        plt.text(x[15],y[15]*1.3,'G')
+
+
+    def read_state(self):
+        pos = self.get_position()
+        cur = self._eng.read("aoRead('sabi32_pidCoilOut',1:19)")
+        coilsEnabled = np.sum(self._read_splatt_vec("aoRead('sabu8_enableCoil',1:19)"))
+        self._eng.send('flags = lattGetFlags()')
+        nrDriver = self._eng.read('1+sum(flags.driver2On)/19+sum(flags.driver3On)/19+sum(flags.driver4On)/19')
+        if nrDriver < 4:
+            print(f'Warning! {(nrDriver-1)*19:1.1f} coils are not enabled')
+
+        flatTN = self._eng.read('sys_data.flatTN')
+        Kp = self._eng.read('sys_data.ctrPar.Kp')
+        Kd = self._eng.read('sys_data.ctrPar.Kd')
+        Ki = self._eng.read('sys_data.ctrPar.Ki')
+        aPid = self._eng.read('sys_data.ctrPar.aPid')
+        bPid = self._eng.read('sys_data.ctrPar.bPid')
+        preTime = self._eng.read('sys_data.ctrPar.cmdPreTime')
+        preEna = np.sum(self._eng.read("aoRead('sabi32_damperGain',1:19)")) # self._eng.read('sys_data.ctrPar.dampEna')
+
+        state = configparser.ConfigParser()
+        state.add_section("Gap")
+        state.add_section("Control")
+        state.add_section("Coils")
+
+        state.set("Gap", "Mean", f'{np.mean(pos)*1e+6:1.2f}')
+        state.set("Gap", "Max", f'{np.max(pos)*1e+6:1.2f}')
+        state.set("Gap", "Min", f'{np.min(pos)*1e+6:1.2f}')
+        state.set("Control", "Kp",f'{Kp}')
+        state.set("Control", "Kd", f'{Kd}')
+        state.set("Control", "Ki", f'{Ki}')
+        state.set("Control", 'Kd_cut-off_frequency', f'{aPid/(2*np.pi):1.0f}')
+        if bPid > 0:
+            state.set("Control", 'Kp_cut-off_frequency', f'{bPid/(2*np.pi):1.0f}')
+        state.set("Control", 'PreshaperTime', f'{preTime*1e+3:1.2f}')
+        state.set("Control",'PreshaperEnabled',f'{preEna:1.0f}')
+        state.set("Control",'FlatTN', f'{flatTN}')
+        state.set("Coils",'EnabledCoils',f'{coilsEnabled:1.0f}')
+        state.set("Coils",'DriversOn', f'{nrDriver:1.0f}')
+        state.set("Coils",'MaxCurrent', f'{np.max(cur):1.0f}')
+        state.set("Coils",'MinCurrent', f'{np.min(cur):1.0f}')
+
+        return state
+
+
 
     def saveFlatTN(self, tn: str = None):
         if tn is None:
