@@ -55,13 +55,16 @@ performed. This can be done through the `reload_calibrated_parabola` method.
 
 >>> tn_parabola = '20241122_160000' # example, tracking number
 >>> align.reload_calibrated_parabola(tn_parabola) # load the calibrated parabola
+
+When working with segmented system (e.g. a segmented mirror), the Zernike modes shall be computed as global coefficients, which are basically the average of the local amplitude measured on each of the segment.
+
 """
 
 import os as _os
 import numpy as _np
 from .core.root import folders as _fn
 from .core.read_config import getAlignmentConfig as _gac
-from .ground import logger as _logger, zernike as _zern, geo as _geo
+from .ground import logger as _logger, zernike as _zern, geo as _geo, roi as roigen
 from .ground.osutils import load_fits as _rfits, save_fits as _sfits, newtn as _ts
 from . import typings as _ot
 
@@ -393,18 +396,56 @@ class Alignment:
                 coeff, _ = _zern.zernikeFit(img, self._zvec2fit)
                 _logger.log(f"{_zern.zernikeFit.__qualname__}")
             else:
-                img = img - 2 * self._surface
+                img = img - 2 * self._surface  #questo 2x potrebbe essere una configurazione, o meglio ancora un REQ di salvataggio della "fitting surface", che viene salvata già 2x
                 cir = _geo.qpupil(-1 * self._surface.mask + 1)
                 mm = _geo.draw_mask(
                     self._surface.data * 0, cir[0], cir[1], 1.44 / 0.00076 / 2, out=0
-                )
-                coeff, _ = _zern.zernikeFitAuxmask(img, mm, self._zvec2fit)
+                )  #e questo blocco potrebbe essere in una funzione chiamata all'avvio, così si crea anche la auxmask. i parametri da definire in conf sarebbero 1.44 / 0.00076 / 2 == pix on radius
+                #coeff, _ = _zern.zernikeFitAuxmask(img, mm, self._zvec2fit) #mod RB20250917: this part has been substituted with zern_on_roi below
+                coeff = self._global_zern_on_roi(self, img, auxmask = mm)
                 _logger.log(f"{_zern.zernikeFitAuxmask.__qualname__}")
             coefflist.append(coeff[self._zvec2use])
         if len(coefflist) == 1:
             coefflist = _np.array([c for c in coefflist[0]])
         intMat = _np.array(coefflist).T
         return intMat
+
+    def _global_zern_on_roi(self,img,  auxmask=None):
+        """
+        Computes Zernike coefficients over a segmented fitting area, i.e. a pupil mask divided into Regions Of Interest (ROI). The computation is based on the fitting of Zernike modes independently on each ROI; the coefficients are then averaged together to return the global Zernike mode amplitude.
+        An auxiliary mask (optional) may be passed. Such auxiliary mask allows creating the Zernike modes (or more precisely the coordinates grid) over a user-defined area, instead over the image mask (default option for zernikeFit).
+
+        Parameters
+        ----------
+        img : maskedArray
+            image (as masked array) to be Zernike fitted
+
+        auxmask : array
+            image of the auxiliary mask, where the fitting coordinates are contructed
+
+        Returns
+        -------
+        zcoeff : array
+            The vector of the Zernike coefficients, corresponding to the selected modes id, fitted over the auxiliary mask and all the ROIs, averaged together.
+        """
+        print('Searching for Regions of Interest in the frame...')
+        roiimg = roigen.roiGenerator(img)
+        nroi = len(roiid)
+        print('Found '+str(nroi)+' ROI')
+        if auxmask is None:
+            auxmask2use = img.mask
+        else:
+            auxmask2use = auxmask
+        zcoeff = i_np.zeros([nroi, len(self._zvec2fit)])
+        for i in range(nroi):
+            img2fit = _np.ma.masked_array(img.data, roiimg[i])
+            cc, _ =zern.zernikeFitAuxmask(img2fit, auxmask2use, self._zvec2fit)
+            zcoeff[i,:] = cc
+        zcoeff = zcoeff.mean(axis=0)
+        print('Global Zernike coeff:')
+        print(str(zcoeff))
+        return zcoeff
+
 
     def _create_rec_mat(self, intMat: _ot.MatrixLike) -> _ot.MatrixLike:
         """
