@@ -410,36 +410,42 @@ class Alignment:
         intMat = _np.array(coefflist).T
         return intMat
 
-    def _global_zern_on_roi(self,img,  auxmask=None):
+    def _global_zern_on_roi(self, img: _ot.ImageData, auxmask: _ot.Optional[_ot.ImageData] = None):
         """
-        Computes Zernike coefficients over a segmented fitting area, i.e. a pupil mask divided into Regions Of Interest (ROI). The computation is based on the fitting of Zernike modes independently on each ROI; the coefficients are then averaged together to return the global Zernike mode amplitude.
-        An auxiliary mask (optional) may be passed. Such auxiliary mask allows creating the Zernike modes (or more precisely the coordinates grid) over a user-defined area, instead over the image mask (default option for zernikeFit).
+        Computes Zernike coefficients over a segmented fitting area, i.e. a pupil
+        mask divided into Regions Of Interest (ROI). The computation is based on 
+        the fitting of Zernike modes independently on each ROI; the coefficients 
+        are then averaged together to return the global Zernike mode amplitude.
+        An auxiliary mask (optional) may be passed. Such auxiliary mask allows 
+        creating the Zernike modes (or more precisely the coordinates grid) over 
+        a user-defined area, instead over the image mask (default option for zernikeFit).
 
         Parameters
         ----------
-        img : maskedArray
-            image (as masked array) to be Zernike fitted
+        img : ImageData
+            Image to fit the Zernike modes on, over the ROIs.
 
-        auxmask : array
-            image of the auxiliary mask, where the fitting coordinates are contructed
+        auxmask : ImageData, optional
+            Image of the auxiliary mask, where the fitting coordinates are constructed
 
         Returns
         -------
         zcoeff : array
-            The vector of the Zernike coefficients, corresponding to the selected modes id, fitted over the auxiliary mask and all the ROIs, averaged together.
+            The vector of the Zernike coefficients, corresponding to the selected modes id, 
+            fitted over the auxiliary mask and all the ROIs, averaged together.
         """
         print('Searching for Regions of Interest in the frame...')
         roiimg = roigen.roiGenerator(img)
-        nroi = len(roiid)
+        nroi = len(roiimg)
         print('Found '+str(nroi)+' ROI')
         if auxmask is None:
             auxmask2use = img.mask
         else:
             auxmask2use = auxmask
-        zcoeff = i_np.zeros([nroi, len(self._zvec2fit)])
+        zcoeff = _np.zeros([nroi, len(self._zvec2fit)])
         for i in range(nroi):
             img2fit = _np.ma.masked_array(img.data, roiimg[i])
-            cc, _ =zern.zernikeFitAuxmask(img2fit, auxmask2use, self._zvec2fit)
+            cc, _ = _zern.zernikeFitAuxmask(img2fit, auxmask2use, self._zvec2fit)
             zcoeff[i,:] = cc
         zcoeff = zcoeff.mean(axis=0)
         print('Global Zernike coeff:')
