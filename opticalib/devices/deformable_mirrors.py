@@ -34,7 +34,7 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
         pos = self._aoClient.getPosition()
         return pos
 
-    def set_shape(self, cmd: list[float]): #cmd, segment=None):
+    def set_shape(self, cmd: list[float]):  # cmd, segment=None):
         """
         Applies the given command to the DM actuators.
 
@@ -52,7 +52,7 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
 
     def uploadCmdHistory(self, tcmdhist: _ot.MatrixLike) -> None:
         """
-        Uploads the (timed) command history in the DM. if `for_triggered` is true, 
+        Uploads the (timed) command history in the DM. if `for_triggered` is true,
         then it is loaded direclty in the AO client for the triggere mode run.
 
         Parameters
@@ -68,7 +68,7 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             raise _oe.MatrixError(
                 f"Expecting a 2D Matrix of shape (used_acts, nmodes), got instead: {tcmdhist.shape}"
             )
-        trig = _dmc()['triggerMode']
+        trig = _dmc()["triggerMode"]
         if trig is not False:
             self._tCmdHistory = tcmdhist.copy()
             self._aoClient.timeHistoryUpload(tcmdhist)
@@ -76,7 +76,12 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             self.cmdHistory = tcmdhist
         print("Time History uploaded!")
 
-    def runCmdHistory(self, interf: _ot.Optional[_ot.InterferometerDevice] = None, differential: bool = False, save: _ot.Optional[str] = None) -> None:
+    def runCmdHistory(
+        self,
+        interf: _ot.Optional[_ot.InterferometerDevice] = None,
+        differential: bool = False,
+        save: _ot.Optional[str] = None,
+    ) -> None:
         """
         Runs the loaded command history on the DM. If `triggered` is not False, it must
         be a dictionary containing the low level arguments for the `aoClient.timeHistoryRun` function.
@@ -87,12 +92,12 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             The interferometer device to be used for acquiring images during the command history run.
         differential : bool, optional
             If True, the commands will be applied as differential commands (default is False).
-        triggered : bool | dict[str, _ot.Any], optional 
-            If False, the command history will be run in a sequential mode. 
-            If not False, a dictionary must be provided, where it should contain the keys 
+        triggered : bool | dict[str, _ot.Any], optional
+            If False, the command history will be run in a sequential mode.
+            If not False, a dictionary must be provided, where it should contain the keys
             'freq', 'wait', and 'delay' for the triggered mode.
         sequential_delay : int | float, optional
-            The delay between each command execution in seconds (only if not in 
+            The delay between each command execution in seconds (only if not in
             triggered mode).
         save : str, optional
             If provided, the command history will be saved with this name as a timestamp.
@@ -112,7 +117,7 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             self._aoClient.timeHistoryRun(freq, 0, tdelay)
             nframes = self._tCmdHistory.shape[-1]
             if interf is not None:
-                interf.capture(nframes-2, save)
+                interf.capture(nframes - 2, save)
             self.set_shape(ins)
         else:
             if self.cmdHistory is None:
@@ -274,10 +279,12 @@ class SplattDm(_api.base_devices.BaseDeformableMirror):
                     cmd = cmd + s
                 self.set_shape(cmd)
                 if read_buffers is True:
-                    pos,cur,bufTN = self._dm.read_buffers(external=true, n_samples=300)
-                    path = _os.path.join(datafold, f'buffer_{i:05d}.fits')
-                    hdr_dict = {'BUF_TN': str(bufTN)}
-                    _sf(path, [pos,cur], hdr_dict)
+                    pos, cur, bufTN = self._dm.read_buffers(
+                        external=true, n_samples=300
+                    )
+                    path = _os.path.join(datafold, f"buffer_{i:05d}.fits")
+                    hdr_dict = {"BUF_TN": str(bufTN)}
+                    _sf(path, [pos, cur], hdr_dict)
                 if interf is not None:
                     _time.sleep(delay)
                     img = interf.acquire_map()
@@ -308,9 +315,8 @@ class SplattDm(_api.base_devices.BaseDeformableMirror):
     def nActuators(self) -> int:
         return self.nActs
 
-    def integratePosition(self, Nits:int = 3):
-        self._dm._eng.send(f'splattIntegrateMeasPos({Nits})')
-
+    def integratePosition(self, Nits: int = 3):
+        self._dm._eng.send(f"splattIntegrateMeasPos({Nits})")
 
     def _checkCmdIntegrity(self, cmd: _ot.ArrayLike) -> None:
         pos = cmd + self._dm.flatPos

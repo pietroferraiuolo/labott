@@ -21,42 +21,58 @@ Usage Example
 Given the OTT (with Parabola, Reference Mirror and M4 Hexapode) as mechanical device
 and the interferometer as acquisition device, we can initialize the class as follows:
 
->>> from opticalib.alignment import Alignment
->>> align = Alignment(ott, interf)
->>> # At this point the alignment is ready to be calibrated, given the command amplitude
->>> amps = [0,7, 10, 10, 6, 6, 4, 4] # example, verosimilar, amplitudes
->>> align.calibrate_alignment(amps)
->>> [...]
->>> "Ready for Alignment..."
+```python
+    from opticalib.alignment import Alignment
+    align = Alignment(ott, interf)
+    # At this point the alignment is ready to be calibrated, given the command amplitude
+    amps = [0,7, 10, 10, 6, 6, 4, 4] # example, verosimilar, amplitudes
+    align.calibrate_alignment(amps)
+    [...]
+    "Ready for Alignment..."
+```
 
 At this point, the calibration is complete and and `InteractionMatrix.fits` file
 was created, saved and stored in the Alignment class. It is ready to compute
-and apply corrections. 
+and apply corrections.
 
->>> modes2correct = [3,4] # Reference Mirror DoF
->>> zern2correct = [0,1] # tip $ tilt
->>> align.correct_alignment(modes2correct, zern2correct, apply=True)
+```python
+    modes2correct = [3,4] # Reference Mirror DoF
+    zern2correct = [0,1] # tip $ tilt
+    align.correct_alignment(modes2correct, zern2correct, apply=True)
+```
 
-If we already have an `InteractionMatrix.fits` file, we can load it and apply 
-corrections based off the loaded calibration. All to do is to pass a tracking
-number to the `correct_alignment` method:
+If we already have an `InteractionMatrix.fits` file, we can load it and apply
+corrections based off the loaded calibration. All to do is to load the calibration
+to the class:
 
->>> tn_intmat = '20241122_160000' # example, tracking number
->>> align.correct_alignment(modes2correct, zern2correct, tn=tn_intmat, apply=True)
+```python
+    tn_cal = '20241122_160000' # example, tracking number
+    align.load_calibration(tn_cal) # load the calibration
+    align.correct_alignment(modes2correct, zern2correct, apply=True)
+```
 
-And the alignment is done.
+It can also be instanced with a calibration:
 
+```python
+    tn_cal = '20241122_160000' # example, tracking number
+    align = Alignment(ott, interf, calibtn=tn_cal)
+    align.correct_alignment(modes2correct, zern2correct, apply=True)
+```
 
 Notes
 -----
 Note that the calibration process can be done uploading to the class
-a calibrated parabola, so that a different algorithm for the Zernike fitting is 
-performed. This can be done through the `reload_calibrated_parabola` method.
+a `calibrated cavity`, so that a different algorithm for the Zernike fitting is
+performed. This can be done through the `load_fitting_surface` method.
 
->>> tn_parabola = '20241122_160000' # example, tracking number
->>> align.reload_calibrated_parabola(tn_parabola) # load the calibrated parabola
+```python
+    cavity_tn = '20241122_160000' # example, tracking number
+    align.load_fitting_surface(cavity_tn) # load the calibrated cavity
+```
 
-When working with segmented system (e.g. a segmented mirror), the Zernike modes shall be computed as global coefficients, which are basically the average of the local amplitude measured on each of the segment.
+When working with segmented system (e.g. a segmented mirror), the Zernike modes
+shall be computed as global coefficients, which are basically the average of the
+local amplitude measured on each of the segment.
 
 """
 
@@ -69,6 +85,7 @@ from .ground.osutils import load_fits as _rfits, save_fits as _sfits, newtn as _
 from . import typings as _ot
 
 _sc = _gac()
+_np.set_printoptions(precision=2, suppress=True)
 
 
 class Alignment:
@@ -202,14 +219,15 @@ class Alignment:
         correction command or returns it.
         """
         _logger.log(f"{self.correct_alignment.__qualname__}")
-        self._correct_cavity = True # in order to allow the subtraction of the cavity offset from the image2align
-        print('Cavity correction enabled')
+        self._correct_cavity = True
         image = self._acquire[0](nframes=n_frames)
         zernike_coeff = self._zern_routine(image)
         if self.intMat is not None:
             intMat = self.intMat
         else:
-            raise AttributeError("No internal matrix found. Please calibrate the alignment first.")
+            raise AttributeError(
+                "No internal matrix found. Please calibrate the alignment first."
+            )
         reduced_intMat = intMat[_np.ix_(zern2correct, modes2correct)]
         reduced_cmdMat = self.cmdMat[:, modes2correct]
         recMat = self._create_rec_mat(reduced_intMat)
@@ -230,7 +248,7 @@ class Alignment:
         n_frames: int = 15,
         template: _ot.ArrayLike = None,
         n_repetitions: int = 1,
-        save: bool = False,
+        save: bool = True,
     ) -> str:
         """
         Calibrate the alignment of the system using the provided command amplitude and template.
@@ -262,8 +280,8 @@ class Alignment:
         4. Executes a Zernike routine on the image list to generate an internal matrix.
         5. Optionally saves the internal matrix to a FITS file.
         """
-        self._correct_cavity = False #in order to skip the correction of the cavity, since it is already included in the differential algorithm (and an on purpose subtraction will be an unwanted offset)
-        print('Cavity correction disabled')
+        self._correct_cavity = False
+        _logger.log(f"Cavity correction: False", level="INFO")
         self._calibtn = _ts()
         _logger.log(f"{self.calibrate_alignment.__qualname__}")
         self._cmdAmp = cmdAmp
@@ -279,8 +297,9 @@ class Alignment:
             filename = _os.path.join(path, "InteractionMatrix.fits")
             _sfits(filename, self.intMat, overwrite=True)
             _logger.log(f"{_sfits.__qualname__}")
-            print(f"Calibration saved in '{filename}'")
-        return "Ready for Alignment..."
+            _logger.log(f"Calibration saved in '{filename}'", level="INFO")
+            print(f"Calibration saved in '{filename}'\nReady for Alignment...")
+        return tn
 
     def read_positions(self, show: bool = True) -> _ot.ArrayLike:
         """
@@ -324,10 +343,10 @@ class Alignment:
         surf = _rfits(filepath)
         self._surface = surf
         print(f"Correctly loaded '{filepath}'")
-        
+
     def load_calibration(self, tn: str) -> None:
         """
-        Loads the alignment calibration InteractionMatrix.fits based on the 
+        Loads the alignment calibration InteractionMatrix.fits based on the
         provided tracking number.
 
         Parameters
@@ -378,7 +397,9 @@ class Alignment:
                 n_results = results
         return n_results
 
-    def _zern_routine(self, imglist: list[_ot.ImageData]|_ot.CubeData) -> _ot.MatrixLike:
+    def _zern_routine(
+        self, imglist: list[_ot.ImageData] | _ot.CubeData
+    ) -> _ot.MatrixLike:
         """
         Creates the interaction matrix from the provided image list.
 
@@ -402,13 +423,13 @@ class Alignment:
                 _logger.log(f"{_zern.zernikeFit.__qualname__}")
             else:
                 if self._correct_cavity is True:
-                    img = img - 2 * self._surface  #questo 2x potrebbe essere una configurazione, o meglio ancora un REQ di salvataggio della "fitting surface", che viene salvata già 2x
+                    img -= 2 * self._surface
                 cir = _geo.qpupil(-1 * self._surface.mask + 1)
                 mm = _geo.draw_mask(
                     self._surface.data * 0, cir[0], cir[1], 1.44 / 0.00076 / 2, out=0
-                )  #e questo blocco potrebbe essere in una funzione chiamata all'avvio, così si crea anche la auxmask. i parametri da definire in conf sarebbero 1.44 / 0.00076 / 2 == pix on radius
-                #coeff, _ = _zern.zernikeFitAuxmask(img, mm, self._zvec2fit) #mod RB20250917: this part has been substituted with zern_on_roi below
-                coeff = self._global_zern_on_roi(img, auxmask = mm)
+                )  # e questo blocco potrebbe essere in una funzione chiamata all'avvio, così si crea anche la auxmask. i parametri da definire in conf sarebbero 1.44 / 0.00076 / 2 == pix on radius
+                # coeff, _ = _zern.zernikeFitAuxmask(img, mm, self._zvec2fit) #mod RB20250917: this part has been substituted with zern_on_roi below
+                coeff = self._global_zern_on_roi(img, auxmask=mm)
                 _logger.log(f"{_zern.zernikeFitAuxmask.__qualname__}")
             coefflist.append(coeff[self._zvec2use])
         if len(coefflist) == 1:
@@ -416,14 +437,16 @@ class Alignment:
         intMat = _np.array(coefflist).T
         return intMat
 
-    def _global_zern_on_roi(self, img: _ot.ImageData, auxmask: _ot.Optional[_ot.ImageData] = None):
+    def _global_zern_on_roi(
+        self, img: _ot.ImageData, auxmask: _ot.Optional[_ot.ImageData] = None
+    ):
         """
         Computes Zernike coefficients over a segmented fitting area, i.e. a pupil
-        mask divided into Regions Of Interest (ROI). The computation is based on 
-        the fitting of Zernike modes independently on each ROI; the coefficients 
+        mask divided into Regions Of Interest (ROI). The computation is based on
+        the fitting of Zernike modes independently on each ROI; the coefficients
         are then averaged together to return the global Zernike mode amplitude.
-        An auxiliary mask (optional) may be passed. Such auxiliary mask allows 
-        creating the Zernike modes (or more precisely the coordinates grid) over 
+        An auxiliary mask (optional) may be passed. Such auxiliary mask allows
+        creating the Zernike modes (or more precisely the coordinates grid) over
         a user-defined area, instead over the image mask (default option for zernikeFit).
 
         Parameters
@@ -437,13 +460,13 @@ class Alignment:
         Returns
         -------
         zcoeff : array
-            The vector of the Zernike coefficients, corresponding to the selected modes id, 
+            The vector of the Zernike coefficients, corresponding to the selected modes id,
             fitted over the auxiliary mask and all the ROIs, averaged together.
         """
-        print('Searching for Regions of Interest in the frame...')
+        print("Searching for Regions of Interest in the frame...")
         roiimg = roigen.roiGenerator(img)
         nroi = len(roiimg)
-        print('Found '+str(nroi)+' ROI')
+        print("Found " + str(nroi) + " ROI")
         if auxmask is None:
             auxmask2use = img.mask
         else:
@@ -452,12 +475,11 @@ class Alignment:
         for i in range(nroi):
             img2fit = _np.ma.masked_array(img.data, roiimg[i])
             cc, _ = _zern.zernikeFitAuxmask(img2fit, auxmask2use, self._zvec2fit)
-            zcoeff[i,:] = cc
+            zcoeff[i, :] = cc
         zcoeff = zcoeff.mean(axis=0)
-        print('Global Zernike coeff:')
+        print("Global Zernike coeff:")
         print(str(zcoeff))
         return zcoeff
-
 
     def _create_rec_mat(self, intMat: _ot.MatrixLike) -> _ot.MatrixLike:
         """
@@ -603,8 +625,8 @@ class Alignment:
         image = _np.ma.masked_array(image, mask=master_mask) / 6
         template.pop(0)
         return image
-    
-    def __loadIntMat(self, calibtn: str|None) -> _ot.MatrixLike:
+
+    def __loadIntMat(self, calibtn: str | None) -> _ot.MatrixLike:
         """
         Loads the interaction matrix from a FITS file based on the provided tracking number.
 
@@ -617,7 +639,7 @@ class Alignment:
         -------
         intMat : MatrixLike
             The loaded interaction matrix.
-        
+
         Raises
         ------
         FileNotFoundError
@@ -625,12 +647,15 @@ class Alignment:
         """
         if calibtn is None:
             return None
-        filename = _os.path.join(_fn.ALIGN_CALIBRATION_ROOT_FOLDER, calibtn, "InteractionMatrix.fits")
+        filename = _os.path.join(
+            _fn.ALIGN_CALIBRATION_ROOT_FOLDER, calibtn, "InteractionMatrix.fits"
+        )
         if not _os.path.exists(filename):
-            raise FileNotFoundError(f"Interaction matrix file '{filename}' does not exist.")
+            raise FileNotFoundError(
+                f"Interaction matrix file '{filename}' does not exist."
+            )
         intMat = _rfits(filename)
         return intMat
-
 
     @staticmethod
     def __get_callables(

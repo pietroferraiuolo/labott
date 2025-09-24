@@ -3,17 +3,17 @@ Author(s):
 ----------
     - Pietro Ferraiuolo
     - Runa Briguglio
-    
+
 Written in June 2024
 
 Description
 -----------
-Module containing all the functions necessary to process the data acquired for 
+Module containing all the functions necessary to process the data acquired for
 the Influence Function measurements done on M4.
 
 High-level Functions
 --------------------
-process(tn, registration=False) 
+process(tn, registration=False)
     Function that processes the data contained in the OPDImages/tn folder. by p
     erforming the differential algorithm, it procudes fits images for each comm
     anded mode into the IFFunctions/tn folder, and creates a cube from these in
@@ -22,14 +22,14 @@ process(tn, registration=False)
 
 stackCubes(tnlist)
     Function that, given as imput a tracking number list containing cubes data,
-    will stack the found cubes into a new one with a new tracking number, into 
+    will stack the found cubes into a new one with a new tracking number, into
     INTMatrices/new_tn. A 'flag.txt' file will be created to give more informat
     ion on the process.
 
 Notes
 -----
 In order for the module to work properly, the tower initialization must be run
-so that the folder names configuration file is populated. 
+so that the folder names configuration file is populated.
 From the IPython console
 
 >>> run '/path/to/m4/initOTT.py'
@@ -53,11 +53,7 @@ import numpy as _np
 import shutil as _sh
 import configparser as _cp
 from opticalib.core.root import _folds
-from opticalib.ground import (
-        osutils as _osu,
-        zernike as _zern,
-        roi as _roi
-)
+from opticalib.ground import osutils as _osu, zernike as _zern, roi as _roi
 from opticalib.core import read_config as _rif
 from opticalib import typings as _ot
 
@@ -85,7 +81,7 @@ flagFile = "flag.txt"
 
 
 def process(
-        tn: str, register: bool = False, roi:int = None, save: bool = False, rebin: int = 1
+    tn: str, register: bool = False, roi: int = None, save: bool = False, rebin: int = 1
 ) -> None:
     """
     High level function with processes the data contained in the given tracking
@@ -122,7 +118,10 @@ def process(
 
 
 def saveCube(
-    tn: str, rebin: int = 1, register: bool = False, cube_header: _ot.Optional[dict[str,_ot.Any]|_ot.Header]=None
+    tn: str,
+    rebin: int = 1,
+    register: bool = False,
+    cube_header: _ot.Optional[dict[str, _ot.Any] | _ot.Header] = None,
 ) -> _ot.CubeData:
     """
     Creates and save a cube from the fits files contained in the tn folder,
@@ -456,7 +455,7 @@ def findFrameOffset(
     """
     actCoordFile = _os.path.join(_ifFold, tn, coordfile)
     actCoord = _osu.load_fits(actCoordFile)
-    xy = _fa.findFrameCoord(imglist, actlist, actCoord) # type: ignore
+    xy = _fa.findFrameCoord(imglist, actlist, actCoord)  # type: ignore
     dp = xy - _frameCenter
     return dp
 
@@ -503,15 +502,15 @@ def getTriggerFrame(tn: str, amplitude: int | float = None, roi: int = None) -> 
         if not roi is None:
             rois = _roi.roiGenerator(img0)
             roi2use = rois[roi]
-            _=rois.pop(roi)
+            _ = rois.pop(roi)
             for r in rois:
-                img1.mask[r==0] = True
-                img0.mask[r==0] = True
+                img1.mask[r == 0] = True
+                img0.mask[r == 0] = True
         rr2check = _np.nanstd(_zern.removeZernike(img1 - img0, [1, 2, 3]))
         print(f"Frame {i-1}: std = {rr2check:.2e}")
-        if go > infoT["zeros"]+1:
+        if go > infoT["zeros"] + 1:
             msg = f"Frame {go}. Heading Zeros exceeded: std = {rr2check:.2e} < {thresh:.2e} (Amp/sqrt(3))"
-            raise RuntimeError(msg )
+            raise RuntimeError(msg)
         if rr2check > thresh:
             print(f"↑ Trigger Frame found!")
             go = 0
@@ -545,7 +544,8 @@ def getRegFileMatrix(tn: str, roi: int = None) -> tuple[int, _ot.ArrayLike]:
     if not _osu.is_tn(tn):
         fold = tn[:-15]
         _os.path.isdir(fold)
-    else: fold = None
+    else:
+        fold = None
     fileList = _osu.getFileList(tn, fold=fold)
     _, infoR, _, _ = _getAcqInfo(tn)
     timing = _rif.getTiming()
@@ -579,13 +579,14 @@ def getIffFileMatrix(tn: str, roi: int = None) -> _ot.ArrayLike:
     if not _osu.is_tn(tn):
         fold = tn[:-15]
         _os.path.isdir(fold)
-    else: fold = None
+    else:
+        fold = None
     fileList = _osu.getFileList(tn, fold=fold)
     _, _, infoIF, _ = _getAcqInfo(tn)
     regEnd, _ = getRegFileMatrix(tn, roi)
     n_useful_frames = len(infoIF["modes"]) * len(infoIF["template"])
-    k = regEnd + infoIF["zeros"] 
-    iffList = fileList[k: k+ n_useful_frames]
+    k = regEnd + infoIF["zeros"]
+    iffList = fileList[k : k + n_useful_frames]
     iffMat = _np.reshape(iffList, (len(infoIF["modes"]), len(infoIF["template"])))
     return iffMat
 
@@ -634,7 +635,9 @@ def _getCubeList(
 
 def _getAcqPar(
     tn: str,
-) -> tuple[_ot.ArrayLike, _ot.ArrayLike, _ot.ArrayLike, _ot.ArrayLike, _ot.ArrayLike, int]:
+) -> tuple[
+    _ot.ArrayLike, _ot.ArrayLike, _ot.ArrayLike, _ot.ArrayLike, _ot.ArrayLike, int
+]:
     """
     Reads ad returns the acquisition parameters from fits files.
 
@@ -672,7 +675,9 @@ def _getAcqPar(
 
 def _getAcqInfo(
     tn: str = None,
-) -> tuple[dict[str, _ot.Any], dict[str, _ot.Any], dict[str, _ot.Any], dict[str, _ot.Any]]:
+) -> tuple[
+    dict[str, _ot.Any], dict[str, _ot.Any], dict[str, _ot.Any], dict[str, _ot.Any]
+]:
     """
     Returns the information read from the iffConfig.ini file.
 

@@ -13,7 +13,7 @@ from opticalib import typings as _ot
 def roiGenerator(img: _ot.ImageData) -> list[_ot.ImageData]:
     """
     This function generates a list of `n_masks` roi from the input image.
-    
+
     Parameters
     ----------
     img: ImageData | np.ma.maskedArray
@@ -32,7 +32,7 @@ def roiGenerator(img: _ot.ImageData) -> list[_ot.ImageData]:
         maski[_np.where(labels == i)] = 1
         final_roi = _np.ma.mask_or(_np.invert(maski), img.mask)
         if _np.invert(final_roi).sum() < 100:
-            null_rois+=1
+            null_rois += 1
             continue
         if null_rois >= 2:
             break

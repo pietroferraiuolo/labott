@@ -1,5 +1,5 @@
 """
-Author(s) 
+Author(s)
 ---------
     - Pietro Ferraiuolo : written in 2024
 
@@ -120,7 +120,7 @@ class Flattening:
         modes2flat: int | _ot.ArrayLike,
         modes2discard: _ot.Optional[int] = None,
         cmdOffset: _ot.Optional[_ot.ArrayLike] = None,
-        nframes: int = 5
+        nframes: int = 5,
     ) -> None:
         f"""
         Computes, applies and saves the computed flat command to the DM, given
@@ -147,9 +147,9 @@ class Flattening:
         cmd = dm.get_shape()
         # TODO
         ## Modifiche DP: da sistemare poi
-        #dm.set_shape(deltacmd, differential=True)
-        for i in range(1,5):
-            dm.set_shape(cmdOffset + deltacmd*0.2*i)
+        # dm.set_shape(deltacmd, differential=True)
+        for i in range(1, 5):
+            dm.set_shape(cmdOffset + deltacmd * 0.2 * i)
         imgflat = interf.acquire_map(nframes, rebin=self.rebin)
         files = [
             "flatCommand.fits",
@@ -192,15 +192,17 @@ class Flattening:
         cmdMat = self._cmdMat.copy()
         if isinstance(n_modes, int):
             flat_cmd = cmdMat[:, :n_modes] @ _cmd[:n_modes]
-        elif isinstance(n_modes, (_np.ndarray,list)):
+        elif isinstance(n_modes, (_np.ndarray, list)):
             _cmdMat = _np.zeros((cmdMat.shape[0], len(n_modes)))
-            _scmd = _np.zeros(len(n_modes))#_cmd.shape[0])
+            _scmd = _np.zeros(len(n_modes))  # _cmd.shape[0])
             for i, mode in enumerate(n_modes):
                 _cmdMat.T[i] = cmdMat.T[mode]
                 _scmd[i] = _cmd[mode]
             flat_cmd = _cmdMat @ _scmd
         else:
-            raise TypeError(f"`n_modes` must be either an int or a list of int: {type(n_modes)}")
+            raise TypeError(
+                f"`n_modes` must be either an int or a list of int: {type(n_modes)}"
+            )
         self.flatCmd = flat_cmd.copy()
         return flat_cmd
 

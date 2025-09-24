@@ -1,8 +1,4 @@
-from . import (
-    flattening,
-    iff_module,
-    iff_processing
-)
+from . import flattening, iff_module, iff_processing
 from .flattening import Flattening
 from .iff_acquisition_preparation import IFFCapturePreparation
 

@@ -147,7 +147,7 @@ class AccuFiz(_api.BaseInterferometer):
         )
         return folder_name
 
-    def produce(self, tn: str|list[str]) -> None:
+    def produce(self, tn: str | list[str]) -> None:
         """
         Parameters
         ----------
@@ -268,7 +268,6 @@ class AccuFiz(_api.BaseInterferometer):
         fullmask[offx : offx + sx, offy : offy + sy] = img.mask
         fullimg = _np.ma.masked_array(fullimg, fullmask)
         return fullimg
-
 
 
 class PhaseCam(_api.BaseInterferometer):
@@ -409,7 +408,7 @@ class PhaseCam(_api.BaseInterferometer):
         )
         return folder_name
 
-    def produce(self, tn: str|list[str]) -> None:
+    def produce(self, tn: str | list[str]) -> None:
         """
         Parameters
         ----------

@@ -39,7 +39,6 @@ class PupilCalibrator:
         """
         return self._dm.actCoords
 
-
     def act_coordinates_tranformation(
         self, dm: _ot.DeformableMirrorDevice, img: _ot.Optional[_ot.ImageData] = None
     ) -> _ot.MatrixLike:
@@ -57,7 +56,7 @@ class PupilCalibrator:
 
     def maskTransform(self, mask: _ot.ImageData, geometry) -> _ot.ImageData:
         """
-        Transforms the given mask to the given geometry 
+        Transforms the given mask to the given geometry
 
         Parameters
         ----------
@@ -73,7 +72,7 @@ class PupilCalibrator:
         """
         ...
 
-    def remapIff(self, mask: _ot.ImageData, geometry) -> _ot.MatrixLike: 
+    def remapIff(self, mask: _ot.ImageData, geometry) -> _ot.MatrixLike:
         """
         Fits the IFFs to the given mask and geometry
 
@@ -90,7 +89,6 @@ class PupilCalibrator:
             The remapped influence functions matrix
         """
         IFM = self.IFM.copy()
-
 
     def fitShape2Command(
         self,
@@ -122,7 +120,6 @@ class PupilCalibrator:
         raw_cmd = remapped_IFF @ masked_shape
         return raw_cmd
 
-
     def slaveCoords(
         self, raw_cmd: _ot.ArrayLike, slave_ids: list[int], slaving_method: str = "zero"
     ) -> _ot.ArrayLike:
@@ -132,7 +129,7 @@ class PupilCalibrator:
 
         Parameters
         ----------
-        raw_cmd : ArrayLike 
+        raw_cmd : ArrayLike
             Vector of actuator commands.
         slave_ids : list
             The list of slave actuator ids.
@@ -175,7 +172,6 @@ class PupilCalibrator:
                     f"{slaving_method} is not an available slaving method. Available methods are: 'interp', 'nearest', 'zero'"
                 )
         return cmd
-
 
     def _loadIFMatrix(self) -> None:
         """

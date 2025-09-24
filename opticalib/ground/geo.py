@@ -3,7 +3,7 @@ Autor(s)
 ---------
     - Runa Briguglio : created Mar 2020
     - Federico Miceli : added funcitonality on 2022
-    - Pietro Ferraiuolo : polished on 2024 
+    - Pietro Ferraiuolo : polished on 2024
 
 Description
 -----------
@@ -95,10 +95,11 @@ def qpupil(mask, xx=None, yy=None, nocircle=0):
         yy = yy / ((maxv - minv) / 2)
         r = _np.mean([r1, r2])
         my = [minv, maxv]
-    return x0, y0, r,xx, yy
+    return x0, y0, r, xx, yy
+
 
 def draw_mask(img, cx, cy, r, out=0):
-    """ Function to create circular mask
+    """Function to create circular mask
     Created by Runa
 
     Parameters
@@ -126,10 +127,10 @@ def draw_mask(img, cx, cy, r, out=0):
     y = y - cy
     nr = _np.size(r)
     if nr == 2:
-        rr = x*x/r[0]**2+y*y/r[1]**2
+        rr = x * x / r[0] ** 2 + y * y / r[1] ** 2
         r1 = 1
     else:
-        rr = x*x+y*y
+        rr = x * x + y * y
         r1 = r**2
     pp = _np.where(rr < r1)
     img1 = img.copy()
@@ -137,7 +138,7 @@ def draw_mask(img, cx, cy, r, out=0):
         img1[pp] = 0
     else:
         img1[pp] = 1
-    #plt.imshow(img1)
+    # plt.imshow(img1)
     return img1
 
 

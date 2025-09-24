@@ -300,7 +300,7 @@ def save_fits(
     filepath: str,
     data: _ot.ImageData | _ot.CubeData | _ot.MatrixLike | _ot.ArrayLike | _ot.Any,
     overwrite: bool = True,
-    header: dict[str,_ot.Any] | _fits.Header = None,
+    header: dict[str, _ot.Any] | _fits.Header = None,
 ) -> None:
     """
     Saves a FITS file.
@@ -410,7 +410,7 @@ def getFrameRate(tn: str) -> float:
 
 
 def _header_from_dict(
-    dictheader: dict[str, _ot.Any | tuple[_ot.Any, str]]
+    dictheader: dict[str, _ot.Any | tuple[_ot.Any, str]],
 ) -> _fits.Header:
     """
     Converts a dictionary to an astropy.io.fits.Header object.
