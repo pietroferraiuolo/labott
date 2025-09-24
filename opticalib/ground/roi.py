@@ -10,7 +10,7 @@ from skimage import measure as _meas
 from opticalib import typings as _ot
 
 
-def roiGenerator(img: _ot.ImageData, n_masks: int = 2) -> list[_ot.ImageData]:
+def roiGenerator(img: _ot.ImageData) -> list[_ot.ImageData]:
     """
     This function generates a list of `n_masks` roi from the input image.
     
@@ -26,10 +26,16 @@ def roiGenerator(img: _ot.ImageData, n_masks: int = 2) -> list[_ot.ImageData]:
     """
     labels = _meas.label(_np.invert(img.mask))
     roiList = []
-    for i in range(1, n_masks+1):
+    null_rois = 0
+    for i in range(1, 20):
         maski = _np.zeros(labels.shape, dtype=bool)
         maski[_np.where(labels == i)] = 1
         final_roi = _np.ma.mask_or(_np.invert(maski), img.mask)
+        if _np.invert(final_roi).sum() < 100:
+            null_rois+=1
+            continue
+        if null_rois >= 2:
+            break
         roiList.append(final_roi)
     return roiList
 

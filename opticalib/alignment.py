@@ -155,6 +155,7 @@ class Alignment:
         self._zvec2fit = _np.arange(1, 11)
         self._zvec2use = _sc.zernike_to_use
         self._template = _sc.push_pull_template
+        self._correct_cavity = True
         self._dataPath = _fn.ALIGNMENT_ROOT_FOLDER
         self._logPath = _os.path.join(_fn.LOGGING_ROOT_FOLDER, "alignment.log")
         self._txt = _logger.txtLogger(self._logPath.strip(".log") + "Record.txt")
@@ -201,6 +202,8 @@ class Alignment:
         correction command or returns it.
         """
         _logger.log(f"{self.correct_alignment.__qualname__}")
+        self._correct_cavity = True # in order to allow the subtraction of the cavity offset from the image2align
+        print('Cavity correction enabled')
         image = self._acquire[0](nframes=n_frames)
         zernike_coeff = self._zern_routine(image)
         if self.intMat is not None:
@@ -259,6 +262,8 @@ class Alignment:
         4. Executes a Zernike routine on the image list to generate an internal matrix.
         5. Optionally saves the internal matrix to a FITS file.
         """
+        self._correct_cavity = False #in order to skip the correction of the cavity, since it is already included in the differential algorithm (and an on purpose subtraction will be an unwanted offset)
+        print('Cavity correction disabled')
         self._calibtn = _ts()
         _logger.log(f"{self.calibrate_alignment.__qualname__}")
         self._cmdAmp = cmdAmp
@@ -396,13 +401,14 @@ class Alignment:
                 coeff, _ = _zern.zernikeFit(img, self._zvec2fit)
                 _logger.log(f"{_zern.zernikeFit.__qualname__}")
             else:
-                img = img - 2 * self._surface  #questo 2x potrebbe essere una configurazione, o meglio ancora un REQ di salvataggio della "fitting surface", che viene salvata già 2x
+                if self._correct_cavity is True:
+                    img = img - 2 * self._surface  #questo 2x potrebbe essere una configurazione, o meglio ancora un REQ di salvataggio della "fitting surface", che viene salvata già 2x
                 cir = _geo.qpupil(-1 * self._surface.mask + 1)
                 mm = _geo.draw_mask(
                     self._surface.data * 0, cir[0], cir[1], 1.44 / 0.00076 / 2, out=0
                 )  #e questo blocco potrebbe essere in una funzione chiamata all'avvio, così si crea anche la auxmask. i parametri da definire in conf sarebbero 1.44 / 0.00076 / 2 == pix on radius
                 #coeff, _ = _zern.zernikeFitAuxmask(img, mm, self._zvec2fit) #mod RB20250917: this part has been substituted with zern_on_roi below
-                coeff = self._global_zern_on_roi(self, img, auxmask = mm)
+                coeff = self._global_zern_on_roi(img, auxmask = mm)
                 _logger.log(f"{_zern.zernikeFitAuxmask.__qualname__}")
             coefflist.append(coeff[self._zvec2use])
         if len(coefflist) == 1:
