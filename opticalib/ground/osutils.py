@@ -318,6 +318,8 @@ def save_fits(
         a fits.Header object.
     """
     # Prepare the header
+    if data.dtype != _np.float32:
+        data = _np.asanyarray(data, dtype=_np.float32)
     if header is not None:
         header = _header_from_dict(header)
     # Save the FITS file
