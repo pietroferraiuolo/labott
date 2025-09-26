@@ -85,7 +85,7 @@ from .ground.osutils import load_fits as _rfits, save_fits as _sfits, newtn as _
 from . import typings as _ot
 
 _sc = _gac()
-_np.set_printoptions(precision=2, suppress=True)
+_np.set_printoptions(precision=2, suppress=False)
 
 
 class Alignment:
