@@ -1,8 +1,10 @@
 """
+Module containing functions for region of interest (ROI) generation and other image utilities
+within the Opticalib framework.
+
 Author(s):
 ----------
-- Chiara Selmi: written in 2019 | rewritten in 2022
-- Pietro Ferraiuolo: modified in 2024
+- Pietro Ferraiuolo: pietro.ferraiuolo@inaf.it
 """
 
 import numpy as _np

@@ -1,17 +1,14 @@
 """
 Zernike Generation Library
 ==========================
-Author(s)
----------
-- Tim van Werkhoven (t.i.m.vanwerkhoven@xs4all.nl) : Original Author
-        Created in 2011-10-12
-- Pietro Ferraiuolo (pietro.ferraiuolo@inaf.it) : Adapted in 2024
-
-Description
------------
 This module provides functions and utilities for generating Zernike polynomials,
 which are a sequence of polynomials that are orthogonal on the unit disk. These
 polynomials are commonly used in optics and wavefront analysis.
+
+Author(s)
+---------
+- Tim van Werkhoven (t.i.m.vanwerkhoven@xs4all.nl) : Original Author,  Created in 2011-10-12
+- Pietro Ferraiuolo (pietro.ferraiuolo@inaf.it) : Adapted in 2024
 
 Functions
 ---------

@@ -1,15 +1,11 @@
 """
+Module containing all the functions necessary to process the data acquired for
+the Influence Function measurements.
+
 Author(s):
 ----------
-- Pietro Ferraiuolo
-- Runa Briguglio
-
-Written in June 2024
-
-Description
------------
-Module containing all the functions necessary to process the data acquired for
-the Influence Function measurements done on M4.
+- Pietro Ferraiuolo: pietro.ferraiuolo@inaf.it
+- Runa Briguglio: runa.briguglio@inaf.it
 
 High-level Functions
 --------------------

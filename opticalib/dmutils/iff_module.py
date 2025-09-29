@@ -1,15 +1,12 @@
 """
-IFF Module
-==========
-Author(s):
-----------
-- Pietro Ferraiuolo
-- Runa Briguglio
-
-Description:
-------------
 This module contains the necessary high/user-leve functions to acquire the IFF data,
 given a deformable mirror and an interferometer.
+
+Author(s):
+----------
+- Pietro Ferraiuolo: pietro.ferraiuolo@inaf.it
+- Runa Briguglio: runa.briguglio@inaf.it
+
 """
 
 import os as _os

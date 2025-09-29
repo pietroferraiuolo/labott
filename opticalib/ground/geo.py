@@ -1,15 +1,14 @@
 """
+This module contains functions for geometric operations on images.
+
 Autor(s)
 ---------
-    - Runa Briguglio : created Mar 2020
-    - Federico Miceli : added funcitonality on 2022
-    - Pietro Ferraiuolo : polished on 2024
+- Runa Briguglio : created Mar 2020
+- Federico Miceli : added funcitonality on 2022
+- Pietro Ferraiuolo : polished on 2024
 
-Description
------------
-This module contains functions for geometric operations on images.
 """
-
+    
 import numpy as _np
 from skimage.draw import disk as _disk
 from skimage.measure import CircleModel as _CM

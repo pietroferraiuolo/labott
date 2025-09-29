@@ -1,9 +1,11 @@
 """
+Module containing the ComputeReconstructor class, which, from a dm calibration,
+computes the reconstruction matrix.
+
 Author(s):
 ----------
-    - Chiara Selmi : written in 2019
-    - Marco Xompero : modified in 2024
-    - Pietro Ferraiuolo : modified in 2024
+- Marco Xompero : written in 2024
+- Pietro Ferraiuolo : modified in 2024
 """
 
 import numpy as _np

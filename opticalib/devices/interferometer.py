@@ -1,3 +1,12 @@
+"""
+This module contains the high-level classes for the use of interferometer devices.
+
+Author(s)
+---------
+- Pietro Ferraiuolo : pietro.ferraiuolo@inaf.it
+
+"""
+
 import os as _os
 import numpy as _np
 import time as _time

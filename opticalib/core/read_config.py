@@ -1,6 +1,4 @@
 """
-Module: read_config
-===================
 This module provides utilities for reading, writing, and updating YAML configuration files
 used in the opticalib system. It supports configuration management for devices such as
 deformable mirrors and interferometers, as well as acquisition and alignment settings.

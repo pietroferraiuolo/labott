@@ -1,8 +1,12 @@
 """
+ANALYZER module
+===============
+2020-2024
+
 Author(s)
 ---------
-- Runa Briguglio: created 2020
-- Pietro Ferraiuolo: modified 2024
+- Runa Briguglio: runa.briguglio@inaf.it
+- Pietro Ferraiuolo: pietro.ferraiuolo@inaf.it
 
 Description
 -----------

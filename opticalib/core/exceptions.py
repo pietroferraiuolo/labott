@@ -1,3 +1,7 @@
+"""
+This module defines custom exceptions used in the opticalib system.
+"""
+
 class DeviceNotFoundError(Exception):
     """Exception raised when a device is not found in the
     configuration file.

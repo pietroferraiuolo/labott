@@ -1,3 +1,22 @@
+"""
+TYPINGS module
+==============
+2025
+
+Author(s)
+---------
+- Pietro Ferraiuolo : pietro.ferraiuolo@inaf.it
+
+Description
+-----------
+This module defines custom type aliases and protocols for type hinting
+within the `opticalib` package. It includes protocols for matrix-like
+objects, image data, cube data, interferometer devices, and deformable
+mirror devices. Additionally, it provides a custom `isinstance_` function
+to check if an object conforms to these protocols.
+
+"""
+
 from typing import (
     Union,
     Optional,

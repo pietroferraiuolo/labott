@@ -1,16 +1,12 @@
 """
+This module contains the IFFCapturePreparation class, a class which serves as a
+preparator for the Influence Function acquisition, creating the timed command
+matrix history that will be ultimately used.
+
 Author(s):
 ----------
-    - Pietro Ferraiuolo
+- Pietro Ferraiuolo: pietro.ferraiuolo@inaf.it
 
-Written in June 2024
-
-Description
------------
-This module contains the IFFCapturePreparation class, a class which serves as a
-preparator for the Influence Function acquisition by M4, creating the timed com
-mand matrix history that will be ultimately used.
-More information on its use can be found on the class documentation.
 """
 
 import os as _os

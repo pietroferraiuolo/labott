@@ -1,13 +1,13 @@
 """
+Module containing the class which computes the flattening command for a deformable
+mirror, given an imput shape and a (filtered) interaction cube.
+
 Author(s)
 ---------
     - Pietro Ferraiuolo : written in 2024
 
 Description
 -----------
-Module containing the class which computes the flattening command for a deformable
-mirror, given an imput shape and a (filtered) interaction cube.
-
 From the loaded tracking number (tn) the interaction cube will be loaded (and
 filtered, if it's not already) from which the interaction matrix will be computed.
 If an image to shape is provided on class instance, then the reconstructor will
@@ -18,18 +18,22 @@ How to Use it
 =============
 Instancing the class only with the tn of the interaction cube
 
-    >>> from opticalib.dmutils import flattening as flt
-    >>> tn = '20240906_110000' # example tn
-    >>> f = flt.Flattening(tn)
-    >>> # say we have acquired an image
-    >>> img = interf.acquire_map()
-    >>> f.load_image2shape(img)
-    >>> f.computeRecMat()
-    'Computing reconstruction matrix...'
+```python
+from opticalib.dmutils import flattening as flt
+tn = '20240906_110000' # example tn
+f = flt.Flattening(tn)
+# say we have acquired an image
+img = interf.acquire_map()
+f.load_image2shape(img)
+f.computeRecMat()
+'Computing reconstruction matrix...'
+```
 
 all is ready to compute the flat command, by simply running the method
 
-    >>> flatCmd = flat.computeFlatCmd()
+```python
+flatCmd = f.computeFlatCmd()
+```
 
 Update : all the steps above have been wrapped into the `applyFlatCommand` method,
 which will also save the flat command and the images used for the computation in a

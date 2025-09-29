@@ -1,4 +1,6 @@
 """
+This module contains the classes for the high-level use of deformable mirrors.
+
 Author(s)
 ---------
 - Pietro Ferraiuolo : written in 2025
@@ -21,6 +23,11 @@ import types as _types
 
 
 class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
+    """
+    AdOptica Deformable Mirror interface.
+    
+    Used with the AdOptica AO Client. In use for the DP, and will later be used for M4.
+    """
 
     def __init__(self, tn: _ot.Optional[str] = None):
         """The Constructor"""
@@ -260,7 +267,7 @@ class SplattDm(_api.base_devices.BaseDeformableMirror):
         delay: int | float = 0.2,
         save: _ot.Optional[str] = None,
         differential: bool = True,
-        read_nuffers: bool = False,
+        read_buffers: bool = False,
     ) -> str:
         if self.cmdHistory is None:
             raise _oe.MatrixError("No Command History to run!")
@@ -280,7 +287,7 @@ class SplattDm(_api.base_devices.BaseDeformableMirror):
                 self.set_shape(cmd)
                 if read_buffers is True:
                     pos, cur, bufTN = self._dm.read_buffers(
-                        external=true, n_samples=300
+                        external=True, n_samples=300
                     )
                     path = _os.path.join(datafold, f"buffer_{i:05d}.fits")
                     hdr_dict = {"BUF_TN": str(bufTN)}
@@ -293,7 +300,7 @@ class SplattDm(_api.base_devices.BaseDeformableMirror):
         self.set_shape(s)
         return tn
 
-    def plot_command(self, cmd):
+    def plot_command(self, cmd: _ot.ArrayLike) -> None:
         self._dm.plot_splatt_vec(cmd)
 
     def sendBufferCommand(

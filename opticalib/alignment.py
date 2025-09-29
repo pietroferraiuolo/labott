@@ -1,7 +1,11 @@
 """
+ALIGNMENT module
+================
+2024
+
 Author(s):
 ----------
-- Pietro Ferraiuolo : written in 2024
+- Pietro Ferraiuolo : pietro.ferraiuolo@inaf.it
 
 Description
 -----------

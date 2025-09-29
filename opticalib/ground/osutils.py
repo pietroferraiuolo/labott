@@ -1,4 +1,8 @@
 """
+Module containing various utility functions for handling files and directories,
+especially related to tracking numbers and interferometric data, within the
+Opticalib framework.
+
 Author(s)
 ---------
 - Chiara Selmi:  written in 2019

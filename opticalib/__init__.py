@@ -1,11 +1,13 @@
 """
 Author(s)
 ---------
-- Pietro Ferraiuolo : written in 2025
+- Pietro Ferraiuolo : pietro.ferraiuolo@inaf.it
 
 Description
 -----------
-`opticalib` is a package for the control of the 4D PhaseCam interferometer.
+`opticalib` is a package for the control of laboratory instrumentations, like
+Interferometers and Deformable Mirrors. It also provides tools for the
+analysis of wavefronts and images.
 
 How to Use:
 -----------
@@ -34,8 +36,5 @@ __all__ = [
     "getFileList",
     "folders",
     "create_configuration_file",
-    "load_configuration_file",
     "read_config",
-    "interferometer",
-    "deformable_mirrors",
 ]
