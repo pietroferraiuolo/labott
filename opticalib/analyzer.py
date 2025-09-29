@@ -13,6 +13,7 @@ import os as _os
 import numpy as _np
 import jdcal as _jdcal
 import matplotlib.pyplot as _plt
+from . import typings as _ot
 from .ground import zernike as zern
 from .ground import osutils as osu
 from .core import root as _foldname
@@ -27,7 +28,7 @@ def averageFrames(
     tn: str,
     first: int = None,
     last: int = None,
-    file_selector: list = None,
+    file_selector: list[int] = None,
     thresh: bool = False,
 ):
     """
@@ -90,7 +91,12 @@ def averageFrames(
     return aveimg
 
 
-def saveAverage(tn, average_img=None, overwrite: bool = False, **kwargs):
+def saveAverage(
+    tn: str,
+    average_img: _ot.ImageData = None,
+    overwrite: bool = False,
+    **kwargs: dict[str, _ot.Any],
+):
     """
     Saves an averaged frame, in the same folder as the original frames. If no
     averaged image is passed as argument, it will create a new average for the
@@ -107,20 +113,17 @@ def saveAverage(tn, average_img=None, overwrite: bool = False, **kwargs):
         from data found in the tracking number folder. Additional arguments can
         be passed on
     **kwargs : additional optional arguments
-        The same arguments as ''averageFrames'', to specify the averaging method.
-
-        tn : str
-            Data Tracking Number.
-        first : int, optional
+        The same arguments as `averageFrames`, to specify the averaging method.
+        - first : int, optional
             Index number of the first file to consider. If None, the first file in
             the list is considered.
-        last : int, optional
+        - last : int, optional
             Index number of the last file to consider. If None, the last file in
             list is considered.
-        file_selector : list, optional
+        - file_selector : list of ints, optional
             A list of integers, representing the specific files to load. If None,
             the range (first->last) is considered.
-        thresh : bool, optional
+        - thresh : bool, optional
             DESCRIPTION. The default is None.
     """
     fname = _os.path.join(_OPDSER, tn, "average.fits")
@@ -168,21 +171,21 @@ def openAverage(tn: str):
     return image
 
 
-def runningDiff(tn, gap=2):
+def runningDiff(tn: str, gap: int = 2):
     """
-
+    Computes the running difference of the frames in a given tracking number.
 
     Parameters
     ----------
-    tn : TYPE
-        DESCRIPTION.
-    gap : TYPE, optional
-        DESCRIPTION. The default is 2.
+    tn : str
+        Tracking number of the frames to process.
+    gap : int, optional
+        Number of frames to skip between each difference calculation. The default is 2.
 
     Returns
     -------
-    svec : TYPE
-        DESCRIPTION.
+    svec : ndarray
+        Array of standard deviations for each frame difference.
 
     """
     llist = osu.getFileList(tn)
@@ -199,9 +202,9 @@ def runningDiff(tn, gap=2):
     return svec
 
 
-def frame(idx, mylist):
+def frame(idx: int, mylist: list[_ot.ImageData] | _ot.CubeData) -> _ot.ImageData:
     """
-
+    Returns a single frame from a list of files or from a cube.
 
     Parameters
     ----------
@@ -224,7 +227,9 @@ def frame(idx, mylist):
     return img
 
 
-def spectrum(signal, dt=1, show=None):
+def spectrum(
+    signal: _ot.ArrayLike, dt: float = 1, show: bool = None
+) -> tuple[_ot.ArrayLike, _ot.ArrayLike]:
     """
 
 
@@ -274,7 +279,9 @@ def spectrum(signal, dt=1, show=None):
     return spe, freq
 
 
-def frame2ottFrame(img, croppar, flipOffset=True):
+def frame2ottFrame(
+    img: _ot.ImageData, croppar: list[int], flipOffset: bool = True
+) -> _ot.ImageData:
     """
 
 
@@ -310,19 +317,17 @@ def frame2ottFrame(img, croppar, flipOffset=True):
     return fullimg
 
 
-def timevec(tn):
+def timevec(tn: str) -> _ot.ArrayLike:
     """
-
-
     Parameters
     ----------
-    tn : TYPE
-        DESCRIPTION.
+    tn : str
+        Tracking number of the frames to process.
 
     Returns
     -------
-    timevector : TYPE
-        DESCRIPTION.
+    timevector : _np.ndarray
+        Array of time values for each frame.
 
     """
     fold = osu.findTracknum(tn)
@@ -348,7 +353,7 @@ def timevec(tn):
     return timevector
 
 
-def track2jd(tni):
+def track2jd(tni: str):
     """
 
 
@@ -368,7 +373,7 @@ def track2jd(tni):
     return jdi
 
 
-def track2date(tni):
+def track2date(tni: str) -> list[str | float]:
     """
     Converts a tracing number into a list containing year, month, day, hour,
     minutes and seconds, divied.
@@ -405,7 +410,7 @@ def track2date(tni):
     return time
 
 
-def runningMean(vec, npoints):
+def runningMean(vec: _ot.ArrayLike, npoints: int) -> _ot.ArrayLike:
     """
 
 
@@ -425,7 +430,7 @@ def runningMean(vec, npoints):
     return _np.convolve(vec, _np.ones(npoints), "valid") / npoints
 
 
-def readTemperatures(tn):
+def readTemperatures(tn: str):
     """
 
 
@@ -446,7 +451,7 @@ def readTemperatures(tn):
     return temperatures
 
 
-def readZernike(tn):
+def readZernike(tn: str):
     """
 
 
@@ -467,7 +472,9 @@ def readZernike(tn):
     return zernikes
 
 
-def zernikePlot(mylist, modes=_np.array(range(1, 11))):
+def zernikePlot(
+    mylist: _ot.CubeData | list[_ot.ImageData], modes: _ot.ArrayLike = None
+) -> _ot.ArrayLike:
     """
 
 
@@ -484,6 +491,8 @@ def zernikePlot(mylist, modes=_np.array(range(1, 11))):
         DESCRIPTION.
 
     """
+    if modes is None:
+        modes = _np.array(range(1, 11))
     mytype = type(mylist)
     if mytype is list:
         imgcube = createCube(mylist)
@@ -499,7 +508,7 @@ def zernikePlot(mylist, modes=_np.array(range(1, 11))):
     return zcoeff
 
 
-def strfunct(vect, gapvect):
+def strfunct(vect: _ot.ArrayLike, gapvect: _ot.ArrayLike) -> _ot.ArrayLike:
     """
     vect shall be npoints x m
     the strfunct is calculate m times over the npoints time series
@@ -521,7 +530,13 @@ def strfunct(vect, gapvect):
     return st
 
 
-def comp_filtered_image(imgin, verbose=False, disp=False, d=1, freq2filter=None):
+def comp_filtered_image(
+    imgin: _ot.ImageData,
+    verbose: bool = False,
+    disp: bool = False,
+    d: int = 1,
+    freq2filter: _ot.Optional[tuple[float, float]] = None,
+):
     """
 
 
@@ -607,14 +622,14 @@ def comp_filtered_image(imgin, verbose=False, disp=False, d=1, freq2filter=None)
 
 
 def comp_psd(
-    imgin,
-    nbins=None,
-    norm="backward",
-    verbose=False,
-    disp=False,
-    d=1,
-    sigma=None,
-    crop=True,
+    imgin: _ot.ImageData,
+    nbins: _ot.Optional[int] = None,
+    norm: str = "backward",
+    verbose: bool = False,
+    disp: bool = False,
+    d: int = 1,
+    sigma: _ot.Optional[float] = None,
+    crop: bool = True,
 ):
     """
 
@@ -706,13 +721,13 @@ def comp_psd(
     return fout, Aout
 
 
-def integrate_psd(y, img):
+def integrate_psd(y: _ot.ArrayLike, img: _ot.ImageData) -> _ot.ArrayLike:
     nn = _np.sqrt(_np.sum(-1 * img.mask + 1))
     yint = _np.sqrt(_np.cumsum(y)) / nn
     return yint
 
 
-def getDataFileList(tn):
+def getDataFileList(tn: str) -> list[str]:
     """
     Returns a list of data files for the given tracking number.
 
@@ -731,7 +746,7 @@ def getDataFileList(tn):
     return filelist
 
 
-def createCube(filelist, register=False):
+def createCube(filelist: list[str], register: bool = False):
     """
     Creates a cube of images from an images file list
 
@@ -759,7 +774,9 @@ def createCube(filelist, register=False):
     return cube
 
 
-def modeRebinner(img, rebin):
+def modeRebinner(
+    img: _ot.ImageData, rebin: int, method: str = "averaging"
+) -> _ot.ArrayLike:
     """
     Image rebinner
 
@@ -771,6 +788,8 @@ def modeRebinner(img, rebin):
         Image to rebin.
     rebin : int
         Rebinning factor.
+    method : str, optional
+        Rebinning method, either 'averaging' or 'sampling'. The default is 'averaging'.
 
     Returns
     -------
@@ -779,11 +798,14 @@ def modeRebinner(img, rebin):
     """
     shape = img.shape
     new_shape = (shape[0] // rebin, shape[1] // rebin)
-    newImg = _rebin2DArray(img, new_shape)
+    sample = False if method == "sampling" else True
+    newImg = _rebin2DArray(img, new_shape, sample=sample)
     return newImg
 
 
-def cubeRebinner(cube, rebin):
+def cubeRebinner(
+    cube: _ot.CubeData, rebin: int, method: str = "averaging"
+) -> _ot.CubeData:
     """
     Cube rebinner
 
@@ -793,6 +815,8 @@ def cubeRebinner(cube, rebin):
         Cube to rebin.
     rebin : int
         Rebinning factor.
+    method : str, optional
+        Rebinning method, either 'averaging' or 'sampling'. The default is 'averaging'.
 
     Returns
     -------
@@ -800,18 +824,22 @@ def cubeRebinner(cube, rebin):
         Rebinned cube.
     """
     newCube = []
+
     for i in range(cube.shape[-1]):
-        newCube.append(modeRebinner(cube[:, :, i], rebin))
+        newCube.append(modeRebinner(cube[:, :, i], rebin, method=method))
     return _np.ma.dstack(newCube)
 
 
 # From ARTE #
-def _rebin2DArray(a, new_shape, sample=False):
+def _rebin2DArray(
+    a: _ot.ArrayLike, new_shape: tuple[int, int], sample: bool = False
+) -> _ot.ArrayLike:
     """
     Replacement of IDL's rebin() function for 2d arrays.
     Resizes a 2d array by averaging or repeating elements.
     New dimensions must be integral factors of original dimensions,
     otherwise a ValueError exception will be raised.
+
     Parameters
     ----------
     a : ndarray
@@ -822,12 +850,14 @@ def _rebin2DArray(a, new_shape, sample=False):
         if True, when reducing the array side elements are set
         using a nearest-neighbor algorithm instead of averaging.
         This parameter has no effect when enlarging the array.
+
     Returns
     -------
     rebinned_array : ndarray
         If the new shape is smaller of the input array  the data are averaged,
         unless the sample parameter is set.
         If the new shape is bigger array elements are repeated.
+
     Raises
     ------
     ValueError
@@ -837,6 +867,7 @@ def _rebin2DArray(a, new_shape, sample=False):
     NotImplementedError
          - one dimension requires an upsampling while the other requires
            a downsampling
+
     Examples
     --------
     >>> a = np.array([[0, 1], [2, 3]])

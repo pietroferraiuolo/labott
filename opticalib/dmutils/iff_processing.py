@@ -1,8 +1,8 @@
 """
 Author(s):
 ----------
-    - Pietro Ferraiuolo
-    - Runa Briguglio
+- Pietro Ferraiuolo
+- Runa Briguglio
 
 Written in June 2024
 
@@ -13,39 +13,33 @@ the Influence Function measurements done on M4.
 
 High-level Functions
 --------------------
-process(tn, registration=False)
-    Function that processes the data contained in the OPDImages/tn folder. by p
-    erforming the differential algorithm, it procudes fits images for each comm
-    anded mode into the IFFunctions/tn folder, and creates a cube from these in
-    to INTMatrices/tn. If 'registration is not False', upon createing the cube,
+process(tn, registration=False, roi=None, save=False, rebin=1)
+    Function that processes the data contained in the OPDImages/tn folder. By 
+    performing the differential algorithm, it produces fits images for each 
+    commanded mode into the IFFunctions/tn folder, and creates a cube from these
+    into INTMatrices/tn. If 'registration is not False', upon createing the cube,
     the registration algorithm is performed.
 
 stackCubes(tnlist)
     Function that, given as imput a tracking number list containing cubes data,
     will stack the found cubes into a new one with a new tracking number, into
-    INTMatrices/new_tn. A 'flag.txt' file will be created to give more informat
-    ion on the process.
-
-Notes
------
-In order for the module to work properly, the tower initialization must be run
-so that the folder names configuration file is populated.
-From the IPython console
-
->>> run '/path/to/m4/initOTT.py'
->>> from m4.dmutils import iff_processing as ifp
+    INTMatrices/new_tn. A 'flag.txt' file will be created to give more information
+    on the process.
 
 Example
 -------
->>> tn1 = '20160516_114916'
->>> tn2 = '20160516_114917' # A copy of tn1 (simulated) data
->>> ifp.process(tn1)
-Cube saved in '.../m4/data/M4Data/OPTData/INTMatrices/20160516_114916/IMcube.fits'
->>> ifp.process(tn2)
-Cube saved in '.../m4/data/M4Data/OPTData/INTMatrices/20160516_114917/IMcube.fits'
->>> tnlist = [tn1, tn2]
->>> ifp.stackCubes(tnlist)
-Stacekd cube and matrices saved in '.../m4/data/M4Data/OPTData/INTMatrices/'new_tn'/IMcube.fits'
+
+```python
+tn1 = '20160516_114916'
+tn2 = '20160516_114917' # A copy of tn1 (simulated) data
+ifp.process(tn1, save=True)
+Cube saved in '.../path/to/data/OPTData/INTMatrices/20160516_114916/IMcube.fits'
+ifp.process(tn2, save=True)
+Cube saved in '.../path/to/data/OPTData/INTMatrices/20160516_114917/IMcube.fits'
+tnlist = [tn1, tn2]
+ifp.stackCubes(tnlist)
+Stacked cube and matrices saved in '.../path/to/data/OPTData/INTMatrices/'new_tn'/IMcube.fits'
+```
 """
 
 import os as _os
@@ -152,6 +146,11 @@ def saveCube(
     old_fold = _os.path.join(_ifFold, tn)
     filelist = _osu.getFileList(fold=old_fold, key="mode_")
     cube = createCube(filelist, register=register)
+    
+    # FIXME: For now commented 
+    # cmask = createMasterMask(cube)
+    # cube.mask = cmask
+    
     # Rebinning the cube
     if rebin > 1:
         cube = cubeRebinner(cube, rebin)
@@ -219,6 +218,27 @@ def stackCubes(tnlist: str) -> None:
     ) as file:
         flag.write(file)
     print(f"Stacked cube and matrices saved in {new_tn}")
+
+
+def createMasterMask(cube: _ot.CubeData) -> _ot.ImageData:
+    """
+    Function which creates a master mask for the cube, by performing a logical
+    OR operation between the masks of each image in the cube.
+
+    Parameters
+    ----------
+    cube : masked_array
+        Cube from which create the master mask.
+
+    Returns
+    -------
+    master_mask : masked_array
+        Master mask created from the cube.
+    """
+    master_mask = cube[:, :, 0].mask
+    for i in range(1, cube.shape[-1]):
+        master_mask = _np.ma.mask_or(master_mask, cube[:, :, i].mask)
+    return master_mask
 
 
 def filterZernikeCube(
