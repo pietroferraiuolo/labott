@@ -29,12 +29,11 @@ def roiGenerator(img: _ot.ImageData) -> list[_ot.ImageData]:
     labels = _meas.label(_np.invert(img.mask))
     roiList = []
     null_rois = 0
-    for i in range(1, labels.max()):
+    for i in range(1, labels.max()+1):
         maski = _np.zeros(labels.shape, dtype=bool)
         maski[_np.where(labels == i)] = 1
         final_roi = _np.ma.mask_or(_np.invert(maski), img.mask)
         if _np.invert(final_roi).sum() < 100:
-            null_rois += 1
             continue
         roiList.append(final_roi)
     return roiList
