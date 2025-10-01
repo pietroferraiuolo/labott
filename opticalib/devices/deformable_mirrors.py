@@ -56,9 +56,12 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
                 f"Command length {len(cmd)} does not match the number of actuators {self.nActs}."
             )
         if incremental:
-            dc = 1/incremental
-            for i in range(dc):       
-                self._aoClient.mirrorCommand(cmd*i*incremental)
+            dc = _np.ceil((1/incremental))
+            for i in range(dc):
+                if i*incremental > 1.:
+                    self._aoClient.mirrorCommand(cmd)
+                else:
+                    self._aoClient.mirrorCommand(cmd*i*incremental)
         else:
             self._aoClient.mirrorCommand(cmd)
 
