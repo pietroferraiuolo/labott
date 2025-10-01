@@ -41,7 +41,7 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
         pos = self._aoClient.getPosition()
         return pos
 
-    def set_shape(self, cmd: list[float]):  # cmd, segment=None):
+    def set_shape(self, cmd: list[float], incremental: float = False):  # cmd, segment=None):
         """
         Applies the given command to the DM actuators.
 
@@ -55,7 +55,12 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             raise _oe.CommandError(
                 f"Command length {len(cmd)} does not match the number of actuators {self.nActs}."
             )
-        self._aoClient.mirrorCommand(cmd)
+        if incremental:
+            dc = 1/incremental
+            for i in range(dc):       
+                self._aoClient.mirrorCommand(cmd*i*incremental)
+        else:
+            self._aoClient.mirrorCommand(cmd)
 
     def uploadCmdHistory(self, tcmdhist: _ot.MatrixLike) -> None:
         """
