@@ -61,7 +61,7 @@ def averageFrames(
         Final image of averaged frames.
 
     """
-    fileList = osu.getFileList(tn, fold=_OPDSER, key="20")
+    fileList = osu.getFileList(tn, fold=_OPDSER.split('/')[-1], key="20")
     if first is not None and last is not None:
         fl = [
             fileList[x]

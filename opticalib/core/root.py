@@ -69,7 +69,6 @@ def _updateInterfPaths(paths: dict[str, str]) -> None:
     This function reads the configuration file and updates the paths of the
     settings file and the folders used in the package.
     """
-    print("è partita?")
     global SETTINGS_CONF_FILE
     global COPIED_SETTINGS_CONF_FILE
     global CAPTURE_FOLDER_NAME_4D_PC
@@ -80,11 +79,6 @@ def _updateInterfPaths(paths: dict[str, str]) -> None:
     CAPTURE_FOLDER_NAME_4D_PC = paths["capture_4dpc"]
     PRODUCE_FOLDER_NAME_4D_PC = paths["produce_4dpc"]
     PRODUCE_FOLDER_NAME_LOCAL_PC = paths["produce"]
-    print(f"Settings file: {SETTINGS_CONF_FILE}")
-    print(f"Copied settings file: {COPIED_SETTINGS_CONF_FILE}")
-    print(f"Capture folder name: {CAPTURE_FOLDER_NAME_4D_PC}")
-    print(f"Produce folder name: {PRODUCE_FOLDER_NAME_4D_PC}")
-    print(f"Produce folder name local PC: {PRODUCE_FOLDER_NAME_LOCAL_PC}")
 
 
 TEMPLATE_CONF_FILE: str = (
