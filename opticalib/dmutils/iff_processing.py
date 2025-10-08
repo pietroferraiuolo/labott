@@ -91,6 +91,8 @@ def process(
         default is (False, 1).
     """
     ampVector, modesVector, template, _, registrationActs, shuffle = _getAcqPar(tn)
+    if not modesVector.dtype.type is _np.int_:
+        modesVector = modesVector.astype(int)
     _, regMat = getRegFileMatrix(tn, roi)
     modesMat = getIffFileMatrix(tn, roi)
     new_fold = _os.path.join(_intMatFold, tn)
@@ -812,5 +814,9 @@ def _ampReorganization(ampVector: _ot.ArrayLike):
 
 
 def _modesReorganization(modesVector: _ot.ArrayLike):
+    # if isinstance(modesVector, _np.ndarray):
+    #     modesVector = modesVector.astype(int)
+    # else:
+    #     modesVector = _np.asarray(modesVector)
     reorganizaed_modes = modesVector
     return reorganizaed_modes
