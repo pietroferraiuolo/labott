@@ -222,7 +222,9 @@ class ZernikeFitter:
         mode: str = "global",
     ) -> tuple[_t.ArrayLike, _t.ArrayLike]:
         """
-        Fit Zernike modes to an image or to an image using the current fit mask.
+        Computes Zernike coefficients over a segmented fitting area, i.e. a pupil
+        mask divided into Regions Of Interest (ROI). The computation is based on
+        the fitting of Zernike modes independently on each ROI.
 
         Parameters
         ----------
@@ -550,9 +552,7 @@ def _surf_fit(
     zgen : ZernikeGenerator
         Zernike generator instance.
     zlist : list[int]
-        List of Zernike modes.
-    ordering : str, optional
-        Ordering of Zernike modes. Default is 'noll'.
+        List of Zernike modes in `noll` ordering.
 
     Returns
     -------
@@ -561,13 +561,8 @@ def _surf_fit(
     mat : numpy array
         Matrix of Zernike polynomials.
     """
-    # tmp = _np.ma.masked_array(zz.data, zgen._boolean_mask)
-    tmp = zz.copy()  # _np.ma.masked_array(zz.data, zgen._boolean_mask)
-
+    tmp = zz.copy()
     tmp_mask = tmp.mask == 0
-
-    if ordering not in ["noll"]:
-        raise ValueError("ordering currently supported is only 'noll'")
     mat = []
     for zmode in zlist:
         vv = zgen.getZernike(zmode)
