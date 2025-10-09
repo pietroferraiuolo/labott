@@ -55,6 +55,7 @@ plt.show()
 
 import numpy as _np
 import math as _math
+from contextlib import contextmanager as _contextmanager
 from . import geo as _geo, roi as _roi
 from opticalib import typings as _t
 from arte.utils.zernike_generator import ZernikeGenerator
@@ -62,10 +63,251 @@ from arte.types.mask import CircularMask
 
 fac = _math.factorial
 
+class ZernikeFitter:
+    """
+    Class for fitting Zernike polynomials to an image.
 
-def generateZernMat(
-    noll_ids: list[int], img_mask: _t.ImageData, scale_length: float = None
-) -> _t.MatrixLike:
+    Parameters
+    ----------
+    fit_mask : ImageData or CircularMask or np.ndarray, optional
+        Mask to be used for fitting. Can be an ImageData, CircularMask, or ndarray.
+        If None, a default CircularMask will be created.
+    """
+
+    def __init__(self, fit_mask: _t.Optional[_t.ImageData] = None):
+        """
+        Class for fitting Zernike polynomials to an image.
+
+        Parameters
+        ----------
+        fit_mask : ImageData or CircularMask or np.ndarray, optional
+            Mask to be used for fitting. Can be an ImageData, CircularMask, or ndarray.
+            If None, a default CircularMask will be created.
+        """
+        if fit_mask is not None:
+            if isinstance(fit_mask, CircularMask):
+                self._fit_mask = fit_mask
+            elif isinstance(fit_mask, _np.ndarray):
+                self._fit_mask = CircularMask.fromMaskedArray(
+                    _np.ma.masked_array(fit_mask, mask=fit_mask == 0),
+                    method="COG",
+                )
+            else:
+                self._fit_mask = CircularMask.fromMaskedArray(fit_mask, mask=fit_mask.mask, method="COG")
+            self._zgen = ZernikeGenerator(self._fit_mask)
+            self.auxmask = self._fit_mask.as_masked_array()
+        else:
+            self._fit_mask = None
+            self._zgen = None
+            self.auxmask = None
+
+    def setFitMask(self, fit_mask: _t.ImageData, method: str = "GOC") -> None:
+        """
+        Set the fitting mask.
+
+        Parameters
+        ----------
+        fit_mask : ImageData or CircularMask or np.ndarray
+            Mask to be used for fitting. Can be an ImageData, CircularMask, or ndarray.
+        method : str, optional
+            Method used my the `CircularMask.fromMaskedArray` function. Default is 'COG'.
+        """
+        if isinstance(fit_mask, CircularMask):
+            self._fit_mask = fit_mask
+        elif isinstance(fit_mask, _np.ndarray):
+            self._fit_mask = CircularMask.fromMaskedArray(
+                _np.ma.masked_array(fit_mask, mask=fit_mask == 0),
+                method=method,
+            )
+        else:
+            self._fit_mask = CircularMask.fromMaskedArray(fit_mask, method="COG")
+        self._zgen = ZernikeGenerator(self._fit_mask)
+        self.auxmask = self._fit_mask.as_masked_array()
+
+    def getFitMask(self) -> _t.ImageData:
+        """
+        Get the current fitting mask.
+
+        Returns
+        -------
+        fit_mask : ImageData
+            Current fitting mask.
+        """
+        return self.auxmask
+
+    @_contextmanager
+    def no_mask(self):
+        """
+        Context manager to temporarily clear the fitting mask and Zernike generator.
+
+        Usage
+        -----
+        with zfitter.no_mask():
+            coeffs, mat = zfitter.fit(image, modes)
+
+        Within the context, ``self._fit_mask``, ``self._zgen`` and ``self.auxmask``
+        are set to ``None`` so that ``fit`` will lazily create a temporary mask
+        from the provided image. On exit, the previous values are restored.
+        """
+        prev_fit_mask = self._fit_mask
+        prev_zgen = self._zgen
+        prev_auxmask = self.auxmask.copy()
+        try:
+            self._fit_mask = None
+            self._zgen = None
+            self.auxmask = None
+            yield self
+        finally:
+            self._fit_mask = prev_fit_mask
+            self._zgen = prev_zgen
+            self.auxmask = prev_auxmask
+
+    def removeZernike(
+        self, image: _t.ImageData, zernike_index_vector: list[int] = None
+    ) -> _t.ImageData:
+        """
+        Remove Zernike modes from the image using the current fit mask.
+
+        Parameters
+        ----------
+        image : ImageData
+            Image from which to remove Zernike modes.
+        zernike_index_vector : list[int], optional
+            List of Zernike mode indices to be removed. Default is [1, 2, 3].
+
+        Returns
+        -------
+        new_ima : ImageData
+            Image with Zernike modes removed.
+        """
+        if zernike_index_vector is None:
+            zernike_index_vector = [1, 2, 3]
+        coeff, mat = self.fit(image, zernike_index_vector)
+        surf = self.makeZernikeSurface(image, coeff, mat)
+        return _np.ma.masked_array(image - surf, image.mask)
+
+    def fit(
+        self, image: _t.ImageData, zernike_index_vector: list[int]
+    ) -> tuple[_t.ArrayLike, _t.ArrayLike]:
+        """
+        Fit Zernike modes to an image.
+
+        Parameters
+        ----------
+        image : ImageData
+            Image for Zernike fit.
+        zernike_index_vector : list[int]
+            List containing the index of Zernike modes to be fitted starting from 1.
+
+        Returns
+        -------
+        coeff : numpy array
+            Vector of Zernike coefficients.
+        mat : numpy array
+            Matrix of Zernike polynomials.
+        """
+        if self._fit_mask is None and self._zgen is None:
+            zgen = self._create_fit_mask_from_img(image)
+            img2fit = _np.ma.masked_array(image.data, mask=zgen._boolean_mask.copy())
+        else:
+            zgen = self._zgen
+            img2fit = image
+        coeffs, mat = _surf_fit(img2fit, zgen, zernike_index_vector)
+        return coeffs, mat
+
+    def fitOnROi(
+        self,
+        image: _t.ImageData,
+        z2fit: _t.Optional[list[int]] = None,
+        mode: str = "global",
+    ) -> tuple[_t.ArrayLike, _t.ArrayLike]:
+        """
+        Fit Zernike modes to an image or to an image using the current fit mask.
+
+        Parameters
+        ----------
+        image : ImageData
+            Image for Zernike fit.
+        z2fit : list[int], optional
+            List containing the index of Zernike modes to be fitted starting from 1.
+            Default is [1,2,3].
+        mode : str, optional
+            Mode of fitting.
+            - `global` will return the mean of the fitted zernike coefficient of each ROI
+            - `local` will return the vector of fitted zernike coefficient for each ROI
+            Default is 'global'.
+
+        Returns
+        -------
+        coeff : numpy array
+            Vector of Zernike coefficients.
+        mat : numpy array
+            Matrix of Zernike polynomials.
+        """
+        if mode not in ["global", "local"]:
+            raise ValueError("mode must be 'global' or 'local'")
+        if z2fit is None:
+            z2fit = [1, 2, 3]
+        roiimg = _roi.roiGenerator(image)
+        nroi = len(roiimg)
+        print("Found " + str(nroi) + " ROI")
+        zcoeff = _np.zeros([nroi, len(z2fit)])
+        for i in range(nroi):
+            img2fit = _np.ma.masked_array(image.data, mask=roiimg[i])
+            cc, _ = self.fit(img2fit, z2fit)
+            zcoeff[i, :] = cc
+        if mode == "global":
+            zcoeff = zcoeff.mean(axis=0)
+        return zcoeff
+
+    def makeZernikeSurface(
+        self, image: _t.ImageData, coeff: _t.ArrayLike, mat: _t.ArrayLike
+    ) -> _t.ImageData:
+        """
+        Generate Zernike surface from coefficients and matrix.
+
+        Parameters
+        ----------
+        image : ImageData
+            Image for Zernike fit.
+        coeff : numpy array
+            Vector of Zernike coefficients.
+        mat : numpy array
+            Matrix of Zernike polynomials.
+
+        Returns
+        -------
+        zernike_surface : ImageData
+            Generated Zernike surface.
+        """
+        mm = _np.where(image.mask == 0)
+        zernike_surface = _np.zeros(image.shape)
+        zernike_surface[mm] = _np.dot(mat, coeff)
+        return _np.ma.masked_array(zernike_surface, mask=image.mask)
+
+    def _create_fit_mask_from_img(self, image: _t.ImageData) -> CircularMask:
+        """
+        Create a default CircularMask for fitting.
+
+        Returns
+        -------
+        fit_mask : CircularMask
+            Default fitting mask.
+        """
+        if not isinstance(image, _np.ma.masked_array):
+            try:
+                image = _np.ma.masked_array(image, mask=image == 0)
+            except Exception as e:
+                raise ValueError(
+                    "Input image must be a numpy masked array or convertible to one."
+                ) from e
+        cmask = CircularMask(image.shape)
+        cmask._mask = image.mask
+        zgen = ZernikeGenerator(cmask)
+        return zgen
+
+
+def generateZernMat(noll_ids: list[int], img_mask: _t.ImageData) -> _t.MatrixLike:
     """
     Generates the interaction matrix of the Zernike modes with Noll index
     in noll_ids on the mask in input
@@ -76,9 +318,6 @@ def generateZernMat(
         List of (Noll) mode indices to fit.
     img_mask : matrix bool
         Mask of the desired image.
-    scale_length : float, optional
-        The scale length to use for the Zernike fit.
-        The default is the maximum of the image mask shape.
 
     Returns
     -------
@@ -110,7 +349,7 @@ def zernikeFitOnRoi(
     auxmask : numpy array, optional
         Auxiliary mask. Default is the image mask.
     z2fit : numpy array, optional
-        Vector containing the index of Zernike modes to be fitted starting from 1. 
+        Vector containing the index of Zernike modes to be fitted starting from 1.
         Default is [1,2,3].
     mode : str, optional
         Mode of fitting.
@@ -230,15 +469,9 @@ def zernikeFit(
     cmask = CircularMask((sx, sy), rpix, (cx, cy))
     cmask._mask = image.mask
     zgen = ZernikeGenerator(cmask)
-
-    # mm = mask == 1
     mm = zgen._boolean_mask.copy()
     img2 = _np.ma.masked_array(img1, mask=mm)
-    # TO BE REMOVED old_coeffs = _osurf_fit(xx[mm], yy[mm], img1[mm], zernike_index_vector)
     coeffs, mat = _surf_fit(img2, zgen, zernike_index_vector)
-    # TO BE REMOVED print(old_coeffs)
-    # TO BE REMOVED print(coeffs)
-
     return coeffs, mat
 
 
@@ -344,248 +577,3 @@ def _surf_fit(
     B = _np.transpose(tmp.compressed())
     coeffs = _np.linalg.lstsq(A, B, rcond=None)[0]
     return coeffs, A
-
-
-def _osurf_fit(
-    xx: _t.ArrayLike,
-    yy: _t.ArrayLike,
-    zz: _t.ArrayLike,
-    zlist: list[int],
-    ordering: str = "noll",
-) -> _t.ArrayLike:
-    """
-    TO BE REMOVED
-    Fit surface using Zernike polynomials.
-
-    Parameters
-    ----------
-    xx, yy : numpy arrays
-        Coordinates.
-    zz : numpy array
-        Surface data.
-    zlist : numpy array
-        List of Zernike modes.
-    ordering : str, optional
-        Ordering of Zernike modes. Default is 'noll'.
-
-    Returns
-    -------
-    coeff : numpy array
-        Zernike coefficients.
-    """
-    A = _getZernike(xx, yy, zlist, ordering)
-    B = _np.transpose(zz.copy())
-    return _np.linalg.lstsq(A, B, rcond=None)[0]
-
-
-def _getZernike(
-    xx: _t.ArrayLike, yy: _t.ArrayLike, zlist: list[int], ordering: str = "noll"
-) -> _t.ArrayLike:
-    """
-    TO BE REMOVED
-    Get Zernike polynomials.
-
-    Parameters
-    ----------
-    xx, yy : numpy arrays
-        Coordinates.
-    zlist : numpy array
-        List of Zernike modes.
-    ordering : str, optional
-        Ordering of Zernike modes. Default is 'noll'.
-
-    Returns
-    -------
-    zkm : numpy array
-        Zernike polynomials.
-    """
-    if min(zlist) == 0:
-        raise ValueError("Zernike index must be greater or equal to 1")
-    rho = _np.sqrt(yy**2 + xx**2)
-    phi = _np.arctan2(yy, xx)
-    zkm = []
-    zgen = ZernikeGenerator(CircularMask((256, 256)))
-    for j in zlist:
-        if ordering == "noll":
-            cpol = zgen._polar(j, rho, phi)
-        elif ordering == "ansi":
-            m, n = _l2mn_ansi(j)
-            cpol = _zernike(m, n, rho, phi)
-        zkm.append(cpol)
-    return _np.transpose(_np.array(zkm))
-
-
-def _project_zernike_on_mask(
-    noll_number: int, mask: _t.ImageData, scale_length: float = None
-) -> _t.ArrayLike:
-    """
-    TO BE REMOVED
-    Project the Zernike polynomials identified by the Noll number in input
-    on a given mask.
-    The polynomials are computed on the circle inscribed in the mask by default,
-    or on a circle of radius scale_length if the corresponding input is given
-    Masked data is then normalized as follows:
-    data = ma.data[~ma.mask], data = (data - mean(data))/std(data)
-
-    Parameters
-    ----------
-    noll_number : int
-        Noll index of the desired Zernike polynomial.
-    mask : matrix bool
-        Mask of the desired image.
-
-    Returns
-    -------
-    masked_data : ndarray
-        Flattenned array of the masked values of the Zernike
-        shape projected on the mask.
-
-    """
-    if noll_number < 1:
-        raise ValueError("Noll index must be equal to or greater than 1")
-    # Image dimensions
-    X, Y = _np.shape(mask)
-    # Determine circle radius on to which define the Zernike
-    if scale_length is not None:
-        r = scale_length
-    else:
-        r = _np.max([X, Y]) / 2
-    # Conversion to polar coordinates on circle of radius r
-    phi = lambda i, j: _np.arctan2((j - Y / 2.0) / r, (i - X / 2.0) / r)
-    rho = lambda i, j: _np.sqrt(((j - Y / 2.0) / r) ** 2 + ((i - X / 2.0) / r) ** 2)
-    mode = _np.fromfunction(
-        lambda i, j: _zernikel(noll_number, rho(i, j), phi(i, j)), [X, Y]
-    )
-    # masked_data = mode[1-mask]
-    masked_data = mode.flatten()[mask.flatten() < 1]
-    # Normalization of the masked data: null mean and unit STD
-    if noll_number > 1:
-        masked_data = (masked_data - _np.mean(masked_data)) / _np.std(masked_data)
-    return masked_data
-
-
-def _zernike_rad(m: int, n: int, rho: _t.ArrayLike) -> _t.ArrayLike:
-    """
-    TO BE REMOVED
-    Calculate the radial component of Zernike polynomial (m, n).
-
-    Parameters
-    ----------
-    m, n : int
-        Zernike polynomial indices.
-    rho : numpy array
-        Radial coordinates.
-
-    Returns
-    -------
-    rad : numpy array
-        Radial component of Zernike polynomial.
-    """
-    if n < 0 or m < 0 or abs(m) > n:
-        raise ValueError("Invalid Zernike polynomial indices")
-    if (n - m) % 2:
-        return rho * 0.0
-    pre_fac = (
-        lambda k: (-1.0) ** k
-        * fac(n - k)
-        / (fac(k) * fac((n + m) // 2 - k) * fac((n - m) // 2 - k))
-    )
-    return sum(pre_fac(k) * rho ** (n - 2 * k) for k in range((n - m) // 2 + 1))
-
-
-def _zernike(m: int, n: int, rho: _t.ArrayLike, phi: _t.ArrayLike) -> _t.ArrayLike:
-    """
-    TO BE REMOVED
-    Calculate Zernike polynomial (m, n).
-
-    Parameters
-    ----------
-    m, n : int
-        Zernike polynomial indices.
-    rho, phi : numpy arrays
-        Radial and azimuthal coordinates.
-
-    Returns
-    -------
-    zernike : numpy array
-        Zernike polynomial.
-    """
-    if m > 0:
-        rad = _zernike_rad(m, n, rho)
-        return rad * _np.cos(m * phi)
-    if m < 0:
-        rad = _zernike_rad(-m, n, rho)
-        return rad * _np.sin(-m * phi)
-    return _zernike_rad(0, n, rho)
-
-
-def _zernikel(j: int, rho: _t.ArrayLike, phi: _t.ArrayLike) -> _t.ArrayLike:
-    """
-    TO BE REMOVED
-    Calculate Zernike polynomial with Null coordinate j.
-
-    Parameters
-    ----------
-    j : int
-        Null coordinate.
-    rho, phi : numpy arrays
-        Radial and azimuthal coordinates.
-
-    Returns
-    -------
-    zernike : numpy array
-        Zernike polynomial.
-    """
-    n = 0
-    while j > n:
-        n += 1
-        j -= n
-    m = -n + 2 * j
-    return _zernike(m, n, rho, phi)
-
-
-def _l2mn_ansi(j: int) -> tuple[int, int]:
-    """
-    TO BE REMOVED
-    Convert ANSI index to Zernike polynomial indices.
-
-    Parameters
-    ----------
-    j : int
-        ANSI index.
-
-    Returns
-    -------
-    m, n : int
-        Zernike polynomial indices.
-    """
-    n = 0
-    while j > n:
-        n += 1
-        j -= n
-    m = -n + 2 * j
-    return m, n
-
-
-def _l2mn_noll(j: int) -> tuple[int, int]:
-    """
-    TO BE REMOVED
-    Convert Noll index to Zernike polynomial indices.
-
-    Parameters
-    ----------
-    j : int
-        Noll index.
-
-    Returns
-    -------
-    m, n : int
-        Zernike polynomial indices.
-    """
-    n = int((-1.0 + _np.sqrt(8 * (j - 1) + 1)) / 2.0)
-    p = j - (n * (n + 1)) / 2
-    k = n % 2
-    m = int((p + k) / 2.0) * 2 - k
-    if m != 0:
-        m *= 1 if j % 2 == 0 else -1
-    return m, n
