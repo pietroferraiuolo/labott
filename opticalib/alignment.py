@@ -431,7 +431,8 @@ class Alignment:
                 cir = _geo.qpupil(-1 * self._surface.mask + 1)
                 mm = _geo.draw_mask(
                     self._surface.data * 0, cir[0], cir[1], 1.44 / 0.00076 / 2, out=0
-                )  # e questo blocco potrebbe essere in una funzione chiamata all'avvio, così si crea anche la auxmask. i parametri da definire in conf sarebbero 1.44 / 0.00076 / 2 == pix on radius
+                )  # e questo blocco potrebbe essere in una funzione chiamata all'avvio, 
+                # così si crea anche la auxmask. i parametri da definire in conf sarebbero 1.44 / 0.00076 / 2 == pix on radius
                 # coeff, _ = _zern.zernikeFitAuxmask(img, mm, self._zvec2fit) #mod RB20250917: this part has been substituted with zern_on_roi below
                 coeff = self._global_zern_on_roi(img, auxmask=mm)
                 _logger.log(f"{_zern.zernikeFitAuxmask.__qualname__}")
@@ -457,7 +458,6 @@ class Alignment:
         ----------
         img : ImageData
             Image to fit the Zernike modes on, over the ROIs.
-
         auxmask : ImageData, optional
             Image of the auxiliary mask, where the fitting coordinates are constructed
 

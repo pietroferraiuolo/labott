@@ -26,13 +26,14 @@ def roiGenerator(img: _ot.ImageData) -> list[_ot.ImageData]:
     roiList: list
         List of the first `n_masks` roi found in the image.
     """
+    # Labelled pixel islands in image mask
     labels = _meas.label(_np.invert(img.mask))
     roiList = []
-    null_rois = 0
-    for i in range(1, labels.max()+1):
+    for i in range(1, labels.max() + 1):
         maski = _np.zeros(labels.shape, dtype=bool)
         maski[_np.where(labels == i)] = 1
         final_roi = _np.ma.mask_or(_np.invert(maski), img.mask)
+        # Eliminating possible islands with less than 100 pixels
         if _np.invert(final_roi).sum() < 100:
             continue
         roiList.append(final_roi)

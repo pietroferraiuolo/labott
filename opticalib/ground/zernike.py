@@ -55,7 +55,7 @@ plt.show()
 
 import numpy as _np
 import math as _math
-from . import geo as _geo
+from . import geo as _geo, roi as _roi
 from opticalib import typings as _t
 from arte.utils.zernike_generator import ZernikeGenerator
 from arte.types.mask import CircularMask
@@ -92,6 +92,58 @@ def generateZernMat(
         mat.append(zgen.getZernike(zmode).compressed())
     A = _np.array(mat).T
     return A
+
+
+def zernikeFitOnRoi(
+    img: _t.ImageData,
+    auxmask: _t.Optional[_t.ImageData] = None,
+    z2fit: _t.Optional[list[int]] = None,
+    mode: str = "global",
+) -> tuple[_t.ArrayLike, _t.ArrayLike]:
+    """
+    Fit Zernike modes to an image or to an image using an auxiliary mask.
+
+    Parameters
+    ----------
+    img : numpy masked array
+        Image for Zernike fit.
+    auxmask : numpy array, optional
+        Auxiliary mask. Default is the image mask.
+    z2fit : numpy array, optional
+        Vector containing the index of Zernike modes to be fitted starting from 1. 
+        Default is [1,2,3].
+    mode : str, optional
+        Mode of fitting.
+        - `global` will return the mean of the fitted zernike coefficient of each ROI
+        - `local` will return the vector of fitted zernike coefficient for each ROI
+        Default is 'global'.
+
+    Returns
+    -------
+    coeff : numpy array
+        Vector of Zernike coefficients.
+    mat : numpy array
+        Matrix of Zernike polynomials.
+    """
+    if mode not in ["global", "local"]:
+        raise ValueError("mode must be 'global' or 'local'")
+    if z2fit is None:
+        z2fit = [1, 2, 3]
+    roiimg = _roi.roiGenerator(img)
+    nroi = len(roiimg)
+    print("Found " + str(nroi) + " ROI")
+    if auxmask is None:
+        auxmask2use = img.mask
+    else:
+        auxmask2use = auxmask
+    zcoeff = _np.zeros([nroi, len(z2fit)])
+    for i in range(nroi):
+        img2fit = _np.ma.masked_array(img.data, roiimg[i])
+        cc, _ = zernikeFitAuxmask(img2fit, auxmask2use, z2fit)
+        zcoeff[i, :] = cc
+    if mode == "global":
+        zcoeff = zcoeff.mean(axis=0)
+    return zcoeff
 
 
 def removeZernike(
@@ -218,11 +270,8 @@ def zernikeFitAuxmask(
         tmp = auxmask
     cmask = CircularMask.fromMaskedArray(tmp, mask=tmp.mask)
     zgen = ZernikeGenerator(cmask)
-    _ = zgen.getZernike(1)  # to initialize the ZGen
-    # img2 = _np.ma.masked_array(image.data, mask=auxmask ==0)  #same error as surf Fit. we want that the image2Fit has its own valid mask, not the auxmask. the auxmask is requested only to compute the Zernike
-    img2 = image.copy()
-
-    coeffs, mat = _surf_fit(img2, zgen, zernike_index_vector)
+    # _ = zgen.getZernike(1)  # to initialize the ZGen <- should not be needed
+    coeffs, mat = _surf_fit(image, zgen, zernike_index_vector)
     return coeffs, mat
 
 

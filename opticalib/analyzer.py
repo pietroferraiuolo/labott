@@ -3,6 +3,8 @@ ANALYZER module
 ===============
 2020-2024
 
+In this module are present all useful functions for data analysis.
+
 Author(s)
 ---------
 - Runa Briguglio: runa.briguglio@inaf.it
@@ -212,22 +214,29 @@ def frame(idx: int, mylist: list[_ot.ImageData] | _ot.CubeData) -> _ot.ImageData
 
     Parameters
     ----------
-    id : TYPE
-        DESCRIPTION.
-    mylist : TYPE
-        DESCRIPTION.
+    idx : int
+        Index of the frame to retrieve.
+    mylist : list or cube
+        1) list of strings with the paths to the files to read;
+        2) list of ImageData objects;
+        3) cube of images (3D masked array).
 
     Returns
     -------
-    img : TYPE
-        DESCRIPTION.
-
+    img : _ot.ImageData
+        The requested image frame.
     """
-    mytype = type(mylist)
-    if mytype is list:
-        img = osu.read_phasemap(mylist[idx])
-    if mytype is _np.ma.core.MaskedArray:
-        img = mylist[idx]
+    if isinstance(mylist, list):
+        if idx >= len(mylist):
+            raise IndexError("Index out of range")
+        if isinstance(mylist[0], str):
+            img = osu.read_phasemap(mylist[idx])
+        elif _ot.isinstance_(mylist[0], _ot.ImageData):
+            img = mylist[idx]
+    else:
+        if idx >= mylist.shape[2]:
+            raise IndexError("Index out of range")
+        img = mylist[:, :, idx]
     return img
 
 
@@ -235,26 +244,24 @@ def spectrum(
     signal: _ot.ArrayLike, dt: float = 1, show: bool = None
 ) -> tuple[_ot.ArrayLike, _ot.ArrayLike]:
     """
-
+    Computes the one-dimensional power spectrum of a signal or a set of signals.
 
     Parameters
     ----------
     signal : ndarray
-        DESCRIPTION.
+        Input signal or signals.
     dt : float, optional
-        DESCRIPTION. The default is 1.
+        Time spacing between samples. The default is 1.
     show : bool, optional
-        DESCRIPTION. The default is None.
+        If True, displays the power spectrum. The default is None.
 
     Returns
     -------
     spe : float | ndarray
-        DESCRIPTION.
+        Power spectrum of the input signal(s).
     freq : float | ArrayLike
-        DESCRIPTION.
-
+        Frequency bins corresponding to the power spectrum.
     """
-    # https://numpy.org/doc/stable/reference/generated/numpy.angle - Spectrum phase
     nsig = signal.shape
     if _np.size(nsig) == 1:
         thedim = 0
@@ -287,22 +294,21 @@ def frame2ottFrame(
     img: _ot.ImageData, croppar: list[int], flipOffset: bool = True
 ) -> _ot.ImageData:
     """
-
+    Reconstructs a full 2048x2048 image from a cropped image and its cropping parameters.
 
     Parameters
     ----------
-    img : TYPE
-        DESCRIPTION.
-    croppar : TYPE
-        DESCRIPTION.
-    flipOffset : TYPE, optional
-        DESCRIPTION. The default is True.
+    img : _ot.ImageData
+        Cropped image data.
+    croppar : list[int]
+        Cropping parameters [x, y, width, height].
+    flipOffset : bool, optional
+        If True, flips the cropping offset. The default is True.
 
     Returns
     -------
-    fullimg : TYPE
-        DESCRIPTION.
-
+    fullimg : _ot.ImageData
+        Reconstructed full image.
     """
     off = croppar.copy()
     if flipOffset is True:
@@ -416,59 +422,57 @@ def track2date(tni: str) -> list[str | float]:
 
 def runningMean(vec: _ot.ArrayLike, npoints: int) -> _ot.ArrayLike:
     """
-
+    Computes the running mean of a 1D array.
 
     Parameters
     ----------
-    vec : TYPE
-        DESCRIPTION.
-    npoints : TYPE
-        DESCRIPTION.
+    vec : _ot.ArrayLike
+        Input array.
+    npoints : int
+        Number of points to average over.
 
     Returns
     -------
-    TYPE
-        DESCRIPTION.
-
+    _ot.ArrayLike
+        Running mean of the input array.
     """
     return _np.convolve(vec, _np.ones(npoints), "valid") / npoints
 
 
 def readTemperatures(tn: str):
     """
-
+    Reads temperature data from a FITS file associated with a tracking number.
 
     Parameters
     ----------
-    tn : TYPE
-        DESCRIPTION.
+    tn : str
+        Tracking number of the frames to process.
 
     Returns
     -------
-    temperatures : TYPE
-        DESCRIPTION.
+    temperatures : _ot.ArrayLike
+        Array of temperature values for each frame.
 
     """
     fold = osu.findTracknum(tn, complete_path=True)
-    fname = _os.path.join(fold, tn, "temperature.fits")
+    fname = _os.path.join(fold, "temperature.fits")
     temperatures = osu.load_fits(fname)
     return temperatures
 
 
 def readZernike(tn: str):
     """
-
+    Reads Zernike coefficients from a FITS file associated with a tracking number.
 
     Parameters
     ----------
-    tn : TYPE
-        DESCRIPTION.
+    tn : str
+        Tracking number of the frames to process.
 
     Returns
     -------
-    temperatures : TYPE
-        DESCRIPTION.
-
+    zernikes : _ot.ArrayLike
+        Array of Zernike coefficients for each frame.
     """
     fold = osu.findTracknum(tn, complete_path=True)
     fname = _os.path.join(fold, tn, "zernike.fits")
@@ -480,20 +484,19 @@ def zernikePlot(
     mylist: _ot.CubeData | list[_ot.ImageData], modes: _ot.ArrayLike = None
 ) -> _ot.ArrayLike:
     """
-
+    Computes Zernike coefficients for each frame in a cube or a list of images.
 
     Parameters
     ----------
-    mylist : TYPE
-        DESCRIPTION.
-    modes : TYPE, optional
-        DESCRIPTION. The default is _np.array(range(1, 11)).
+    mylist : _ot.CubeData | list[_ot.ImageData]
+        Input image data.
+    modes : _ot.ArrayLike, optional
+        Zernike modes to compute. The default is _np.array(range(1, 11)).
 
     Returns
     -------
-    zcoeff : TYPE
-        DESCRIPTION.
-
+    zcoeff : _ot.ArrayLike
+        Zernike coefficients for each frame.
     """
     if modes is None:
         modes = _np.array(range(1, 11))
@@ -514,9 +517,19 @@ def zernikePlot(
 
 def strfunct(vect: _ot.ArrayLike, gapvect: _ot.ArrayLike) -> _ot.ArrayLike:
     """
-    vect shall be npoints x m
-    the strfunct is calculate m times over the npoints time series
-    returns stf(n_timeseries x ngaps)
+    Computes the structure function for a given time series.
+    
+    Parameters
+    ----------
+    vect : _ot.ArrayLike
+        Input time series data.
+    gapvect : _ot.ArrayLike
+        Array of gap values to compute the structure function.
+        
+    Returns
+    -------
+    _ot.ArrayLike
+        Structure function values for each gap.
     """
     nn = _np.shape(vect)
     maxgap = _np.max(gapvect)
@@ -546,21 +559,21 @@ def comp_filtered_image(
 
     Parameters
     ----------
-    imgin : TYPE
-        DESCRIPTION.
-    verbose : TYPE, optional
-        DESCRIPTION. The default is False.
-    disp : TYPE, optional
-        DESCRIPTION. The default is False.
-    d : TYPE, optional
-        DESCRIPTION. The default is 1.
-    freq2filter : TYPE, optional
-        DESCRIPTION. The default is None.
+    imgin : _ot.ImageData
+        Input image data.
+    verbose : bool, optional
+        If True, print detailed information. The default is False.
+    disp : bool, optional
+        If True, display intermediate results. The default is False.
+    d : int, optional
+        Spacing between samples. The default is 1.
+    freq2filter : tuple[float, float], optional
+        Frequency range to filter. The default is None.
 
     Returns
     -------
-    imgout : TYPE
-        DESCRIPTION.
+    imgout : _ot.ImageData
+        Filtered image data.
     """
     img = imgin.copy()
     sx = (_np.shape(img))[0]
@@ -636,33 +649,33 @@ def comp_psd(
     crop: bool = True,
 ):
     """
-
+    Computes the power spectrum of a 2D image.
 
     Parameters
     ----------
-    imgin : TYPE
-        DESCRIPTION.
-    nbins : TYPE, optional
-        DESCRIPTION. The default is None.
-    norm : TYPE, optional
-        DESCRIPTION. The default is "backward".
-    verbose : TYPE, optional
-        DESCRIPTION. The default is False.
-    disp : TYPE, optional
-        DESCRIPTION. The default is False.
-    d : TYPE, optional
-        DESCRIPTION. The default is 1.
-    sigma : TYPE, optional
-        DESCRIPTION. The default is None.
-    crop : TYPE, optional
-        DESCRIPTION. The default is True.
+    imgin : _ot.ImageData
+        Input image data.
+    nbins : _ot.Optional[int], optional
+        Number of bins for the power spectrum. The default is None.
+    norm : str, optional
+        Normalization mode for the FFT. The default is "backward".
+    verbose : bool, optional
+        If True, print detailed information. The default is False.
+    disp : bool, optional
+        If True, display intermediate results. The default is False.
+    d : int, optional
+        Spacing between samples. The default is 1.
+    sigma : _ot.Optional[float], optional
+        Standard deviation for Gaussian smoothing. The default is None.
+    crop : bool, optional
+        If True, crop the image to the circular region. The default is True.
 
     Returns
     -------
-    fout : TYPE
-        DESCRIPTION.
-    Aout : TYPE
-        DESCRIPTION.
+    fout : _ot.ArrayLike
+        Frequency bins.
+    Aout : _ot.ArrayLike
+        Amplitude spectrum.
 
     """
     if crop:
@@ -726,6 +739,21 @@ def comp_psd(
 
 
 def integrate_psd(y: _ot.ArrayLike, img: _ot.ImageData) -> _ot.ArrayLike:
+    """
+    Integrates the power spectral density (PSD) over the image.
+    
+    Parameters
+    ----------
+    y : _ot.ArrayLike
+        Power spectral density values.
+    img : _ot.ImageData
+        Input image data.
+        
+    Returns
+    -------
+    _ot.ArrayLike
+        Integrated PSD values.
+    """
     nn = _np.sqrt(_np.sum(-1 * img.mask + 1))
     yint = _np.sqrt(_np.cumsum(y)) / nn
     return yint
