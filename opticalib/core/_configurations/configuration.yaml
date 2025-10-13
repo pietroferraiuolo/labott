@@ -2,17 +2,7 @@ SYSTEM:
   data_path: ''
   simulated.devices:
     dm: true
-    interf: false
     interferometer: true
-    accelerometers: true
-    angleRotator: true
-    m4Exapode: true
-    dp: true
-    parSlider: true
-    par: true
-    rmSlider: true
-    rm: true
-    tempSensors: true
 DEVICES:
   INTERFEROMETER:
     PhaseCam4020:
