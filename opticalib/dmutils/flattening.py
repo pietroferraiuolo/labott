@@ -243,6 +243,37 @@ class Flattening:
         """
         print("Computing recontruction matrix...")
         self._recMat = self._rec.run(sv_threshold=threshold)
+    
+    def getSVDmatrices(self) -> tuple[_ot.ArrayLike, _ot.ArrayLike, _ot.ArrayLike]:
+        """
+        Returns the U, S, Vt matrices from the SVD decomposition of the interaction matrix.
+
+        Returns
+        -------
+        U : ndarray
+            Left singular vectors.
+        S : ndarray
+            Singular values.
+        Vt : ndarray
+            Right singular vectors (transposed).
+        """
+        return self._rec._intMat_U, self._rec._intMat_S, self._rec._intMat_Vt
+    
+    def plotEigenvalues(self) -> None:
+        """
+        Plots the eigenvalues of the interaction matrix.
+        """
+        import matplotlib.pyplot as plt
+
+        if self._rec._intMat_S is None:
+            raise ValueError("Reconstruction matrix not computed yet.")
+        plt.figure()
+        plt.semilogy(self._rec._intMat_S, "o-")
+        plt.title("Eigenvalues of the interaction matrix")
+        plt.xlabel("Mode number")
+        plt.ylabel("Eigenvalue")
+        plt.grid()
+        plt.show()
 
     def filterIntCube(
         self, zernModes: _ot.Optional[list[int] | _ot.ArrayLike] = None
