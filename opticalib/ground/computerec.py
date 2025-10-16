@@ -12,8 +12,8 @@ import numpy as _np
 from . import logger as _log
 from . import osutils as _osu
 import matplotlib.pyplot as _plt
-from opticalib.core.root import folders as _fn
 from opticalib import typings as _ot
+from opticalib.core.root import folders as _fn
 
 _imgFold = _fn.OPD_IMAGES_ROOT_FOLDER
 _ifFold = _fn.IFFUNCTIONS_ROOT_FOLDER
@@ -321,12 +321,3 @@ class ComputeReconstructor:
         # Visualizzare il grafico
         _plt.show()
         return threshold
-
-
-# if __name__ == "__main__":
-#    import random
-#    random.seed(0)
-#    mat = _np.array([
-#        [random.random() for i in range(100)] for j in range(100)])
-#    sqmat = mat @ mat.T
-#    rec = ComputeReconstructor.make_interactive_plot_bokeh(sqmat)
