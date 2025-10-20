@@ -15,11 +15,7 @@ import matplotlib.pyplot as _plt
 from opticalib import typings as _ot
 from opticalib.core.root import folders as _fn
 
-_imgFold = _fn.OPD_IMAGES_ROOT_FOLDER
-_ifFold = _fn.IFFUNCTIONS_ROOT_FOLDER
 _intMatFold = _fn.INTMAT_ROOT_FOLDER
-_confFold = _fn.CONFIGURATION_FOLDER
-
 
 class ComputeReconstructor:
     """
@@ -177,7 +173,7 @@ class ComputeReconstructor:
         except Exception as e:
             self._logger.error("Error in computing interaction matrix from cube:%s", e)
             raise e
-        print(self._intMat.shape)
+        self._logger.info("Computed interaction matrix of shape %s", self._intMat.shape)
 
     def _setAnalysisMask(self):
         """
@@ -235,7 +231,7 @@ class ComputeReconstructor:
 
     # ______________________________________________________________________________
     @staticmethod
-    def make_interactive_plot(singular_values, current_threshold=None):
+    def make_interactive_plot(singular_values: _ot.ArrayLike):
         # Creare il grafico
         fig, ax = _plt.subplots()
         modelist = _np.arange(len(singular_values))
@@ -246,7 +242,6 @@ class ComputeReconstructor:
         ax.autoscale(tight=False)
         ax.set_ylim([min(singular_values), max(singular_values)])
         ax.title.set_text("Singular values")
-        # if current_threshold is None:
         threshold = dict()
 
         threshold["y"] = _np.finfo(_np.float32).eps  # 0.01
