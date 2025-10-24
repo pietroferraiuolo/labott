@@ -116,6 +116,27 @@ class Flattening:
         self._synthFlat = None
         self._flatResidue = None
         self._flatteningModes = None
+    
+    @property
+    def RM(self):
+        """
+        Reconstruction matrix property.
+        """
+        return self._recMat
+
+    @property
+    def CM(self):
+        """
+        Command matrix property.
+        """
+        return self._cmdMat
+    
+    @property
+    def IM(self):
+        """
+        Interaction cube property.
+        """
+        return self._rec._intMat
 
     def applyFlatCommand(
         self,

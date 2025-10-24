@@ -241,6 +241,43 @@ def tnRange(tn0: str, tn1: str) -> list[str]:
                 )
     return tnMat
 
+def loadCubeFromFilelist(tn_or_fl: str, fold: _ot.Optional[str] = None, key: _ot.Optional[str] = None) -> _ot.CubeData:
+    """
+    Loads a cube from a list of files obtained from a tracking number or a folder.
+
+    Parameters
+    ----------
+    tn_or_fl : str
+        Either the filelist of the data to be put into the cube, or the tracking
+        number. In the second case, the filelist is obtained searching for the
+        tracking number, for which the additional parameters `fold` and `key` can
+        be used (see the `getFileList` function).
+    fold : str, optional
+        Folder in which searching for the tracking number.
+    key : str, optional
+        A key which identify specific files to load.
+
+    Returns
+    -------
+    cube : CubeData
+        Cube containing all the images loaded from the files.
+    """
+    from ..analyzer import createCube
+    if is_tn(tn_or_fl):
+        if fold is None:
+            raise ValueError("When passing a tracking number, the 'fold' argument must be specified")
+        path = findTracknum(tn_or_fl, complete_path=True)
+        if isinstance(path, str):
+            path = [path]
+        for p in path:
+            if fold in p:
+                fold = p
+                break
+        fl = getFileList(fold=fold, key=key)
+    if isinstance(fl, str):
+        fl = [fl]
+    cube = createCube(fl)
+    return cube
 
 def read_phasemap(file_path: str) -> _ot.ImageData:
     """

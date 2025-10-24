@@ -1,4 +1,5 @@
 import Pyro4
+import configparser
 import numpy as np
 from opticalib.core.exceptions import DeviceNotFoundError
 import matplotlib.pyplot as plt
@@ -94,7 +95,7 @@ class SPLATTEngine:
         plt.colorbar()
         plt.xlim([min(x) - margin, max(x) + margin])
         plt.ylim([min(y) - margin, max(y) + margin])
-        for i in range(nActs):
+        for i in range(self.nActs):
             plt.text(x[i] * 2 / 3, y[i] + margin * 2 / 3, str(indices[i]))
         plt.text(x[15], y[15] * 1.3, "G")
 
@@ -119,7 +120,7 @@ class SPLATTEngine:
         preEna = np.sum(
             self._eng.read("aoRead('sabi32_damperGain',1:19)")
         )  # self._eng.read('sys_data.ctrPar.dampEna')
-
+        
         state = configparser.ConfigParser()
         state.add_section("Gap")
         state.add_section("Control")

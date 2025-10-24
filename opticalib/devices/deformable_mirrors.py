@@ -33,6 +33,8 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
         """The Constructor"""
         self._name = "AdOpticaDm"
         super().__init__(tn)
+        self._lastCmd = _np.zeros(self.nActs)
+        self._lastCmdDiff = False
 
     def get_shape(self):
         """
@@ -41,22 +43,35 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
         pos = self._aoClient.getPosition()
         return pos
 
-    def set_shape(self, cmd: list[float], incremental: float = False):  # cmd, segment=None):
+    def set_shape(self, cmd: _ot.ArrayLike|list[float], differential: bool = False, incremental: float = False):  # cmd, segment=None):
         """
         Applies the given command to the DM actuators.
 
         Parameters
         ----------
-        cmd : list[float]
+        cmd : ArrayLike | list[float]
             The command to be applied to the DM actuators, of lenght equal
             the number of actuators.
+        differential : bool, optional
+            If True, the command will be applied as a differential command
+            with respect to the current shape (default is False).
+        incremental : float, optional
+            If provided, the command will be applied incrementally in steps of
+            size `incremental` (if <1) of in `N=incremental` steps (if >1)
+            (default is False, meaning the command is applied in one go).
         """
         if not len(cmd) == self.nActs:
             raise _oe.CommandError(
                 f"Command length {len(cmd)} does not match the number of actuators {self.nActs}."
             )
+        if differential:
+            self._lastCmd += cmd
+        self._lastCmd = cmd
         if incremental:
             dc = _np.ceil((1/incremental))
+            if dc < 1 and incremental > 1.:
+                dc = incremental
+                incremental = 1./incremental
             for i in range(dc):
                 if i*incremental > 1.:
                     self._aoClient.mirrorCommand(cmd)

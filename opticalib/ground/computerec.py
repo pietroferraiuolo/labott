@@ -84,12 +84,12 @@ class ComputeReconstructor:
         self._logger.info("SVD of Interaction Matrix")
         IM = _xp.asarray(self._intMat, dtype=_xp.float)
         U, S, Vt = _xp.linalg.svd(IM, full_matrices=False)
-        self._intMat_U, self._intMat_S, self._intMat_Vt = U.get(), S.get(), Vt.get()
+        self._intMat_U, self._intMat_S, self._intMat_Vt = [_xp.asnumpy(x) for x in (U, S, Vt)]
         if interactive:
             self._threshold = self.make_interactive_plot(self._intMat_S)
         else:
             if sv_threshold is None:
-                return _xp.linalg.pinv(IM).get()
+                return _xp.asnumpy(_xp.linalg.pinv(IM))
             elif isinstance(sv_threshold, int):
                 self._threshold = {
                     "y": _np.finfo(_np.float32).eps,
@@ -108,7 +108,25 @@ class ComputeReconstructor:
         )
         self._filtered_sv = sv_inv_threshold
         self._logger.info("Computing Reconstructor Matrix: Vt.T @ S_inv @ U.T")
-        return (Vt.T @ _np.diag(sv_inv_threshold) @ U.T).get()
+        return _xp.asnumpy(Vt.T @ _xp.diag(sv_inv_threshold) @ U.T)
+    
+    def getSVD(self):
+        """
+        Returns the SVD components of the interaction matrix.
+
+        Returns
+        -------
+        U : MatrixLike
+            Left singular vectors.
+        S : ArrayLike
+            Singular values.
+        Vt : MatrixLike
+            Right singular vectors transposed.
+        """
+        if not all([x is not None for x in (self._intMat_U, self._intMat_S, self._intMat_Vt)]):
+            return self._intMat_U, self._intMat_S, self._intMat_Vt
+        else:
+            print("SVD has not been computed yet. Run the 'run' method first.")
 
     def loadShape2Flat(self, img: _ot.ImageData) -> "ComputeReconstructor":
         """
@@ -120,8 +138,8 @@ class ComputeReconstructor:
         img : ImageData
             The image to compute the new recontructor.
         """
-        self._shape2flat = img
-        self._imgMask = img.mask
+        self._shape2flat = img.copy()
+        self._imgMask = self._shape2flat.mask
         return self
 
     def loadInteractionCube(

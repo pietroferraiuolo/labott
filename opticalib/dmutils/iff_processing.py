@@ -10,8 +10,8 @@ Author(s):
 High-level Functions
 --------------------
 process(tn, registration=False, roi=None, save=False, rebin=1)
-    Function that processes the data contained in the OPDImages/tn folder. By 
-    performing the differential algorithm, it produces fits images for each 
+    Function that processes the data contained in the OPDImages/tn folder. By
+    performing the differential algorithm, it produces fits images for each
     commanded mode into the IFFunctions/tn folder, and creates a cube from these
     into INTMatrices/tn. If 'registration is not False', upon createing the cube,
     the registration algorithm is performed.
@@ -39,22 +39,22 @@ Stacked cube and matrices saved in '.../path/to/data/OPTData/INTMatrices/'new_tn
 """
 
 import os as _os
+import xupy as _xp
 import numpy as _np
 import shutil as _sh
 import configparser as _cp
-from opticalib.core.root import _folds
-from opticalib.ground import osutils as _osu, zernike as _zern, roi as _roi
-from opticalib.core import read_config as _rif
 from opticalib import typings as _ot
+from opticalib.core.root import _folds
+from opticalib.core import read_config as _rif
+from concurrent.futures import ThreadPoolExecutor as _tpe
+from opticalib.ground import osutils as _osu, zernike as _zern, roi as _roi
 
 # from scripts.misc.IFFPackage import actuator_identification_lib as _fa
 
 _fn = _folds()
 _config = _cp.ConfigParser()
-_imgFold = _fn.OPD_IMAGES_ROOT_FOLDER
 _ifFold = _fn.IFFUNCTIONS_ROOT_FOLDER
 _intMatFold = _fn.INTMAT_ROOT_FOLDER
-_confFold = _fn.CONFIGURATION_FOLDER
 _frameCenter = [200, 200]
 _ts = _osu.newtn
 
@@ -71,7 +71,14 @@ flagFile = "flag.txt"
 
 
 def process(
-    tn: str, register: bool = False, roi: int = None, save: bool = False, rebin: int = 1
+    tn: str,
+    register: bool = False,
+    save: bool = False,
+    rebin: int = 1,
+    roi: int = None,
+    *,
+    nworkers: int = 1,
+    nmode_prefetch: int = 0,
 ) -> None:
     """
     High level function with processes the data contained in the given tracking
@@ -84,24 +91,44 @@ def process(
         Tracking number of the data in the OPDImages folder.
     register : bool, optional
         Parameter which enables the registration option. The default is False.
-    save_and_rebin_cube : bool | int | tuple, optional
-        If a bool is passed, the value is used to save the cube. If an int is
-        passed, the value is used to rebin and save the cube. If a tuple is passed, the
-        first value is used to save the cube, and the second to rebin it. The
-        default is (False, 1).
+    save : bool, optional
+        If True, the final cube is saved into the INTMatrices/tn folder. The
+        default is False.
+    rebin : int, optional
+        Rebinning factor to apply to the images before stacking them into the
+        cube. The default is 1, which means no rebinning.
+    roi : int, optional
+        If not None, it defines the size of the square ROI to be used for the
+        registration algorithm. The default is None.
+    nworkers : int, optional
+        Number of workers to use for the processing. The default is 1 for no 
+        parallelization.
+    nmode_prefetch : int, optional
+        Number of modes to prefetch during the processing. The default is 0
+        for no prefetching.
     """
     ampVector, modesVector, template, _, registrationActs, shuffle = _getAcqPar(tn)
     if not modesVector.dtype.type is _np.int_:
         modesVector = modesVector.astype(int)
-    _, regMat = getRegFileMatrix(tn, roi)
-    modesMat = getIffFileMatrix(tn, roi)
     new_fold = _os.path.join(_intMatFold, tn)
     if not _os.path.exists(new_fold):
         _os.mkdir(new_fold)
-    actImgList = registrationRedux(tn, regMat)
+    trigFrame = getTriggerFrame(tn)
+    regMat = getRegFileMatrix(tn, trigFrame)
+    modesMat = getIffFileMatrix(tn, trigFrame)
     modesMatReorg = _modesReorganization(modesMat)
-    iffRedux(tn, modesMatReorg, ampVector, modesVector, template, shuffle)
+    iffRedux(
+        tn=tn,
+        fileMat=modesMatReorg,
+        ampVect=ampVector,
+        modeList=modesVector,
+        template=template,
+        shuffle=shuffle,
+        io_workers=nworkers,
+        prefetch=nmode_prefetch,
+    )
     if register and not len(regMat) == 0:
+        actImgList = registrationRedux(tn, regMat)
         dx = findFrameOffset(tn, actImgList, registrationActs)
     else:
         dx = register
@@ -139,17 +166,17 @@ def saveCube(
     cube : masked_array
         Data cube of the images, with shape (npx, npx, nmodes).
     """
-    from opticalib.analyzer import cubeRebinner, createCube
+    from opticalib.analyzer import cubeRebinner
 
-    old_fold = _os.path.join(_ifFold, tn)
-    filelist = _osu.getFileList(fold=old_fold, key="mode_")
-    cube = createCube(filelist, register=register)
-    
-    # FIXME: For now commented 
+    cube = _osu.loadCubeFromFilelist(tn_or_fl=tn, fold=_ifFold, key="mode_")
+
+    # FIXME: For now commented
     # cmask = createMasterMask(cube)
     # cube.mask = cmask
-    
+
     # Rebinning the cube
+    header = {}
+    header['REBIN'] = (rebin, 'Rebinning factor applied')
     if rebin > 1:
         cube = cubeRebinner(cube, rebin)
     # Saving the cube
@@ -157,23 +184,11 @@ def saveCube(
     if not _os.path.exists(new_fold):
         _os.mkdir(new_fold)
     cube_path = _os.path.join(new_fold, cubeFile)
-    _osu.save_fits(cube_path, cube, overwrite=True, header=cube_header)
+    _osu.save_fits(cube_path, cube, overwrite=True, header=header)
     # Copying the cmdMatrix and the ModesVector into the INTMAT Folder
-    cmat = _osu.load_fits(_os.path.join(_ifFold, tn, "cmdMatrix.fits"))
-    mvec = _osu.load_fits(_os.path.join(_ifFold, tn, "modesVector.fits"))
-    _osu.save_fits(
-        _os.path.join(_intMatFold, tn, "cmdMatrix.fits"), cmat, overwrite=True
-    )
-    _osu.save_fits(
-        _os.path.join(_intMatFold, tn, "modesVector.fits"), mvec, overwrite=True
-    )
-    # Creating the flag file
-    with open(_os.path.join(_intMatFold, tn, flagFile), "w", encoding="utf-8") as f:
-        f.write(
-            f"Cube created from '{old_fold.split('/')[-1]}' data.\nRebin={rebin}\n \n"
-        )
-    print(f"Cube saved in '{cube_path}'")
-    print(f"Shape: {cube.shape}")
+    _copyFromIffToIM(name='cmdMatrix.fits', tn=tn)
+    _copyFromIffToIM(name='modesVector.fits', tn=tn)
+    print(f"Cube of shape {cube.shape} saved in '.../{'/'.join(cube_path.split('/')[-2:])}'")
     return cube
 
 
@@ -195,9 +210,8 @@ def stackCubes(tnlist: str) -> None:
     # TODO: aggiungere variabile `cubeNames: str|list[str]` che deve matchare
     # `len(tnlist)` e che contiene il nome del file da caricare per ogni tn
     new_tn = _ts()
-    stacked_cube_fold = _os.path.join(_fn.INTMAT_ROOT_FOLDER, new_tn)
-    if not _os.path.exists(stacked_cube_fold):
-        _os.mkdir(stacked_cube_fold)
+    stacked_cube_fold = _os.path.join(_intMatFold, new_tn)
+    _os.mkdir(stacked_cube_fold)
     cube_parameters = _getCubeList(tnlist)
     flag = _checkStackedCubes(tnlist)
     # Stacking the cube and the matrices
@@ -307,7 +321,10 @@ def iffRedux(
     ampVect: _ot.ArrayLike,
     modeList: _ot.ArrayLike,
     template: _ot.ArrayLike,
+    *,
     shuffle: int = 0,
+    io_workers: int = 1,
+    prefetch: int = 0,
 ) -> None:
     """
     Reduction function that performs the push-pull analysis on each mode, saving
@@ -335,33 +352,88 @@ def iffRedux(
         A value different from 0 activates the shuffle option, and the imput
         value is the number of repetition for each mode's push-pull packet. The
         default is 0, which means the shuffle is OFF.
+    io_workers : int, optional
+        Number of threads to use for I/O prefetching. The default is 1.
+    prefetch : int, optional
+        Number of future modes to keep in-flight. The default is 0.
+
+    Notes on performance
+    --------------------
+    - I/O is overlapped with computation via a small prefetch window.
+    - io_workers controls the number of threads used to prefetch mode blocks.
+    - prefetch controls how many future modes to keep in-flight.
     """
     fold = _os.path.join(_ifFold, tn)
     nmodes = len(modeList)
-    for i in range(0, nmodes):
-        img = pushPullRedux(fileMat[i, :], template, shuffle)
-        norm_img = img / (2 * ampVect[i])
-        img_name = _os.path.join(fold, f"mode_{modeList[i]:04d}.fits")
-        # header = _header()
-        # header["MODEID"] = modeList[i]
-        # header["AMP"] = (ampVect[i], 'mode amplitude')
-        # header["TEMPLATE"] = str(template)
-        _osu.save_fits(img_name, norm_img, overwrite=True)
+
+    # Helper: read one mode's frame block
+    def _read_mode(paths: list[str]) -> list[_ot.ImageData]:
+        # Sequential reads inside a worker to keep per-mode locality
+        return [_osu.read_phasemap(p) for p in paths]
+
+    ## NEW METHOD: THREADING I/O WORKERS WITH PREFETCHING
+    # ----------------------
+
+    # just to be sure...
+    io_workers = max(1, int(io_workers))
+    prefetch = max(0, int(prefetch))
+
+    futures: dict[int, _ot.Any] = {}
+    with _tpe(max_workers=io_workers) as ex:
+        for j in range(min(prefetch, nmodes)):
+            futures[j] = ex.submit(_read_mode, fileMat[j, :])
+
+        for i in range(nmodes):
+            # Ensure current mode is scheduled
+            if i not in futures:
+                futures[i] = ex.submit(_read_mode, fileMat[i, :])
+
+            # Fetch prefetched images (waits here if not yet done)
+            imagelist = futures[i].result()
+            del futures[i]
+
+            # Schedule next mode to keep window full
+            j = i + prefetch
+            if j < nmodes and j not in futures:
+                futures[j] = ex.submit(_read_mode, fileMat[j, :])
+
+            # Compute (already vectorized inside pushPullRedux)
+            img = pushPullRedux(imagelist, template, shuffle)
+            norm_img = img / (2 * ampVect[i])
+
+            img_name = _os.path.join(fold, f"mode_{int(modeList[i]):04d}.fits")
+            header = {
+                "MODEID": (int(modeList[i]), "mode id"),
+                "AMP": (float(ampVect[i]), "mode amplitude"),
+                "TEMPLATE": (len(template), "push-pull length"),
+            }
+            _osu.save_fits(img_name, norm_img, overwrite=True, header=header)
+
+    ## LEGACY
+    # for i in range(0, nmodes):
+    #     imagelist = _read_mode(fileMat[i, :])
+    #     img = pushPullRedux(imagelist, template, shuffle)
+    #     norm_img = img / (2 * ampVect[i])
+    #     img_name = _os.path.join(fold, f"mode_{modeList[i]:04d}.fits")
+    #     header = {}
+    #     header["MODEID"] = (modeList[i], 'mode id')
+    #     header["AMP"] = (ampVect[i], 'mode amplitude')
+    #     header["TEMPLATE"] = (len(template), 'push-pull length')
+    #     _osu.save_fits(img_name, norm_img, overwrite=True, header=header)
 
 
 def pushPullRedux(
-    fileVec: list[str], template: _ot.ArrayLike, shuffle: int = 0
+    imglist: list[_ot.ImageData] | _ot.CubeData,
+    template: _ot.ArrayLike,
+    shuffle: int = 0,
 ) -> _ot.ImageData:
     """
     Performs the basic operation of processing PushPull data.
 
     Parameters
     ----------
-    fileVec : string | array
-        It is a row in the fileMat (the organized matrix of the images filename),
-        corresponding to all the realizations of the same mode (or act), with a
-        given template. If shuffle option has been used, the fileMat (and fileVec)
-        shall be reorganized before running the script.
+    imglist : list of ImageData ! CubeData
+        List of images for the PushPull acquisition, organized according to the template.
     template: int | ArrayLike
         Template for the PushPull acquisition.
     shuffle: int, optional
@@ -376,27 +448,34 @@ def pushPullRedux(
     """
     image_list = []
     template = _np.array(template)
-    for i in range(0, template.shape[0]):
-        ima = _osu.read_phasemap(fileVec[i])
-        image_list.append(ima)
-    image = _np.zeros((ima.shape[0], ima.shape[1]))
+    n_images = len(imglist)
     if shuffle == 0:
-        if len(template) == 1:
-            image = image_list[0] * template[0]
-            master_mask = image_list[0].mask
-        else:
-            for x in range(1, len(image_list)):
-                opd2add = (
-                    image_list[x] * template[x] + image_list[x - 1] * template[x - 1]
-                )
-                master_mask2add = _np.ma.mask_or(
-                    image_list[x].mask, image_list[x - 1].mask
-                )
-                if x == 1:
-                    master_mask = master_mask2add
-                else:
-                    master_mask = _np.ma.mask_or(master_mask, master_mask2add)
-                image += opd2add
+        ## NEW ALGORITHM: VECTORIZED COMPUTATION
+        # Template weights computation
+        w = template.astype(_np.result_type(template, imglist[0].data), copy=True)
+        if n_images > 2:
+            w[1:-1] *= 2.0
+        # OR-reduce all masks once
+        master_mask = _np.logical_or.reduce([_xp.asnumpy(ima.mask) for ima in imglist])
+        # Compute weighted sum over realizations on raw data
+        stack = _np.stack([ima.data for ima in imglist], axis=0)  # (n, H, W)
+        image = _xp.asnumpy(  # (H, W)
+            _xp.tensordot(_xp.asarray(w), _xp.asarray(stack), axes=(0, 0))
+        )
+        ##
+
+        # for x in range(1, n_images):
+        #     opd2add = (
+        #         imglist[x] * template[x] + imglist[x - 1] * template[x - 1]
+        #     )
+        #     master_mask2add = _np.ma.mask_or(
+        #         imglist[x].mask, imglist[x - 1].mask
+        #     )
+        #     if x == 1:
+        #         master_mask = master_mask2add
+        #     else:
+        #         master_mask = _np.ma.mask_or(master_mask, master_mask2add)
+        #     image += opd2add
     else:
         print("Shuffle option")
         for i in range(0, shuffle - 1):
@@ -411,11 +490,11 @@ def pushPullRedux(
                 if i == 0 and x == 1:
                     master_mask = master_mask2add
                 else:
-                    master_mask = _np.na.mask_or(master_mask, master_mask2add)
+                    master_mask = _np.ma.mask_or(master_mask, master_mask2add)
                 image += opd2add
-    image = _np.ma.masked_array(image, mask=master_mask) / _np.max(
-        ((template.shape[0] - 1), 1)
-    )  #!!!
+
+    template_norm_factor = _np.max(((template.shape[0] - 1), 1))
+    image = _np.ma.masked_array(image, mask=master_mask) / template_norm_factor
     return image
 
 
@@ -443,7 +522,8 @@ def registrationRedux(tn: str, fileMat: list[str]) -> list[_ot.ImageData]:
     nActs = fileMat.shape[0]
     imglist = []
     for i in range(0, nActs - 1):
-        img = pushPullRedux(fileMat[i, :], template)
+        imgs = [_osu.read_phasemap(x) for x in fileMat[i, :]]
+        img = pushPullRedux(imgs, template)
         imglist.append(img)
     # cube = _np.ma.masked_array(imglist)
     # _osu.save_fits(_os.path.join(_intMatFold, tn, "regActCube.fits"), cube)
@@ -540,7 +620,19 @@ def getTriggerFrame(tn: str, amplitude: int | float = None, roi: int = None) -> 
     return trigFrame
 
 
-def getRegFileMatrix(tn: str, roi: int = None) -> tuple[int, _ot.ArrayLike]:
+def getRegFrames(tn: str, trigFrame: int) -> tuple[int, _ot.ArrayLike]:
+    """ """
+    _, infoR, _, _ = _getAcqInfo(tn)
+    timing = _rif.getTiming()
+    if infoR["zeros"] == 0 and len(infoR["modes"]) == 0:
+        regStart = regEnd = (trigFrame + 1) if trigFrame != 0 else 0
+    else:
+        regStart = trigFrame + infoR["zeros"] * timing + (1 if trigFrame != 0 else 0)
+        regEnd = regStart + len(infoR["modes"]) * len(infoR["template"]) * timing
+    return regStart, regEnd
+
+
+def getRegFileMatrix(tn: str, trigFrame: int) -> tuple[int, _ot.ArrayLike]:
     """
     Search for the registration frames in the images file list, and creates the
     registration file matrix.
@@ -566,19 +658,13 @@ def getRegFileMatrix(tn: str, roi: int = None) -> tuple[int, _ot.ArrayLike]:
         fold = None
     fileList = _osu.getFileList(tn, fold=fold)
     _, infoR, _, _ = _getAcqInfo(tn)
-    timing = _rif.getTiming()
-    trigFrame = getTriggerFrame(tn, roi=roi)
-    if infoR["zeros"] == 0 and len(infoR["modes"]) == 0:
-        regStart = regEnd = (trigFrame + 1) if trigFrame != 0 else 0
-    else:
-        regStart = trigFrame + infoR["zeros"] * timing + (1 if trigFrame != 0 else 0)
-        regEnd = regStart + len(infoR["modes"]) * len(infoR["template"]) * timing
+    regStart, regEnd = getRegFrames(tn, trigFrame)
     regList = fileList[regStart:regEnd]
     regMat = _np.reshape(regList, (len(infoR["modes"]), len(infoR["template"])))
-    return regEnd, regMat
+    return regMat
 
 
-def getIffFileMatrix(tn: str, roi: int = None) -> _ot.ArrayLike:
+def getIffFileMatrix(tn: str, trigFrame: int = None) -> _ot.ArrayLike:
     """
     Creates the iffMat
 
@@ -601,13 +687,28 @@ def getIffFileMatrix(tn: str, roi: int = None) -> _ot.ArrayLike:
         fold = None
     fileList = _osu.getFileList(tn, fold=fold)
     _, _, infoIF, _ = _getAcqInfo(tn)
-    regEnd, _ = getRegFileMatrix(tn, roi)
+    _, regEnd = getRegFrames(tn, trigFrame)
     n_useful_frames = len(infoIF["modes"]) * len(infoIF["template"])
     k = regEnd + infoIF["zeros"]
     iffList = fileList[k : k + n_useful_frames]
     iffMat = _np.reshape(iffList, (len(infoIF["modes"]), len(infoIF["template"])))
     return iffMat
 
+def _copyFromIffToIM(name: str, tn: str) -> None:
+    """
+    Copies an IFFunctions file from the IFFunctions folder to the IntMatrices folder.
+
+    Parameters
+    ----------
+    name : str
+        Name of the file to copy.
+    tn : str
+        Tracking number of the data.
+    """
+    opd_path = _os.path.join(_ifFold, tn, name)
+    iff_path = _os.path.join(_intMatFold, tn, name)
+    _os.makedirs(_os.path.dirname(iff_path), exist_ok=True)
+    _sh.copy2(opd_path, iff_path)
 
 def _getCubeList(
     tnlist: str,

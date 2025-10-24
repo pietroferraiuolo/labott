@@ -1,5 +1,6 @@
 numpy
 scipy
+xupy
 scikit-learn
 astropy
 plico_dm
