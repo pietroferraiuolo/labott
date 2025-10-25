@@ -116,7 +116,7 @@ class Flattening:
         self._synthFlat = None
         self._flatResidue = None
         self._flatteningModes = None
-    
+
     @property
     def RM(self):
         """
@@ -130,7 +130,7 @@ class Flattening:
         Command matrix property.
         """
         return self._cmdMat
-    
+
     @property
     def IM(self):
         """
@@ -264,7 +264,7 @@ class Flattening:
         """
         print("Computing recontruction matrix...")
         self._recMat = self._rec.run(sv_threshold=threshold)
-    
+
     def getSVDmatrices(self) -> tuple[_ot.ArrayLike, _ot.ArrayLike, _ot.ArrayLike]:
         """
         Returns the U, S, Vt matrices from the SVD decomposition of the interaction matrix.
@@ -279,7 +279,7 @@ class Flattening:
             Right singular vectors (transposed).
         """
         return self._rec._intMat_U, self._rec._intMat_S, self._rec._intMat_Vt
-    
+
     def plotEigenvalues(self) -> None:
         """
         Plots the eigenvalues of the interaction matrix.

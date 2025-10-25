@@ -63,7 +63,7 @@ def averageFrames(
         Final image of averaged frames.
 
     """
-    fileList = osu.getFileList(tn, fold=_OPDSER.split('/')[-1], key="20")
+    fileList = osu.getFileList(tn, fold=_OPDSER.split("/")[-1], key="20")
     if first is not None and last is not None:
         fl = [
             fileList[x]
@@ -518,14 +518,14 @@ def zernikePlot(
 def strfunct(vect: _ot.ArrayLike, gapvect: _ot.ArrayLike) -> _ot.ArrayLike:
     """
     Computes the structure function for a given time series.
-    
+
     Parameters
     ----------
     vect : _ot.ArrayLike
         Input time series data.
     gapvect : _ot.ArrayLike
         Array of gap values to compute the structure function.
-        
+
     Returns
     -------
     _ot.ArrayLike
@@ -741,14 +741,14 @@ def comp_psd(
 def integrate_psd(y: _ot.ArrayLike, img: _ot.ImageData) -> _ot.ArrayLike:
     """
     Integrates the power spectral density (PSD) over the image.
-    
+
     Parameters
     ----------
     y : _ot.ArrayLike
         Power spectral density values.
     img : _ot.ImageData
         Input image data.
-        
+
     Returns
     -------
     _ot.ArrayLike

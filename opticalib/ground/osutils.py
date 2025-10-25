@@ -241,7 +241,10 @@ def tnRange(tn0: str, tn1: str) -> list[str]:
                 )
     return tnMat
 
-def loadCubeFromFilelist(tn_or_fl: str, fold: _ot.Optional[str] = None, key: _ot.Optional[str] = None) -> _ot.CubeData:
+
+def loadCubeFromFilelist(
+    tn_or_fl: str, fold: _ot.Optional[str] = None, key: _ot.Optional[str] = None
+) -> _ot.CubeData:
     """
     Loads a cube from a list of files obtained from a tracking number or a folder.
 
@@ -263,9 +266,12 @@ def loadCubeFromFilelist(tn_or_fl: str, fold: _ot.Optional[str] = None, key: _ot
         Cube containing all the images loaded from the files.
     """
     from ..analyzer import createCube
+
     if is_tn(tn_or_fl):
         if fold is None:
-            raise ValueError("When passing a tracking number, the 'fold' argument must be specified")
+            raise ValueError(
+                "When passing a tracking number, the 'fold' argument must be specified"
+            )
         path = findTracknum(tn_or_fl, complete_path=True)
         if isinstance(path, str):
             path = [path]
@@ -278,6 +284,7 @@ def loadCubeFromFilelist(tn_or_fl: str, fold: _ot.Optional[str] = None, key: _ot
         fl = [fl]
     cube = createCube(fl)
     return cube
+
 
 def read_phasemap(file_path: str) -> _ot.ImageData:
     """
@@ -307,7 +314,7 @@ def read_phasemap(file_path: str) -> _ot.ImageData:
 
 
 def load_fits(
-    filepath: str, return_header: bool = False
+    filepath: str, return_header: bool = False, on_gpu: bool = False
 ) -> tuple[_ot.ImageData | _ot.CubeData | _ot.MatrixLike | _ot.ArrayLike, _ot.Any]:
     """
     Loads a FITS file.
@@ -318,11 +325,14 @@ def load_fits(
         Path to the FITS file.
     return_header: bool
         Wether to return the header of the loaded fits file. Default is False.
+    on_gpu : bool, optional
+        Whether to load the data on GPU as a `cupy.ndarray` or a
+        `xupy.ma.MaskedArray` (if masked). Default is False.
 
     Returns
     -------
-    fit : np.ndarray or np.ma.MaskedArray
-        FITS file data.
+    fit : np.ndarray or np.ma.MaskedArray of cupy.ndarray or xupy.ma.MaskedArray
+        The loaded FITS file data.
     header : dict | fits.Header, optional
         The header of the loaded fits file.
     """
@@ -334,6 +344,13 @@ def load_fits(
         if return_header:
             header = hdul[0].header
             return fit, header
+    if on_gpu:
+        import xupy as _xu
+
+        if isinstance(fit, _masked_array):
+            fit = _xu.ma.MaskedArray(fit.data)
+        else:
+            fit = _xu.asarray(fit)
     return fit
 
 

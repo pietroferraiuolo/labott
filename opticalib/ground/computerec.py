@@ -18,6 +18,7 @@ from opticalib.core.root import folders as _fn
 
 _intMatFold = _fn.INTMAT_ROOT_FOLDER
 
+
 class ComputeReconstructor:
     """
     This class analyzes the measurements made through the IFF class
@@ -84,7 +85,9 @@ class ComputeReconstructor:
         self._logger.info("SVD of Interaction Matrix")
         IM = _xp.asarray(self._intMat, dtype=_xp.float)
         U, S, Vt = _xp.linalg.svd(IM, full_matrices=False)
-        self._intMat_U, self._intMat_S, self._intMat_Vt = [_xp.asnumpy(x) for x in (U, S, Vt)]
+        self._intMat_U, self._intMat_S, self._intMat_Vt = [
+            _xp.asnumpy(x) for x in (U, S, Vt)
+        ]
         if interactive:
             self._threshold = self.make_interactive_plot(self._intMat_S)
         else:
@@ -109,7 +112,7 @@ class ComputeReconstructor:
         self._filtered_sv = sv_inv_threshold
         self._logger.info("Computing Reconstructor Matrix: Vt.T @ S_inv @ U.T")
         return _xp.asnumpy(Vt.T @ _xp.diag(sv_inv_threshold) @ U.T)
-    
+
     def getSVD(self):
         """
         Returns the SVD components of the interaction matrix.
@@ -123,7 +126,9 @@ class ComputeReconstructor:
         Vt : MatrixLike
             Right singular vectors transposed.
         """
-        if not all([x is not None for x in (self._intMat_U, self._intMat_S, self._intMat_Vt)]):
+        if not all(
+            [x is not None for x in (self._intMat_U, self._intMat_S, self._intMat_Vt)]
+        ):
             return self._intMat_U, self._intMat_S, self._intMat_Vt
         else:
             print("SVD has not been computed yet. Run the 'run' method first.")

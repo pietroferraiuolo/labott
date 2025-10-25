@@ -120,7 +120,7 @@ class SPLATTEngine:
         preEna = np.sum(
             self._eng.read("aoRead('sabi32_damperGain',1:19)")
         )  # self._eng.read('sys_data.ctrPar.dampEna')
-        
+
         state = configparser.ConfigParser()
         state.add_section("Gap")
         state.add_section("Control")

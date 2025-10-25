@@ -63,6 +63,7 @@ from arte.types.mask import CircularMask
 
 fac = _math.factorial
 
+
 class ZernikeFitter:
     """
     Class for fitting Zernike polynomials to an image.
@@ -93,7 +94,9 @@ class ZernikeFitter:
                     method="COG",
                 )
             else:
-                self._fit_mask = CircularMask.fromMaskedArray(fit_mask, mask=fit_mask.mask, method="COG")
+                self._fit_mask = CircularMask.fromMaskedArray(
+                    fit_mask, mask=fit_mask.mask, method="COG"
+                )
             self._zgen = ZernikeGenerator(self._fit_mask)
             self.auxmask = self._fit_mask.as_masked_array()
         else:
@@ -208,12 +211,20 @@ class ZernikeFitter:
         """
         if self._fit_mask is None and self._zgen is None:
             zgen = self._create_fit_mask_from_img(image)
-            img2fit = _np.ma.masked_array(image.data, mask=zgen._boolean_mask.copy())
+            image = _np.ma.masked_array(image.data, mask=zgen._boolean_mask.copy())
         else:
             zgen = self._zgen
-            img2fit = image
-        coeffs, mat = _surf_fit(img2fit, zgen, zernike_index_vector)
-        return coeffs, mat
+            image = image
+        tmp_mask = image.mask == 0
+        mat = []
+        for zmode in zernike_index_vector:
+            vv = zgen.getZernike(zmode)
+            mat.append(vv[tmp_mask])
+        mat = _np.array(mat)
+        A = mat.T
+        B = _np.transpose(image.compressed())
+        coeffs = _np.linalg.lstsq(A, B, rcond=None)[0]
+        return coeffs, A
 
     def fitOnROi(
         self,
@@ -307,6 +318,11 @@ class ZernikeFitter:
         cmask._mask = image.mask
         zgen = ZernikeGenerator(cmask)
         return zgen
+
+
+##############################################################################################
+##############################################################################################
+##############################################################################################
 
 
 def generateZernMat(noll_ids: list[int], img_mask: _t.ImageData) -> _t.MatrixLike:

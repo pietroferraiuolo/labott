@@ -63,3 +63,23 @@ def imgCut(img: _ot.ImageData):
     bottom_right = finite_coords.max(axis=0)
     cutImg = img[top_left[0] : bottom_right[0] + 1, top_left[1] : bottom_right[1] + 1]
     return cutImg
+
+
+def cubeMasterMask(cube: _ot.CubeData) -> _ot.ImageData:
+    """
+    Generates a master mask for a cube by combining the masks of all individual frames.
+
+    Parameters
+    ----------
+    cube : np.ma.maskedArray
+        The input cube where each slice along the last axis is a masked image.
+
+    Returns
+    -------
+    master_mask : np.ma.maskedArray
+        The master mask that combines all individual masks in the cube.
+    """
+    master_mask = _np.ma.logical_or.reduce(
+        [cube[:, :, i].mask for i in range(cube.shape[-1])]
+    )
+    return master_mask

@@ -9,7 +9,7 @@ Author(s):
 
 Description:
 ------------
-This module contains the core functionalities of the opticalib package, 
+This module contains the core functionalities of the opticalib package,
 such as path management, configuration handling and custom exceptions.
 
 Contents:

@@ -25,7 +25,7 @@ import types as _types
 class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
     """
     AdOptica Deformable Mirror interface.
-    
+
     Used with the AdOptica AO Client. In use for the DP, and will later be used for M4.
     """
 
@@ -43,7 +43,12 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
         pos = self._aoClient.getPosition()
         return pos
 
-    def set_shape(self, cmd: _ot.ArrayLike|list[float], differential: bool = False, incremental: float = False):  # cmd, segment=None):
+    def set_shape(
+        self,
+        cmd: _ot.ArrayLike | list[float],
+        differential: bool = False,
+        incremental: float = False,
+    ):  # cmd, segment=None):
         """
         Applies the given command to the DM actuators.
 
@@ -68,15 +73,15 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
             self._lastCmd += cmd
         self._lastCmd = cmd
         if incremental:
-            dc = _np.ceil((1/incremental))
-            if dc < 1 and incremental > 1.:
+            dc = _np.ceil((1 / incremental))
+            if dc < 1 and incremental > 1.0:
                 dc = incremental
-                incremental = 1./incremental
+                incremental = 1.0 / incremental
             for i in range(dc):
-                if i*incremental > 1.:
+                if i * incremental > 1.0:
                     self._aoClient.mirrorCommand(cmd)
                 else:
-                    self._aoClient.mirrorCommand(cmd*i*incremental)
+                    self._aoClient.mirrorCommand(cmd * i * incremental)
         else:
             self._aoClient.mirrorCommand(cmd)
 

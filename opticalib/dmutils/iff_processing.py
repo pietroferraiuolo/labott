@@ -101,7 +101,7 @@ def process(
         If not None, it defines the size of the square ROI to be used for the
         registration algorithm. The default is None.
     nworkers : int, optional
-        Number of workers to use for the processing. The default is 1 for no 
+        Number of workers to use for the processing. The default is 1 for no
         parallelization.
     nmode_prefetch : int, optional
         Number of modes to prefetch during the processing. The default is 0
@@ -169,14 +169,11 @@ def saveCube(
     from opticalib.analyzer import cubeRebinner
 
     cube = _osu.loadCubeFromFilelist(tn_or_fl=tn, fold=_ifFold, key="mode_")
-
-    # FIXME: For now commented
-    # cmask = createMasterMask(cube)
-    # cube.mask = cmask
+    # cube.mask = _roi.cubeMasterMask(cube)
 
     # Rebinning the cube
     header = {}
-    header['REBIN'] = (rebin, 'Rebinning factor applied')
+    header["REBIN"] = (rebin, "Rebinning factor applied")
     if rebin > 1:
         cube = cubeRebinner(cube, rebin)
     # Saving the cube
@@ -186,9 +183,11 @@ def saveCube(
     cube_path = _os.path.join(new_fold, cubeFile)
     _osu.save_fits(cube_path, cube, overwrite=True, header=header)
     # Copying the cmdMatrix and the ModesVector into the INTMAT Folder
-    _copyFromIffToIM(name='cmdMatrix.fits', tn=tn)
-    _copyFromIffToIM(name='modesVector.fits', tn=tn)
-    print(f"Cube of shape {cube.shape} saved in '.../{'/'.join(cube_path.split('/')[-2:])}'")
+    _copyFromIffToIM(name="cmdMatrix.fits", tn=tn)
+    _copyFromIffToIM(name="modesVector.fits", tn=tn)
+    print(
+        f"Cube of shape {cube.shape} saved in '.../{'/'.join(cube_path.split('/')[-2:])}'"
+    )
     return cube
 
 
@@ -219,45 +218,25 @@ def stackCubes(tnlist: str) -> None:
     stacked_cmat = _np.hstack(cube_parameters[1])
     stacked_mvec = _np.dstack(cube_parameters[2])
     # Saving everithing to a new file into a new tn
+    nchead = {}
+    nchead["FLAG"] = (flag, "stacking mode")
+    nchead["NSTACK"] = (len(tnlist), "number of stacked cubes")
+    for i, tn in enumerate(tnlist):
+        nchead[f"TN{i+1}"] = (tn, f"TN of stacked cube {i+1}")
+    nchead["REBIN"] = (cube_parameters[3], "common rebinning factor")
     save_cube = _os.path.join(stacked_cube_fold, cubeFile)
     save_cmat = _os.path.join(stacked_cube_fold, "cmdMatrix.fits")
     save_mvec = _os.path.join(stacked_cube_fold, "modesVector.fits")
-    _osu.save_fits(save_cube, stacked_cube)
+    _osu.save_fits(save_cube, stacked_cube, header=nchead)
     _osu.save_fits(save_cmat, stacked_cmat)
     _osu.save_fits(save_mvec, stacked_mvec)
-    with open(
-        _os.path.join(stacked_cube_fold, flagFile), "w", encoding="UTF-8"
-    ) as file:
-        flag.write(file)
     print(f"Stacked cube and matrices saved in {new_tn}")
-
-
-def createMasterMask(cube: _ot.CubeData) -> _ot.ImageData:
-    """
-    Function which creates a master mask for the cube, by performing a logical
-    OR operation between the masks of each image in the cube.
-
-    Parameters
-    ----------
-    cube : masked_array
-        Cube from which create the master mask.
-
-    Returns
-    -------
-    master_mask : masked_array
-        Master mask created from the cube.
-    """
-    master_mask = cube[:, :, 0].mask
-    for i in range(1, cube.shape[-1]):
-        master_mask = _np.ma.mask_or(master_mask, cube[:, :, i].mask)
-    return master_mask
 
 
 def filterZernikeCube(
     tn: str,
     zern_modes: _ot.Optional[list[int]] = None,
     save: bool = True,
-    cube_header: _ot.Optional[dict[str, _ot.Any] | _ot.Header] = None,
 ) -> tuple[_ot.CubeData, str]:
     """
     Function which filters out the desired zernike modes from a cube.
@@ -269,6 +248,8 @@ def filterZernikeCube(
     zern_modes : list, optional
         List of zernike modes to filter out. The default is [1,2,3]
         (piston, tip and tilt).
+    save : bool, optional
+        If True, the filtered cube will be saved to disk. The default is True.
 
     Returns
     -------
@@ -280,18 +261,28 @@ def filterZernikeCube(
     new_tn = _os.path.join(_intMatFold, _ts())
     _os.mkdir(new_tn)
     oldCube = _os.path.join(_intMatFold, tn, cubeFile)
-    ocFlag = _os.path.join(_intMatFold, tn, flagFile)
     newCube = _os.path.join(new_tn, cubeFile)
-    newFlag = _os.path.join(new_tn, flagFile)
     CmdMat = _os.path.join(_intMatFold, tn, cmdMatFile)
     ModesVec = _os.path.join(_intMatFold, tn, modesVecFile)
-    cube = _osu.load_fits(oldCube)
+    cube, cube_header = _osu.load_fits(oldCube, True)
     zern2filter = zern_modes if zern_modes is not None else [1, 2, 3]
-    fcube = []
+    zfit = _zern.ZernikeFitter(cube[:, :, 0].mask)
+
+    # for i in range(cube.shape[-1]):
+    #     # filtered = _zern.removeZernike(cube[:, :, i], zern2filter)
+    #     filtered = zfit.removeZernike(cube[:, :, i], zern2filter)
+    #     fcube.append(filtered)
+    # ffcube = _np.ma.dstack(fcube)
+
+    # Preallocate output cube with same shape and dtype
+    ffcube = _np.ma.empty_like(cube)
+
+    # Process each frame in-place (avoids intermediate list)
     for i in range(cube.shape[-1]):
-        filtered = _zern.removeZernike(cube[:, :, i], zern2filter)
-        fcube.append(filtered)
-    ffcube = _np.ma.dstack(fcube)
+        ffcube[:, :, i] = zfit.removeZernike(cube[:, :, i], zern2filter)
+
+    ffcube.mask = _roi.cubeMasterMask(ffcube)
+
     if save:
         if cube_header:
             zern2filter = "[" + ",".join(map(str, zern2filter)) + "]"
@@ -304,13 +295,6 @@ def filterZernikeCube(
         _osu.save_fits(newCube, ffcube, header=cube_header)
         _sh.copyfile(CmdMat, _os.path.join(new_tn, cmdMatFile))
         _sh.copyfile(ModesVec, _os.path.join(new_tn, modesVecFile))
-        # DEPRECATION : Flag file deprecated and will be removed in the future
-        with open(ocFlag, "r", encoding="utf-8") as oflag:
-            flag = oflag.readlines()
-        flag.pop(-1)
-        flag += f"Zernike modes filtered = {zern2filter}"
-        with open(newFlag, "w", encoding="utf-8") as nflag:
-            nflag.writelines(flag)
         print(f"Filtered cube saved at {new_tn}")
     return ffcube, new_tn.split("/")[-1]
 
@@ -694,6 +678,7 @@ def getIffFileMatrix(tn: str, trigFrame: int = None) -> _ot.ArrayLike:
     iffMat = _np.reshape(iffList, (len(infoIF["modes"]), len(infoIF["template"])))
     return iffMat
 
+
 def _copyFromIffToIM(name: str, tn: str) -> None:
     """
     Copies an IFFunctions file from the IFFunctions folder to the IntMatrices folder.
@@ -709,6 +694,7 @@ def _copyFromIffToIM(name: str, tn: str) -> None:
     iff_path = _os.path.join(_intMatFold, tn, name)
     _os.makedirs(_os.path.dirname(iff_path), exist_ok=True)
     _sh.copy2(opd_path, iff_path)
+
 
 def _getCubeList(
     tnlist: str,
@@ -739,13 +725,11 @@ def _getCubeList(
         cube_name = _os.path.join(fold, "IMCube.fits")
         matrix_name = _os.path.join(fold, "cmdMatrix.fits")
         modesVec_name = _os.path.join(fold, "modesVector.fits")
-        flag_file = _os.path.join(fold, "flag.txt")
-        cubeList.append(_osu.load_fits(cube_name))
+        cube, cube_header = _osu.load_fits(cube_name, True)
+        cubeList.append(cube)
         matrixList.append(_osu.load_fits(matrix_name))
         modesVectList.append(_osu.load_fits(modesVec_name))
-        with open(flag_file, "r", encoding="UTF-8") as f:
-            flag = f.readlines()
-        rebins.append(int(flag[1].split("=")[1].strip()))
+        rebins.append(int(cube_header["REBIN"] if "REBIN" in cube_header else 1))
     if not all([rebin == rebins[0] for rebin in rebins]):
         raise ValueError("Cubes have different rebinning factors")
     rebin = rebins[0]
@@ -880,9 +864,9 @@ def __flag(
         Dictionary containing the flagging information about the stacked cube.
     """
     c_type = [
-        "Sequentially stacked cubes",
-        "Mean of cubes",
-        "!!!Warning: repeated modes in stacked cube",
+        "sequential stack",
+        "mean stack",
+        "(WARN)repeated modes",
     ]
     text = ""
     for i, tn in enumerate(tnlist):
@@ -914,6 +898,7 @@ def _ampReorganization(ampVector: _ot.ArrayLike):
     return reorganizaed_amps
 
 
+# TODO
 def _modesReorganization(modesVector: _ot.ArrayLike):
     # if isinstance(modesVector, _np.ndarray):
     #     modesVector = modesVector.astype(int)
