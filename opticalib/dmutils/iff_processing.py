@@ -43,6 +43,7 @@ import xupy as _xp
 import numpy as _np
 import shutil as _sh
 import configparser as _cp
+from tqdm import tqdm as _tqdm
 from opticalib import typings as _ot
 from opticalib.core.root import _folds
 from opticalib.core import read_config as _rif
@@ -75,7 +76,7 @@ def process(
     register: bool = False,
     save: bool = False,
     rebin: int = 1,
-    roi: int = None,
+    roi: int = None, # ?
     *,
     nworkers: int = 1,
     nmode_prefetch: int = 0,
@@ -139,8 +140,8 @@ def process(
 def saveCube(
     tn: str,
     rebin: int = 1,
-    register: bool = False,
     cube_header: _ot.Optional[dict[str, _ot.Any] | _ot.Header] = None,
+    register: bool = False,
 ) -> _ot.CubeData:
     """
     Creates and save a cube from the fits files contained in the tn folder,
@@ -155,7 +156,7 @@ def saveCube(
         Rebinning factor to apply to the images before stacking them into the
         cube.
     register : int or tuple, optional
-        If not False, and int or a tuple of int must be passed as value, and
+        If not False, an int or a tuple of int must be passed as value, and
         the registration algorithm is performed on the images before stacking them
         into the cube. Default is False.
     cube_header : dict | Header, optional
@@ -169,11 +170,19 @@ def saveCube(
     from opticalib.analyzer import cubeRebinner
 
     cube = _osu.loadCubeFromFilelist(tn_or_fl=tn, fold=_ifFold, key="mode_")
-    # cube.mask = _roi.cubeMasterMask(cube)
+    # cube.mask = _roi.cubeMasterMask(cube) # w/ DP weird behavior
+    
+    ## TODO ??
+    # if register is not False:
+    #     print(f"Applying registration with offset {register}...")
+    #     for i in _tqdm(range(cube.shape[-1]), desc="Registering cube...", unit='modes'):
+    #         cube[:, :, i] = _osu.shiftImage(cube[:, :, i], register)
 
     # Rebinning the cube
     header = {}
     header["REBIN"] = (rebin, "Rebinning factor applied")
+    if cube_header is not None:
+        header.update(cube_header)
     if rebin > 1:
         cube = cubeRebinner(cube, rebin)
     # Saving the cube
@@ -191,7 +200,7 @@ def saveCube(
     return cube
 
 
-def stackCubes(tnlist: str) -> None:
+def stackCubes(tnlist: str, cubeNames: _ot.Optional[list[str]]) -> None:
     """
     Stack the cubes sontained in the corresponding tracking number folder, creating
     a new cube, along with stacked command matrix and modes vector.
@@ -200,6 +209,9 @@ def stackCubes(tnlist: str) -> None:
     ----------
     tnlist : list of str
         List containing the tracking numbers of the cubes to stack.
+    cubeNames : list of str, optional
+        List containing the names of the cube files, corresponding to the tn, to stack.
+        If not provided, the default names `IMCube.fits` will be used.
 
     Returns
     -------
@@ -211,7 +223,7 @@ def stackCubes(tnlist: str) -> None:
     new_tn = _ts()
     stacked_cube_fold = _os.path.join(_intMatFold, new_tn)
     _os.mkdir(stacked_cube_fold)
-    cube_parameters = _getCubeList(tnlist)
+    cube_parameters = _getCubeList(tnlist, cubeNames)
     flag = _checkStackedCubes(tnlist)
     # Stacking the cube and the matrices
     stacked_cube = _np.ma.dstack(cube_parameters[0])
@@ -278,7 +290,7 @@ def filterZernikeCube(
     ffcube = _np.ma.empty_like(cube)
 
     # Process each frame in-place (avoids intermediate list)
-    for i in range(cube.shape[-1]):
+    for i in _tqdm(range(cube.shape[-1]), desc=f"Removing Z[{', '.join(map(str, zern_modes))}]...", unit='modes'):
         ffcube[:, :, i] = zfit.removeZernike(cube[:, :, i], zern2filter)
 
     ffcube.mask = _roi.cubeMasterMask(ffcube)
@@ -367,7 +379,7 @@ def iffRedux(
         for j in range(min(prefetch, nmodes)):
             futures[j] = ex.submit(_read_mode, fileMat[j, :])
 
-        for i in range(nmodes):
+        for i in _tqdm(range(nmodes), desc="Processing...", total=nmodes, unit='modes'):
             # Ensure current mode is scheduled
             if i not in futures:
                 futures[i] = ex.submit(_read_mode, fileMat[i, :])
@@ -578,12 +590,12 @@ def getTriggerFrame(tn: str, amplitude: int | float = None, roi: int = None) -> 
     if infoT["zeros"] == 0 and len(infoT["modes"]) == 0:
         trigFrame = 0
         return trigFrame
-    listout = []
+    # listout = [] # ??
     while go != 0:
         img1 = _osu.read_phasemap(fileList[i])
         if not roi is None:
             rois = _roi.roiGenerator(img0)
-            roi2use = rois[roi]
+            roi2use = rois[roi] # ??
             _ = rois.pop(roi)
             for r in rois:
                 img1.mask[r == 0] = True
@@ -605,7 +617,25 @@ def getTriggerFrame(tn: str, amplitude: int | float = None, roi: int = None) -> 
 
 
 def getRegFrames(tn: str, trigFrame: int) -> tuple[int, _ot.ArrayLike]:
-    """ """
+    """
+    Search for the registration frames in the images file list.
+    
+    Parameters
+    ----------
+    tn : str
+        Tracking number of the data in the OPDImages folder.
+    trigFrame : int
+        Trigger frame index.
+        
+    Returns
+    -------
+    regStart : int
+        Index which identifies the first registration frame in the images file
+        list.
+    regEnd : int
+        Index which identifies the last registration frame in the images file
+        list.
+    """
     _, infoR, _, _ = _getAcqInfo(tn)
     timing = _rif.getTiming()
     if infoR["zeros"] == 0 and len(infoR["modes"]) == 0:
@@ -628,9 +658,6 @@ def getRegFileMatrix(tn: str, trigFrame: int) -> tuple[int, _ot.ArrayLike]:
 
     Returns
     -------
-    regEnd : int
-        Index which identifies the last registration frame in the images file
-        list.
     regMat : ndarray
         A matrix of images in string format, containing the registration frames.
         It has shape (registration_modes, n_push_pull).
@@ -698,6 +725,7 @@ def _copyFromIffToIM(name: str, tn: str) -> None:
 
 def _getCubeList(
     tnlist: str,
+    cubeNames: _ot.Optional[list[str]] = None
 ) -> tuple[list[_ot.ImageData], list[_ot.MatrixLike], _ot.ArrayLike, int]:
     """
     Retireves the cubes from each tn in the tnlist.
@@ -706,6 +734,9 @@ def _getCubeList(
     ----------
     tnlist : list of str
         List containing the tracking number of the cubes to stack.
+    cubeNames : list of str, optional
+        List containing the names of the cube files, corresponding to the tn, to stack.
+        If not provided, the default names `IMCube.fits` will be used.
 
     Returns
     -------
@@ -720,9 +751,11 @@ def _getCubeList(
     matrixList = []
     modesVectList = []
     rebins = []
-    for tn in tnlist:
+    if cubeNames is None:
+        cubeNames = [cubeFile] * len(tnlist)
+    for tn, cname in zip(tnlist, cubeNames):
         fold = _os.path.join(_intMatFold, tn)
-        cube_name = _os.path.join(fold, "IMCube.fits")
+        cube_name = _os.path.join(fold, cname)
         matrix_name = _os.path.join(fold, "cmdMatrix.fits")
         modesVec_name = _os.path.join(fold, "modesVector.fits")
         cube, cube_header = _osu.load_fits(cube_name, True)

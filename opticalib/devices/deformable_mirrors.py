@@ -46,7 +46,7 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
     def set_shape(
         self,
         cmd: _ot.ArrayLike | list[float],
-        differential: bool = False,
+        differential: bool = True,
         incremental: float = False,
     ):  # cmd, segment=None):
         """

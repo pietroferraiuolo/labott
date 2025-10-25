@@ -366,7 +366,7 @@ class Alignment:
         self, template: _ot.ArrayLike, n_frames: int, n_repetitions: int
     ) -> _ot.CubeData:
         """
-        Produces images based on the provided template and number of repetitions.
+        Acquire images based on the provided template and number of repetitions.
 
         Parameters
         ----------

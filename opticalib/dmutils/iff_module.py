@@ -23,9 +23,10 @@ def iffDataAcquisition(
     interf: _ot.InterferometerDevice,
     modesList: _ot.Optional[_ot.ArrayLike] = None,
     amplitude: _ot.Optional[float | _ot.ArrayLike] = None,
-    cmdOffset: _ot.Optional[float | _ot.ArrayLike] = None,
+    # cmdOffset: _ot.Optional[float | _ot.ArrayLike] = None,
     template: _ot.Optional[_ot.ArrayLike] = None,
     shuffle: bool = False,
+    differential: bool = False,
 ) -> str:
     """
     This is the user-lever function for the acquisition of the IFF data, given a
@@ -48,6 +49,9 @@ def iffDataAcquisition(
         template file for the command matrix
     shuffle: bool , optional
         if True, shuffle the modes before acquisition
+    differential: bool , optional
+        if True, applies the commands differentially w.r.t. the initial shape of
+        the DM.
 
     Returns
     -------
@@ -56,10 +60,10 @@ def iffDataAcquisition(
     """
     ifc = _ifa.IFFCapturePreparation(dm)
     tch = ifc.createTimedCmdHistory(modesList, amplitude, template, shuffle)
-    if cmdOffset is not None:
-        cmdOff = cmdOffset[:, _np.newaxis]
-        tch = tch + cmdOff
-        print("Adding a cmd offset to the timeHistory")
+    # if cmdOffset is not None:
+    #     cmdOff = cmdOffset[:, _np.newaxis]
+    #     tch = tch + cmdOff
+    #     print("Adding a cmd offset to the timeHistory")
     info = ifc.getInfoToSave()
     tn = _ts()
     iffpath = _os.path.join(_fn.IFFUNCTIONS_ROOT_FOLDER, tn)
@@ -85,7 +89,7 @@ def iffDataAcquisition(
         if value is not None:
             _rif.updateIffConfig(tn, param, value)
     dm.uploadCmdHistory(tch)
-    dm.runCmdHistory(interf, save=tn)
+    dm.runCmdHistory(interf, save=tn, differential=differential)
     return tn
 
 

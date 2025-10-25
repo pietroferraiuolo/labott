@@ -475,7 +475,7 @@ def readZernike(tn: str):
         Array of Zernike coefficients for each frame.
     """
     fold = osu.findTracknum(tn, complete_path=True)
-    fname = _os.path.join(fold, tn, "zernike.fits")
+    fname = _os.path.join(fold, "zernike.fits")
     zernikes = osu.load_fits(fname)
     return zernikes
 
@@ -848,18 +848,18 @@ def cubeRebinner(
     rebin : int
         Rebinning factor.
     method : str, optional
-        Rebinning method, either 'averaging' or 'sampling'. The default is 'averaging'.
+        Rebinning method, either 'averaging' or 'sampling'. The default is 
+        'averaging'.
 
     Returns
     -------
     newCube : ndarray
         Rebinned cube.
     """
-    newCube = []
-
+    newCube = _np.ma.empty_like(cube)
     for i in range(cube.shape[-1]):
-        newCube.append(modeRebinner(cube[:, :, i], rebin, method=method))
-    return _np.ma.dstack(newCube)
+        newCube[:, :, i] = modeRebinner(cube[:, :, i], rebin, method=method)
+    return newCube
 
 
 # From ARTE #
