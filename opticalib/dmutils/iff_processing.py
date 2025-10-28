@@ -359,6 +359,7 @@ def iffRedux(
     - io_workers controls the number of threads used to prefetch mode blocks.
     - prefetch controls how many future modes to keep in-flight.
     """
+    from opticalib.analyzer import pushPullReductionAlgorithm
     fold = _os.path.join(_ifFold, tn)
     nmodes = len(modeList)
 
@@ -367,8 +368,8 @@ def iffRedux(
         # Sequential reads inside a worker to keep per-mode locality
         return [_osu.read_phasemap(p) for p in paths]
 
-    ## NEW METHOD: THREADING I/O WORKERS WITH PREFETCHING
-    # ----------------------
+    ## NEW METHOD: THREADING I/O WORKERS WITH PREFETCHING ##
+    # ---------------------------------------------------- #
 
     # just to be sure...
     io_workers = max(1, int(io_workers))
@@ -394,8 +395,15 @@ def iffRedux(
                 futures[j] = ex.submit(_read_mode, fileMat[j, :])
 
             # Compute (already vectorized inside pushPullRedux)
-            img = pushPullRedux(imagelist, template, shuffle)
-            norm_img = img / (2 * ampVect[i])
+            
+            #img = pushPullRedux(imagelist, template, shuffle)
+            #norm_img = img / (2 * ampVect[i])
+
+            norm_img = pushPullReductionAlgorithm(
+                imagelist,
+                template,
+                normalization=(_np.max(((template.shape[0] - 1), 1)) *2 * ampVect[i])
+            )
 
             img_name = _os.path.join(fold, f"mode_{int(modeList[i]):04d}.fits")
             header = {
@@ -443,7 +451,7 @@ def pushPullRedux(
         Final processed mode's image.
     """
     image_list = []
-    template = _np.array(template)
+    template = _np.asarray(template)
     n_images = len(imglist)
     if shuffle == 0:
         ## NEW ALGORITHM: VECTORIZED COMPUTATION

@@ -16,6 +16,7 @@ Description
 """
 
 import os as _os
+import xupy as _xp
 import numpy as _np
 import jdcal as _jdcal
 import matplotlib.pyplot as _plt
@@ -777,6 +778,44 @@ def getDataFileList(tn: str) -> list[str]:
     filelist = osu.getFileList(tn, fold=fold)
     return filelist
 
+
+def pushPullReductionAlgorithm(imagelist: list[_ot.ImageData] | _ot.CubeData, template: _ot.ArrayLike, normalization: _ot.Optional[float | int] = None):
+    """
+    Performs the basic operation of processing PushPull data.
+
+    Parameters
+    ----------
+    imglist : list of ImageData ! CubeData
+        List of images for the PushPull acquisition, organized according to the template.
+    template: int | ArrayLike
+        Template for the PushPull acquisition.
+    normalization : float | int, optional
+        Normalization factor for the final image. If None, the normalization factor
+        is set to the template length minus one.
+
+    Returns
+    -------
+    image: masked_array
+        Final processed mode's image.
+    """
+    template = _np.asarray(template)
+    n_images = len(imagelist)
+    # Template weights computation
+    w = template.astype(_np.result_type(template, imagelist[0].data), copy=True)
+    if n_images > 2:
+        w[1:-1] *= 2.0
+    # OR-reduce all masks once
+    master_mask = _np.logical_or.reduce([_xp.asnumpy(ima.mask) for ima in imagelist])
+    # Compute weighted sum over realizations on raw data
+    stack = _np.stack([ima.data for ima in imagelist], axis=0)  # (n, H, W)
+    image = _xp.asnumpy(  # (H, W)
+        _xp.tensordot(_xp.asarray(w), _xp.asarray(stack), axes=(0, 0))
+    )
+    if normalization is None:
+        norm_factor = _np.max(((template.shape[0] - 1), 1))
+    else:
+        norm_factor = normalization
+    image = _np.ma.masked_array(image, mask=master_mask) / norm_factor
 
 def createCube(filelist: list[str], register: bool = False):
     """

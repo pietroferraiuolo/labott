@@ -84,9 +84,11 @@ import os as _os
 import numpy as _np
 from .core.root import folders as _fn
 from .core.read_config import getAlignmentConfig as _gac
-from .ground import logger as _logger, zernike as _zern, geo as _geo, roi as roigen
+from .ground import logger as _logger, roi as roigen
+from .ground.zernike import ZernikeFitter as _zfitter
 from .ground.osutils import load_fits as _rfits, save_fits as _sfits, newtn as _ts
 from . import typings as _ot
+from .analyzer import pushPullReductionAlgorithm as _ppr
 
 _sc = _gac()
 _np.set_printoptions(precision=2, suppress=False)
@@ -159,6 +161,7 @@ class Alignment:
         self._surface = (
             _rfits(_sc.fitting_surface) if not _sc.fitting_surface == "" else None
         )
+        self._zfit = _zfitter(self._surface)
         self._moveFnc = self.__get_callables(self.mdev, _sc.devices_move_calls)
         self._readFnc = self.__get_callables(self.mdev, _sc.devices_read_calls)
         self._acquire = self.__get_callables(self.ccd, _sc.ccd_acquisition)
@@ -363,7 +366,7 @@ class Alignment:
         print(f"Calibration loaded from '{tn}'")
 
     def _images_production(
-        self, template: _ot.ArrayLike, n_frames: int, n_repetitions: int
+        self, template: _ot.ArrayLike|list[int], n_frames: int, n_repetitions: int
     ) -> _ot.CubeData:
         """
         Acquire images based on the provided template and number of repetitions.
@@ -393,13 +396,60 @@ class Alignment:
                 logMsg2 += f"Matrix Column {k+1} : {self.cmdMat.T[k]}"
                 print(f"Matrix Column {k+1} : {self.cmdMat.T[k]}\n")
                 imglist = self._img_acquisition(k, template, n_frames)
-                image = self._push_pull_redux(imglist, template) / self._cmdAmp[k]
+                #image = self._push_pull_redux(imglist, template) / self._cmdAmp[k]
+                template.insert(0, 1)
+                image = _ppr(imglist, template, normalization=6*self._cmdAmp[k]) # TODO: 6 -> sum of template weights?
+                template.pop(0)
                 results.append(image)
             if n_repetitions != 1:
                 n_results.append(results)
             else:
                 n_results = results
         return n_results
+
+
+#### OLD ALGORITHM - TO BE DELETED LATER
+    # def _zern_routine(
+    #     self, imglist: list[_ot.ImageData] | _ot.CubeData
+    # ) -> _ot.MatrixLike:
+    #     """
+    #     Creates the interaction matrix from the provided image list.
+
+    #     Parameters
+    #     ----------
+    #     imglist : CubeData
+    #         The list of images used to create the interaction matrix.
+
+    #     Returns
+    #     -------
+    #     intMat : MatrixLike
+    #         The interaction matrix created from the images.
+    #     """
+    #     _logger.log(f"{self._zern_routine.__qualname__}")
+    #     coefflist = []
+    #     if not isinstance(imglist, list):
+    #         imglist = [imglist]
+    #     for img in imglist:
+    #         if self._surface is None:
+    #             coeff, _ = _zern.zernikeFit(img, self._zvec2fit)
+    #             _logger.log(f"{_zern.zernikeFit.__qualname__}")
+    #         else:
+    #             if self._correct_cavity is True:
+    #                 img -= 2 * self._surface
+    #             cir = _geo.qpupil(-1 * self._surface.mask + 1)
+    #             mm = _geo.draw_mask(
+    #                 self._surface.data * 0, cir[0], cir[1], 1.44 / 0.00076 / 2, out=0
+    #             )  # e questo blocco potrebbe essere in una funzione chiamata all'avvio,
+    #             # così si crea anche la auxmask. i parametri da definire in conf sarebbero 1.44 / 0.00076 / 2 == pix on radius
+    #             # coeff, _ = _zern.zernikeFitAuxmask(img, mm, self._zvec2fit) #mod RB20250917: this part has been substituted with zern_on_roi below
+    #             coeff = self._global_zern_on_roi(img, auxmask=mm)
+    #             _logger.log(f"{_zern.zernikeFitAuxmask.__qualname__}")
+    #         coefflist.append(coeff[self._zvec2use])
+    #     if len(coefflist) == 1:
+    #         coefflist = _np.array([c for c in coefflist[0]])
+    #     intMat = _np.array(coefflist).T
+    #     return intMat
+
 
     def _zern_routine(
         self, imglist: list[_ot.ImageData] | _ot.CubeData
@@ -423,67 +473,63 @@ class Alignment:
             imglist = [imglist]
         for img in imglist:
             if self._surface is None:
-                coeff, _ = _zern.zernikeFit(img, self._zvec2fit)
-                _logger.log(f"{_zern.zernikeFit.__qualname__}")
+                coeff, _ = self._zfit.fit(img, self._zvec2fit)
+                _logger.log(f"{self._zfit.fit.__qualname__}")
             else:
                 if self._correct_cavity is True:
                     img -= 2 * self._surface
-                cir = _geo.qpupil(-1 * self._surface.mask + 1)
-                mm = _geo.draw_mask(
-                    self._surface.data * 0, cir[0], cir[1], 1.44 / 0.00076 / 2, out=0
-                )  # e questo blocco potrebbe essere in una funzione chiamata all'avvio,
-                # così si crea anche la auxmask. i parametri da definire in conf sarebbero 1.44 / 0.00076 / 2 == pix on radius
-                # coeff, _ = _zern.zernikeFitAuxmask(img, mm, self._zvec2fit) #mod RB20250917: this part has been substituted with zern_on_roi below
-                coeff = self._global_zern_on_roi(img, auxmask=mm)
-                _logger.log(f"{_zern.zernikeFitAuxmask.__qualname__}")
+                coeff = self._zfit.fitOnROi(img, self._zvec2fit, 'global')
+                _logger.log(f"{self._zfit.fitOnROi.__qualname__}")
             coefflist.append(coeff[self._zvec2use])
         if len(coefflist) == 1:
             coefflist = _np.array([c for c in coefflist[0]])
         intMat = _np.array(coefflist).T
         return intMat
 
-    def _global_zern_on_roi(
-        self, img: _ot.ImageData, auxmask: _ot.Optional[_ot.ImageData] = None
-    ):
-        """
-        Computes Zernike coefficients over a segmented fitting area, i.e. a pupil
-        mask divided into Regions Of Interest (ROI). The computation is based on
-        the fitting of Zernike modes independently on each ROI; the coefficients
-        are then averaged together to return the global Zernike mode amplitude.
-        An auxiliary mask (optional) may be passed. Such auxiliary mask allows
-        creating the Zernike modes (or more precisely the coordinates grid) over
-        a user-defined area, instead over the image mask (default option for zernikeFit).
 
-        Parameters
-        ----------
-        img : ImageData
-            Image to fit the Zernike modes on, over the ROIs.
-        auxmask : ImageData, optional
-            Image of the auxiliary mask, where the fitting coordinates are constructed
+#### Deprecated - to be deleted later
+    # def _global_zern_on_roi(
+    #     self, img: _ot.ImageData, auxmask: _ot.Optional[_ot.ImageData] = None
+    # ):
+    #     """
+    #     Computes Zernike coefficients over a segmented fitting area, i.e. a pupil
+    #     mask divided into Regions Of Interest (ROI). The computation is based on
+    #     the fitting of Zernike modes independently on each ROI; the coefficients
+    #     are then averaged together to return the global Zernike mode amplitude.
+    #     An auxiliary mask (optional) may be passed. Such auxiliary mask allows
+    #     creating the Zernike modes (or more precisely the coordinates grid) over
+    #     a user-defined area, instead over the image mask (default option for zernikeFit).
 
-        Returns
-        -------
-        zcoeff : array
-            The vector of the Zernike coefficients, corresponding to the selected modes id,
-            fitted over the auxiliary mask and all the ROIs, averaged together.
-        """
-        print("Searching for Regions of Interest in the frame...")
-        roiimg = roigen.roiGenerator(img)
-        nroi = len(roiimg)
-        print("Found " + str(nroi) + " ROI")
-        if auxmask is None:
-            auxmask2use = img.mask
-        else:
-            auxmask2use = auxmask
-        zcoeff = _np.zeros([nroi, len(self._zvec2fit)])
-        for i in range(nroi):
-            img2fit = _np.ma.masked_array(img.data, roiimg[i])
-            cc, _ = _zern.zernikeFitAuxmask(img2fit, auxmask2use, self._zvec2fit)
-            zcoeff[i, :] = cc
-        zcoeff = zcoeff.mean(axis=0)
-        print("Global Zernike coeff:")
-        print(str(zcoeff))
-        return zcoeff
+    #     Parameters
+    #     ----------
+    #     img : ImageData
+    #         Image to fit the Zernike modes on, over the ROIs.
+    #     auxmask : ImageData, optional
+    #         Image of the auxiliary mask, where the fitting coordinates are constructed
+
+    #     Returns
+    #     -------
+    #     zcoeff : array
+    #         The vector of the Zernike coefficients, corresponding to the selected modes id,
+    #         fitted over the auxiliary mask and all the ROIs, averaged together.
+    #     """
+    #     print("Searching for Regions of Interest in the frame...")
+    #     roiimg = roigen.roiGenerator(img)
+    #     nroi = len(roiimg)
+    #     print("Found " + str(nroi) + " ROI")
+    #     if auxmask is None:
+    #         auxmask2use = img.mask
+    #     else:
+    #         auxmask2use = auxmask
+    #     zcoeff = _np.zeros([nroi, len(self._zvec2fit)])
+    #     for i in range(nroi):
+    #         img2fit = _np.ma.masked_array(img.data, roiimg[i])
+    #         cc, _ = _zern.zernikeFitAuxmask(img2fit, auxmask2use, self._zvec2fit)
+    #         zcoeff[i, :] = cc
+    #     zcoeff = zcoeff.mean(axis=0)
+    #     print("Global Zernike coeff:")
+    #     print(str(zcoeff))
+    #     return zcoeff
 
     def _create_rec_mat(self, intMat: _ot.MatrixLike) -> _ot.MatrixLike:
         """
