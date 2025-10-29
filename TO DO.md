@@ -12,8 +12,8 @@
  |__ ✅ `flattening.py` : make CmdMat, IntMat e RecMat pubblicly available
  |
 [] `analyzers.py` : Check for GPU useful operations
- |__ modify and/or rewrite some functions 
- |__ Clarify what to do with these functions:
+ |__ ✅ modify and/or rewrite some functions 
+ |__ [] Clarify what to do with these functions:
  |       - `frame()` : useless
  |       - `spectrum()` : seems done for SPLATT...
  |       - `frame2Ottframe` : clearly for M4 -> transfer it
@@ -24,7 +24,7 @@
  |       - `readZernike` : same
  |       - `zernikePlot` : it's a fit on a cube...
  |
-[] `alignment.py` : Check for GPU useful operations
+✅ `alignment.py` : Check for GPU useful operations
  |__ ✅ `_push_pull_redux` : copy that of `iff_processing` -> actually abstracted and put into `analyzers.py`
  |__ ✅ `zern_routine` + `global_zern_on_roi` : rewrite into the more general way, using the `ZernikeFitter`
 
