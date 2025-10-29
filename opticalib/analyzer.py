@@ -27,14 +27,12 @@ from .core import root as _foldname
 from .ground.geo import qpupil as _qpupil
 from scipy import stats as _stats, fft as _fft, ndimage as _ndimage
 
-_OPDIMG = _foldname.OPD_IMAGES_ROOT_FOLDER
 _OPDSER = _foldname.OPD_SERIES_ROOT_FOLDER
-
 
 def averageFrames(
     tn: str,
-    first: int = None,
-    last: int = None,
+    first: int = 0,
+    last: int = -1,
     file_selector: list[int] = None,
     thresh: bool = False,
 ):
@@ -47,11 +45,11 @@ def averageFrames(
     tn : str
         Data Tracking Number.
     first : int, optional
-        Index number of the first file to consider. If None, the first file in
-        the list is considered.
+        Index number of the first file to consider. Defaults to first item
+        in the list.
     last : int, optional
-        Index number of the last file to consider. If None, the last file in
-        list is considered.
+        Index number of the last file to consider. Defaults to last item in
+        the list.
     file_selector : list, optional
         A list of integers, representing the specific files to load. If None,
         the range (first->last) is considered.
@@ -65,36 +63,50 @@ def averageFrames(
 
     """
     fileList = osu.getFileList(tn, fold=_OPDSER.split("/")[-1], key="20")
-    if first is not None and last is not None:
-        fl = [
-            fileList[x]
-            for x in _np.arange(first, last, 1)
-            if file_selector is None or x in file_selector
-        ]
-    else:
-        first = 0
-        last = len(fileList)
-        fl = [
-            fileList[x]
-            for x in _np.arange(first, last, 1)
-            if file_selector is None or x in file_selector
-        ]
+    fl = _np.asarray(fileList)
+    s = slice(first, last) if last != -1 else slice(first, None)
+    fl = fl[s] if file_selector is None else fl[file_selector]
+    # elif file_selector is not None:
+    #     first = 0
+    #     last = len(fileList)
+    #     fl = [
+    #         fileList[x]
+    #         for x in _np.arange(first, last, 1)
+    #         if file_selector is None or x in file_selector
+    #     ]
     imcube = createCube(fl)
     if thresh is False:
         aveimg = _np.ma.mean(imcube, axis=2)
     else:
-        img = imcube[:, :, 0].data * 0
-        mmask = imcube[:, :, 0].mask
-        nn = 0
-        for j in range(imcube.shape[2]):
-            im = imcube[:, :, j]
-            size = im.data.compressed.size
-            if size > 1:
-                nn += 1
-                img += im.data
-                mmask = _np.ma.mask_or(im.mask, mmask)
-        img = img / nn
+        ## TODO: test new implementation
+
+        valid_frames = ~imcube.mask  # Boolean array of valid data
+        n_valid = valid_frames.sum(axis=2)  # Count valid frames per pixel
+
+        # Sum only valid data
+        img_sum = _np.ma.sum(imcube, axis=2).filled(0)
+
+        # Avoid division by zero
+        with _np.errstate(divide="ignore", invalid="ignore"):
+            img = img_sum / n_valid
+            img = _np.where(n_valid > 0, img, 0)
+
+        # Create mask
+        mmask = n_valid == 0
         aveimg = _np.ma.masked_array(img, mask=mmask)
+
+        # img = imcube[:, :, 0].data * 0
+        # mmask = imcube[:, :, 0].mask
+        # nn = 0
+        # for j in range(imcube.shape[2]):
+        #     im = imcube[:, :, j]
+        #     size = im.data.compressed.size
+        #     if size > 1:
+        #         nn += 1
+        #         img += im.data
+        #         mmask = _np.ma.mask_or(im.mask, mmask)
+        # img = img / nn
+        # aveimg = _np.ma.masked_array(img, mask=mmask)
     return aveimg
 
 
@@ -136,6 +148,7 @@ def saveAverage(
     fname = _os.path.join(_OPDSER, tn, "average.fits")
     if _os.path.isfile(fname):
         print(f"Average '{fname}' already exists")
+        return
     else:
         if average_img is None:
             first = kwargs.get("first", None)
@@ -145,8 +158,8 @@ def saveAverage(
             average_img = averageFrames(
                 tn, first=first, last=last, file_selector=fsel, thresh=thresh
             )
-        osu.save_fits(fname, average_img, overwrite=overwrite)
-        print(f"Saved average at '{fname}'")
+    osu.save_fits(fname, average_img, overwrite=overwrite)
+    print(f"Saved average at '{fname}'")
 
 
 def openAverage(tn: str):
@@ -178,14 +191,18 @@ def openAverage(tn: str):
     return image
 
 
-def runningDiff(tn: str, gap: int = 2):
+def runningDiff(tn_or_fl: str|list[str]|list[_ot.ImageData]|_ot.CubeData, gap: int = 2):
     """
     Computes the running difference of the frames in a given tracking number.
 
     Parameters
     ----------
-    tn : str
-        Tracking number of the frames to process.
+    tn_or_fl : str or list[str] or list[ImageData] or CubeData
+        It can either be:
+        - a tracking number where the frames to process are;
+        - a list of strings with the file list of images to process;
+        - a list of ImageData objects;
+        - a CubeData object.
     gap : int, optional
         Number of frames to skip between each difference calculation. The default is 2.
 
@@ -195,20 +212,34 @@ def runningDiff(tn: str, gap: int = 2):
         Array of standard deviations for each frame difference.
 
     """
-    llist = osu.getFileList(tn)
+    zfit = zern.ZernikeFitter()
+    if isinstance(tn_or_fl, str):
+        if osu.is_tn(tn_or_fl):
+            fl = osu.getFileList(tn_or_fl)
+            llist = [osu.load_fits(x) for x in fl]
+        else:
+            raise ValueError("Invalid tracking number")
+    elif isinstance(tn_or_fl, list):
+        if all(isinstance(item, str) for item in tn_or_fl):
+            llist = [osu.load_fits(x) for x in tn_or_fl]
+        elif all(_ot.isinstance_(item, "ImageData") for item in tn_or_fl):
+            llist = [item.file for item in tn_or_fl]
+        else:
+            raise TypeError("Invalid list elements")
+    elif _ot.isinstance_(tn_or_fl, "CubeData"):
+        llist = tn_or_fl.transpose(2,0,1).tolist()
     nfile = len(llist)
-    npoints = int(nfile / gap) - 2
-    slist = []
-    for i in range(0, npoints):
-        q0 = frame(i * gap, llist)
-        q1 = frame(i * gap + 1, llist)
-        diff = q1 - q0
-        diff = zern.removeZernike(diff)
-        slist.append(diff.std())
-    svec = _np.array(slist)
+    npoints = int(nfile / gap) - 2    
+    idx0 = _np.arange(0, npoints * gap, gap)
+    idx1 = idx0 + 1
+    svec = _np.empty(npoints)
+    for i in range(npoints):
+        diff = llist[idx1[i]] - llist[idx0[i]]
+        diff = zfit.removeZernike(diff)
+        svec[i] = diff.std()
     return svec
 
-
+# TODO: TO REMOVE
 def frame(idx: int, mylist: list[_ot.ImageData] | _ot.CubeData) -> _ot.ImageData:
     """
     Returns a single frame from a list of files or from a cube.
@@ -235,12 +266,10 @@ def frame(idx: int, mylist: list[_ot.ImageData] | _ot.CubeData) -> _ot.ImageData
         elif _ot.isinstance_(mylist[0], _ot.ImageData):
             img = mylist[idx]
     else:
-        if idx >= mylist.shape[2]:
-            raise IndexError("Index out of range")
         img = mylist[:, :, idx]
     return img
 
-
+# TODO
 def spectrum(
     signal: _ot.ArrayLike, dt: float = 1, show: bool = None
 ) -> tuple[_ot.ArrayLike, _ot.ArrayLike]:
@@ -290,7 +319,7 @@ def spectrum(
         _plt.show()
     return spe, freq
 
-
+# TODO: TO REMOVE
 def frame2ottFrame(
     img: _ot.ImageData, croppar: list[int], flipOffset: bool = True
 ) -> _ot.ImageData:
@@ -327,7 +356,7 @@ def frame2ottFrame(
     fullimg = _np.ma.masked_array(fullimg, fullmask)
     return fullimg
 
-
+# TODO
 def timevec(tn: str) -> _ot.ArrayLike:
     """
     Parameters
@@ -363,7 +392,7 @@ def timevec(tn: str) -> _ot.ArrayLike:
         timevector = _np.array(timevec)
     return timevector
 
-
+# TODO
 def track2jd(tni: str):
     """
 
@@ -383,7 +412,7 @@ def track2jd(tni: str):
     jdi = sum(_jdcal.gcal2jd(t[0], t[1], t[2])) + t[3] / 24 + t[4] / 1440 + t[5] / 86400
     return jdi
 
-
+# TODO
 def track2date(tni: str) -> list[str | float]:
     """
     Converts a tracing number into a list containing year, month, day, hour,
@@ -439,7 +468,7 @@ def runningMean(vec: _ot.ArrayLike, npoints: int) -> _ot.ArrayLike:
     """
     return _np.convolve(vec, _np.ones(npoints), "valid") / npoints
 
-
+# TODO
 def readTemperatures(tn: str):
     """
     Reads temperature data from a FITS file associated with a tracking number.
@@ -460,7 +489,7 @@ def readTemperatures(tn: str):
     temperatures = osu.load_fits(fname)
     return temperatures
 
-
+# TODO
 def readZernike(tn: str):
     """
     Reads Zernike coefficients from a FITS file associated with a tracking number.
@@ -480,9 +509,9 @@ def readZernike(tn: str):
     zernikes = osu.load_fits(fname)
     return zernikes
 
-
+# TODO
 def zernikePlot(
-    mylist: _ot.CubeData | list[_ot.ImageData], modes: _ot.ArrayLike = None
+    mylist: _ot.CubeData | list[_ot.ImageData], zmodes: _ot.ArrayLike = None
 ) -> _ot.ArrayLike:
     """
     Computes Zernike coefficients for each frame in a cube or a list of images.
@@ -491,7 +520,7 @@ def zernikePlot(
     ----------
     mylist : _ot.CubeData | list[_ot.ImageData]
         Input image data.
-    modes : _ot.ArrayLike, optional
+    zmodes : _ot.ArrayLike, optional
         Zernike modes to compute. The default is _np.array(range(1, 11)).
 
     Returns
@@ -499,17 +528,16 @@ def zernikePlot(
     zcoeff : _ot.ArrayLike
         Zernike coefficients for each frame.
     """
-    if modes is None:
-        modes = _np.array(range(1, 11))
-    mytype = type(mylist)
-    if mytype is list:
+    zfit = zern.ZernikeFitter()
+    if zmodes is None:
+        zmodes = _np.array(range(1, 11))
+    if isinstance(mylist, list):
         imgcube = createCube(mylist)
-    if mytype is _np.ma.core.MaskedArray:
+    elif isinstance(mylist, _np.ma.MaskedArray):
         imgcube = mylist
     zlist = []
     for i in range(imgcube.shape[-1]):
-        print(i)
-        coeff, _ = zern.zernikeFit(imgcube[:, :, i], modes)
+        coeff, _ = zfit.fit(imgcube[:, :, i], zmodes)
         zlist.append(coeff)
     zcoeff = _np.array(zlist)
     zcoeff = zcoeff.T
@@ -600,38 +628,19 @@ def comp_filtered_image(
     imgf = _fft.ifft2(tf2d_filtered, norm=norm)
     imgout = _np.ma.masked_array(_np.real(imgf), mask=imgin.mask)
     if disp:
-        _plt.figure()
-        _plt.imshow(knrm)
-        _plt.title("freq")
-        _plt.figure()
-        _plt.imshow(fmask1)
-        _plt.title("fmask1")
-        _plt.figure()
-        _plt.imshow(fmask2)
-        _plt.title("fmask2")
-        _plt.figure()
-        _plt.imshow(fmask3)
-        _plt.title("fmask3")
-        _plt.figure()
-        _plt.imshow(fmask)
-        _plt.title("fmask")
-        _plt.figure()
-        _plt.imshow(_np.abs(tf2d))
-        _plt.title("Initial spectrum")
-        _plt.figure()
-        _plt.imshow(_np.abs(tf2d_filtered))
-        _plt.title("Filtered spectrum")
-        _plt.figure()
-        _plt.imshow(imgin)
-        _plt.title("Initial image")
-        _plt.figure()
-        _plt.imshow(imgout)
-        _plt.title("Filtered image")
-    e1 = _np.sqrt(_np.sum(img[mask] ** 2) / _np.sum(mask)) * 1e9
-    e2 = _np.sqrt(_np.sum(imgout[mask] ** 2) / _np.sum(mask)) * 1e9
-    e3 = _np.sqrt(_np.sum(_np.abs(tf2d) ** 2) / _np.sum(mask)) * 1e9
-    e4 = _np.sqrt(_np.sum(_np.abs(tf2d_filtered) ** 2) / _np.sum(mask)) * 1e9
+        imgs = [imgin, imgout, knrm, fmask1, fmask2, fmask3, fmask]
+        titles = ["Initial image", "Filtered image", "Frequency", "Fmask1", "Fmask2", "Fmask3", "Fmask"]
+        for i in range(len(imgs)):
+            _plt.figure()
+            _plt.imshow(imgs[i])
+            _plt.title(titles[i])
+            _plt.colorbar()
+        _plt.show()
     if verbose:
+        e1 = _np.sqrt(_np.sum(img[mask] ** 2) / _np.sum(mask)) * 1e9
+        e2 = _np.sqrt(_np.sum(imgout[mask] ** 2) / _np.sum(mask)) * 1e9
+        e3 = _np.sqrt(_np.sum(_np.abs(tf2d) ** 2) / _np.sum(mask)) * 1e9
+        e4 = _np.sqrt(_np.sum(_np.abs(tf2d_filtered) ** 2) / _np.sum(mask)) * 1e9
         print(f"RMS image [nm]            {e1:.2f}")
         print(f"RMS image filtered [nm]   {e2:.2f}")
         print(f"RMS spectrum              {e3:.2f}")
@@ -644,7 +653,7 @@ def comp_psd(
     nbins: _ot.Optional[int] = None,
     norm: str = "backward",
     verbose: bool = False,
-    disp: bool = False,
+    show: bool = False,
     d: int = 1,
     sigma: _ot.Optional[float] = None,
     crop: bool = True,
@@ -662,7 +671,7 @@ def comp_psd(
         Normalization mode for the FFT. The default is "backward".
     verbose : bool, optional
         If True, print detailed information. The default is False.
-    disp : bool, optional
+    show : bool, optional
         If True, display intermediate results. The default is False.
     d : int, optional
         Spacing between samples. The default is 1.
@@ -721,14 +730,12 @@ def comp_psd(
         print(f"Energy signal     {e1}")
         print(f"Energy spectrum   {e2}")
         print(f"Energy difference {ediff}")
-        print(f"RMS from spectrum {_np.sqrt(e2)}")
-        print(f"RMS [nm]          {(_np.std(img[mask])*1e9):.2f}")
         print(kfreq[0:4])
         print(kfreq[-4:])
     else:
         print(f"RMS from spectrum {_np.sqrt(e2)}")
         print(f"RMS [nm]          {(_np.std(img[mask])*1e9):.2f}")
-    if disp is True:
+    if show is True:
         _plt.figure()
         _plt.plot(fout[1:], Aout[1:] * fout[1:], ".")
         _plt.yscale("log")
@@ -779,7 +786,11 @@ def getDataFileList(tn: str) -> list[str]:
     return filelist
 
 
-def pushPullReductionAlgorithm(imagelist: list[_ot.ImageData] | _ot.CubeData, template: _ot.ArrayLike, normalization: _ot.Optional[float | int] = None):
+def pushPullReductionAlgorithm(
+    imagelist: list[_ot.ImageData] | _ot.CubeData,
+    template: _ot.ArrayLike,
+    normalization: _ot.Optional[float | int] = None,
+):
     """
     Performs the basic operation of processing PushPull data.
 
@@ -817,6 +828,7 @@ def pushPullReductionAlgorithm(imagelist: list[_ot.ImageData] | _ot.CubeData, te
         norm_factor = normalization
     image = _np.ma.masked_array(image, mask=master_mask) / norm_factor
 
+
 def createCube(filelist: list[str], register: bool = False):
     """
     Creates a cube of images from an images file list
@@ -844,6 +856,23 @@ def createCube(filelist: list[str], register: bool = False):
     cube = _np.ma.dstack(cube_list)
     return cube
 
+def makeCubeMasterMask(cube: _ot.CubeData) -> _ot.CubeData:
+    """
+    Creates a master mask for a cube of images by performing a logical OR operation
+    across all individual image masks.
+
+    Parameters
+    ----------
+    cube : ndarray
+        Data cube containing the images/frames stacked.
+
+    Returns
+    -------
+    master_mask : ndarray
+        Master mask for the cube.
+    """
+    master_mask = _np.logical_or.reduce([cube[:, :, i].mask for i in range(cube.shape[2])])
+    return master_mask
 
 def modeRebinner(
     img: _ot.ImageData, rebin: int, method: str = "averaging"
@@ -887,7 +916,7 @@ def cubeRebinner(
     rebin : int
         Rebinning factor.
     method : str, optional
-        Rebinning method, either 'averaging' or 'sampling'. The default is 
+        Rebinning method, either 'averaging' or 'sampling'. The default is
         'averaging'.
 
     Returns
