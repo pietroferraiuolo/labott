@@ -12,7 +12,7 @@
  |__ ✅ `flattening.py` : make CmdMat, IntMat e RecMat pubblicly available
  |
 [] `analyzers.py` : Check for GPU useful operations
- |__ ✅ modify and/or rewrite some functions 
+ |__ ✅ modify and/or rewrite some functions
  |__ [] Clarify what to do with these functions:
  |       - `frame()` : useless
  |       - `spectrum()` : seems done for SPLATT...

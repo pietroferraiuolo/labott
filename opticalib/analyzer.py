@@ -829,14 +829,16 @@ def pushPullReductionAlgorithm(
     image = _np.ma.masked_array(image, mask=master_mask) / norm_factor
 
 
-def createCube(filelist: list[str], register: bool = False):
+def createCube(fl_or_il: list[str], register: bool = False):
     """
     Creates a cube of images from an images file list
 
     Parameters
     ----------
-    filelist : list of str
-        List of file paths to the images/frames to be stacked into a cube.
+    fl_or_il : list of str
+        Either:
+        - the list of image files;
+        - a list of ImageData.
     register : int or tuple, optional
         If not False, and int or a tuple of int must be passed as value, and
         the registration algorithm is performed on the images before stacking them
@@ -847,13 +849,18 @@ def createCube(filelist: list[str], register: bool = False):
     cube : ndarray
         Data cube containing the images/frames stacked.
     """
-    cube_list = []
-    for imgfits in filelist:
-        image = osu.read_phasemap(imgfits)
-        if register:
-            image = _np.roll(image, register)
-        cube_list.append(image)
-    cube = _np.ma.dstack(cube_list)
+    # check it is a list
+    if not isinstance(fl_or_il, list):
+        raise TypeError("filelist must be a list of strings")
+    # check if it is composed of file paths to load
+    if all(isinstance(item, str) for item in fl_or_il):
+        fl_or_il = [osu.load_fits(f) for f in fl_or_il]
+        if not all(_ot.isinstance_(item, "ImageData") for item in fl_or_il):
+            raise TypeError("Data different from `images` loaded. Check filelist.")
+    # finally check if it is a list of ImageData
+    elif not all(_ot.isinstance_(item, "ImageData") for item in fl_or_il):
+        raise TypeError("filelist must be either a list of strings or ImageData")
+    cube = _np.ma.dstack(fl_or_il)
     return cube
 
 def makeCubeMasterMask(cube: _ot.CubeData) -> _ot.CubeData:

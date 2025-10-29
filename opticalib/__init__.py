@@ -28,6 +28,9 @@ from .core.root import (
 from .core import read_config
 from .devices import *
 
+getCameraSettings = AccuFiz.getCameraSettings
+getFrameRate = AccuFiz.getFrameRate
+
 __all__ = [
     "analyzer",
     "load_fits",
@@ -37,4 +40,6 @@ __all__ = [
     "folders",
     "create_configuration_file",
     "read_config",
+    "getCameraSettings",
+    "getFrameRate",
 ]

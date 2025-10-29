@@ -13,9 +13,13 @@ import time as _time
 import shutil as _sh
 from . import _API as _api
 from opticalib.analyzer import modeRebinner as _modeRebinner
-from opticalib.ground.osutils import _InterferometerConverter, rename4D
-from opticalib.core.root import folders as _folds, ConfSettingReader4D as _confReader
+from opticalib.ground.osutils import findTracknum as _ft, _InterferometerConverter
+from opticalib.core import root as _fn
 from opticalib import typings as _ot
+
+_folds = _fn.folders
+_confReader = _fn.ConfSettingReader4D
+_OPDIMG = _folds.OPD_IMAGES_ROOT_FOLDER
 
 
 class AccuFiz(_api.BaseInterferometer):
@@ -174,7 +178,7 @@ class AccuFiz(_api.BaseInterferometer):
                 _os.path.join(_folds.PRODUCE_FOLDER_NAME_LOCAL_PC, t),
                 _folds.OPD_IMAGES_ROOT_FOLDER,
             )
-            rename4D(t)
+            self._rename4D(t)
             self.copy4DSettings(t)
 
     def setTriggerMode(self, enable: bool) -> None:
@@ -215,7 +219,8 @@ class AccuFiz(_api.BaseInterferometer):
             _os.path.join(dest_fold, "4DSettings.ini"),
         )
 
-    def getCameraSettings(self) -> list[int]:
+    @staticmethod
+    def getCameraSettings(tn: str = None) -> list[int]:
         """
         Reads che actual interferometer settings from its configuration file.
 
@@ -224,16 +229,26 @@ class AccuFiz(_api.BaseInterferometer):
         output: list
         list of camera settings: [width_pixel, height_pixel, offset_x, offset_y]
         """
-
-        file_path = _folds.SETTINGS_CONF_FILE
-        setting_reader = _confReader(file_path)
+        if not tn is None:
+            path = _ft(tn, complete_path=True)
+            try:
+                file_path = _os.path.join(path, _fn.COPIED_SETTINGS_CONF_FILE)
+                setting_reader = _fn.ConfSettingReader4D(file_path)
+            except Exception as e:
+                print(f"Error: {e}")
+                file_path = _os.path.join(path, "4DSettings.ini")
+                setting_reader = _fn.ConfSettingReader4D(file_path)
+        else:
+            file_path = _folds.SETTINGS_CONF_FILE
+            setting_reader = _confReader(file_path)
         width_pixel = setting_reader.getImageWidhtInPixels()
         height_pixel = setting_reader.getImageHeightInPixels()
         offset_x = setting_reader.getOffsetX()
         offset_y = setting_reader.getOffsetY()
         return [width_pixel, height_pixel, offset_x, offset_y]
 
-    def getFrameRate(self) -> float:
+    @staticmethod
+    def getFrameRate(tn: str = None) -> float:
         """
         Reads the frame rate the interferometer is working at.
 
@@ -242,9 +257,18 @@ class AccuFiz(_api.BaseInterferometer):
         frame_rate: float
             Frame rate of the interferometer
         """
-
-        file_path = _folds.SETTINGS_CONF_FILE
-        setting_reader = _confReader(file_path)
+        if not tn is None:
+            path = _ft(tn, complete_path=True)
+            try:
+                file_path = _os.path.join(path, _fn.COPIED_SETTINGS_CONF_FILE)
+                setting_reader = _fn.ConfSettingReader4D(file_path)
+            except Exception as e:
+                print(f"Error: {e}")
+                file_path = _os.path.join(path, "4DSettings.ini")
+                setting_reader = _fn.ConfSettingReader4D(file_path)
+        else:
+            file_path = _folds.SETTINGS_CONF_FILE
+            setting_reader = _confReader(file_path)
         frame_rate = setting_reader.getFrameRate()
         return frame_rate
 
@@ -277,6 +301,27 @@ class AccuFiz(_api.BaseInterferometer):
         fullmask[offx : offx + sx, offy : offy + sy] = img.mask
         fullimg = _np.ma.masked_array(fullimg, fullmask)
         return fullimg
+    
+    def _rename4D(self, folder: str) -> None:
+        """
+        Renames the produced 'x.4D' files into '0000x.4D'
+
+        Parameters
+        ----------
+        folder : str
+            The folder where the 4D data is stored.
+        """
+        fold = _os.path.join(_OPDIMG, folder)
+        files = _os.listdir(fold)
+        for file in files:
+            if file.endswith(".4D"):
+                num_str = file.split(".")[0]
+                if num_str.isdigit():
+                    num = int(num_str)
+                    new_name = f"{num:05d}.4D"
+                    old_file = _os.path.join(fold, file)
+                    new_file = _os.path.join(fold, new_name)
+                    _os.rename(old_file, new_file)
 
 
 class PhaseCam(_api.BaseInterferometer):
@@ -435,7 +480,7 @@ class PhaseCam(_api.BaseInterferometer):
                 _os.path.join(_folds.PRODUCE_FOLDER_NAME_LOCAL_PC, t),
                 _folds.OPD_IMAGES_ROOT_FOLDER,
             )
-            rename4D(t)
+            self._rename4D(t)
             self.copy4DSettings(t)
 
     def setTriggerMode(self, enable: bool) -> None:
@@ -476,7 +521,8 @@ class PhaseCam(_api.BaseInterferometer):
             _os.path.join(dest_fold, "4DSettings.ini"),
         )
 
-    def getCameraSettings(self) -> list[int]:
+    @staticmethod
+    def getCameraSettings(tn: str = None) -> list[int]:
         """
         Reads che actual interferometer settings from its configuration file.
 
@@ -485,16 +531,26 @@ class PhaseCam(_api.BaseInterferometer):
         output: list
         list of camera settings: [width_pixel, height_pixel, offset_x, offset_y]
         """
-
-        file_path = _folds.SETTINGS_CONF_FILE
-        setting_reader = _confReader(file_path)
+        if not tn is None:
+            path = _ft(tn, complete_path=True)
+            try:
+                file_path = _os.path.join(path, _fn.COPIED_SETTINGS_CONF_FILE)
+                setting_reader = _fn.ConfSettingReader4D(file_path)
+            except Exception as e:
+                print(f"Error: {e}")
+                file_path = _os.path.join(path, "4DSettings.ini")
+                setting_reader = _fn.ConfSettingReader4D(file_path)
+        else:
+            file_path = _folds.SETTINGS_CONF_FILE
+            setting_reader = _confReader(file_path)
         width_pixel = setting_reader.getImageWidhtInPixels()
         height_pixel = setting_reader.getImageHeightInPixels()
         offset_x = setting_reader.getOffsetX()
         offset_y = setting_reader.getOffsetY()
         return [width_pixel, height_pixel, offset_x, offset_y]
 
-    def getFrameRate(self) -> float:
+    @staticmethod
+    def getFrameRate(tn: str = None) -> float:
         """
         Reads the frame rate the interferometer is working at.
 
@@ -503,9 +559,18 @@ class PhaseCam(_api.BaseInterferometer):
         frame_rate: float
             Frame rate of the interferometer
         """
-
-        file_path = _folds.SETTINGS_CONF_FILE
-        setting_reader = _confReader(file_path)
+        if not tn is None:
+            path = _ft(tn, complete_path=True)
+            try:
+                file_path = _os.path.join(path, _fn.COPIED_SETTINGS_CONF_FILE)
+                setting_reader = _fn.ConfSettingReader4D(file_path)
+            except Exception as e:
+                print(f"Error: {e}")
+                file_path = _os.path.join(path, "4DSettings.ini")
+                setting_reader = _fn.ConfSettingReader4D(file_path)
+        else:
+            file_path = _folds.SETTINGS_CONF_FILE
+            setting_reader = _confReader(file_path)
         frame_rate = setting_reader.getFrameRate()
         return frame_rate
 
@@ -538,3 +603,24 @@ class PhaseCam(_api.BaseInterferometer):
         fullmask[offx : offx + sx, offy : offy + sy] = img.mask
         fullimg = _np.ma.masked_array(fullimg, fullmask)
         return fullimg
+
+    def _rename4D(self, folder: str) -> None:
+        """
+        Renames the produced 'x.4D' files into '0000x.4D'
+
+        Parameters
+        ----------
+        folder : str
+            The folder where the 4D data is stored.
+        """
+        fold = _os.path.join(_OPDIMG, folder)
+        files = _os.listdir(fold)
+        for file in files:
+            if file.endswith(".4D"):
+                num_str = file.split(".")[0]
+                if num_str.isdigit():
+                    num = int(num_str)
+                    new_name = f"{num:05d}.4D"
+                    old_file = _os.path.join(fold, file)
+                    new_file = _os.path.join(fold, new_name)
+                    _os.rename(old_file, new_file)

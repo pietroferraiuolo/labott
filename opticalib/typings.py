@@ -48,6 +48,8 @@ class _MatrixProtocol(Protocol):
 
 @runtime_checkable
 class _ImageDataProtocol(_MatrixProtocol, Protocol):
+    def shape(self) -> tuple[int, int]: ...
+    def data(self) -> ArrayLike: ...
     def mask(self) -> ArrayLike: ...
     def __array__(self) -> ArrayLike: ...
 
@@ -191,6 +193,7 @@ class InstanceCheck:
         try:
             shape = obj.shape
             mask = obj.mask
+            data = obj.data
         except Exception:
             return False
         # Ensure shape is a tuple of length ndim (default 2)
@@ -206,6 +209,19 @@ class InstanceCheck:
                 if len(mask) != shape[0]:
                     return False
                 if any(len(row) != shape[1] for row in mask):
+                    return False
+            except Exception:
+                return False
+        # Check data shape
+        if hasattr(data, "shape"):
+            data_shape = data.shape if not callable(data.shape) else data.shape()
+            if data_shape != shape:
+                return False
+        else:
+            try:
+                if len(data) != shape[0]:
+                    return False
+                if any(len(row) != shape[1] for row in data):
                     return False
             except Exception:
                 return False
