@@ -1,4 +1,7 @@
 """
+OPTICALIB: adaptive OPTIcs package for dm CALIBration
+=====================================================
+
 Author(s)
 ---------
 - Pietro Ferraiuolo : pietro.ferraiuolo@inaf.it
@@ -27,9 +30,12 @@ from .core.root import (
 )
 from .core import read_config
 from .devices import *
+from .devices.interferometer import _4DInterferometer
 
-getCameraSettings = AccuFiz.getCameraSettings
-getFrameRate = AccuFiz.getFrameRate
+getCameraSettings = _4DInterferometer.getCameraSettings
+getFrameRate = _4DInterferometer.getFrameRate
+
+del _4DInterferometer
 
 __all__ = [
     "analyzer",

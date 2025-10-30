@@ -175,6 +175,72 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
                         path = _os.path.join(datafold, f"image_{i:05d}.fits")
                         _sf(path, img)
 
+class DP(AdOpticaDm):
+    """
+    Deformable Mirror interface for the Deformable Platform (DP) of the ELT.
+
+    Used with the AdOptica AO Client.
+    """
+
+    def __init__(self, tn: _ot.Optional[str] = None):
+        """The Constructor"""
+        self._name = "DP"
+        super().__init__(tn)
+    
+    def set_shape(
+        self,
+        cmd: _ot.ArrayLike | list[float],
+        differential: bool = True,
+        incremental: float = False,
+    ):  # cmd, segment=None):
+        """
+        Applies the given command to the DM actuators.
+
+        Parameters
+        ----------
+        cmd : ArrayLike | list[float]
+            The command to be applied to the DM actuators, of lenght equal
+            the number of actuators.
+        differential : bool, optional
+            If True, the command will be applied as a differential command
+            with respect to the current shape (default is False).
+        incremental : float, optional
+            If provided, the command will be applied incrementally in steps of
+            size `incremental` (if <1) of in `N=incremental` steps (if >1)
+            (default is False, meaning the command is applied in one go).
+        """
+        if not len(cmd) == self.nActs:
+            raise _oe.CommandError(
+                f"Command length {len(cmd)} does not match the number of actuators {self.nActs}."
+            )
+        if differential:
+            self._lastCmd += cmd
+        self._lastCmd = cmd
+        if incremental:
+            dc = _np.ceil((1 / incremental))
+            if dc < 1 and incremental > 1.0:
+                dc = incremental
+                incremental = 1.0 / incremental
+            for i in range(dc):
+                if i * incremental > 1.0:
+                    self._aoClient.mirrorCommand(cmd)
+                else:
+                    self._aoClient.mirrorCommand(cmd * i * incremental)
+        else:
+            self._aoClient.mirrorCommand(cmd)
+
+
+class M4AU(AdOpticaDm):
+    """
+    Deformable Mirror interface for the M4 Auxiliary Unit (M4AU) of the ELT.
+
+    Used with the AdOptica AO Client.
+    """
+
+    def __init__(self, tn: _ot.Optional[str] = None):
+        """The Constructor"""
+        self._name = "M4AU"
+        super().__init__(tn)
 
 class AlpaoDm(_api.BaseAlpaoMirror, _api.base_devices.BaseDeformableMirror):
     """

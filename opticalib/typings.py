@@ -44,11 +44,10 @@ Reconstructor: TypeAlias = Union["ComputeReconstructor", None]
 class _MatrixProtocol(Protocol):
     def shape(self) -> tuple[int, int]: ...
     def __getitem__(self, key: Any) -> Any: ...
-
+    
 
 @runtime_checkable
 class _ImageDataProtocol(_MatrixProtocol, Protocol):
-    def shape(self) -> tuple[int, int]: ...
     def data(self) -> ArrayLike: ...
     def mask(self) -> ArrayLike: ...
     def __array__(self) -> ArrayLike: ...
@@ -57,12 +56,14 @@ class _ImageDataProtocol(_MatrixProtocol, Protocol):
 @runtime_checkable
 class _CubeProtocol(Protocol):
     def shape(self) -> tuple[int, int, int]: ...
+    def data(self) -> ArrayLike: ...
     def mask(self) -> ArrayLike: ...
     def __getitem__(self, key: Any) -> Any: ...
     def __array__(self) -> ArrayLike: ...
 
 
 MatrixLike = TypeVar("MatrixLike", bound=_MatrixProtocol)
+MaskData = TypeVar("MaskData", bound=_MatrixProtocol)
 ImageData = TypeVar("ImageData", bound=_ImageDataProtocol)
 CubeData = TypeVar("CubeData", bound=_CubeProtocol)
 
@@ -180,6 +181,31 @@ class InstanceCheck:
                         for row in obj
                     )
         return False
+    
+    @staticmethod
+    def is_mask_like(obj: Any) -> bool:
+        """
+        Check if the object is a mask-like object.
+        Returns True if obj is a 2D mask-like object, otherwise False.
+        """
+        if not isinstance(obj, _MatrixProtocol):
+            return False
+        try:
+            shape = obj.shape
+        except Exception:
+            return False
+        # Ensure shape is a tuple of length 2
+        if not (isinstance(shape, tuple) and len(shape) == 2):
+            return False
+        if not any([
+            obj.dtype.type == _np.bool_,
+            obj.dtype.type == _np.uint8,
+            obj.dtype.type == _np.int_,
+            ]):
+            return False
+        if not _np.sum(obj) <= shape[0] * shape[1]:
+            return False
+        return True
 
     @staticmethod
     def is_image_like(obj: Any, ndim: int = 2) -> bool:
@@ -271,6 +297,7 @@ class InstanceCheck:
         """
         checks: dict[str, Callable[..., bool]] = {
             "MatrixLike": cls.is_matrix_like,
+            "MaskData": cls.is_mask_like,
             "ImageData": cls.is_image_like,
             "CubeData": cls.is_cube_like,
             "InterferometerDevice": cls.generic_check,

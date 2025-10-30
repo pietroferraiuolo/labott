@@ -399,7 +399,6 @@ def save_fits(
     else:
         _fits.writeto(filepath, data, header=header, overwrite=overwrite)
 
-
 def newtn() -> str:
     """
     Returns a timestamp in a string of the format `YYYYMMDD_HHMMSS`.

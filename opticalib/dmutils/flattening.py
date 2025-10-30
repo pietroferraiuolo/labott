@@ -170,11 +170,7 @@ class Flattening:
         self.computeRecMat(modes2discard)
         deltacmd = self.computeFlatCmd(modes2flat)
         cmd = dm.get_shape()
-        # TODO
-        ## Modifiche DP: da sistemare poi
-        # dm.set_shape(deltacmd, differential=True)
-        for i in range(1, 5):
-            dm.set_shape(cmdOffset + deltacmd * 0.2 * i)
+        dm.set_shape(deltacmd, differential=True)
         imgflat = interf.acquire_map(nframes, rebin=self.rebin)
         files = [
             "flatCommand.fits",
@@ -184,17 +180,18 @@ class Flattening:
         ]
         data = [cmd, deltacmd, imgstart, imgflat]
         fold = _os.path.join(_fn.FLAT_ROOT_FOLDER, new_tn)
+        header = {}
+        header['CALDATA'] = (self.tn, 'calibration data used')
+        header['MODFLAT'] = (str(modes2flat), 'modes used for flattening')
+        header['MDISCAR'] = (modes2discard, 'modes discarded in reconstructor')
+        header['DMNAME'] = (dm.name, 'deformable mirror name')
+        header['INTERF'] = (interf.name, 'interferometer used')
         if not _os.path.exists(fold):
             _os.mkdir(fold)
         for f, d in zip(files, data):
             path = _os.path.join(fold, f)
-            if isinstance(d, _np.ma.masked_array):
-                _osu.save_fits(path, d)
-            else:
-                _osu.save_fits(path, d)
-        with open(_os.path.join(fold, "info.txt"), "w") as info:
-            info.write(f"Flattened with `{self.tn}` data")
-        print(f"Flat command saved in {'/'.join(fold.split('/')[-2:])}")
+            _osu.save_fits(path, d, header=header)
+        print(f"Flat command saved in .../{'/'.join(fold.split('/')[-2:])}")
 
     def computeFlatCmd(self, n_modes: int | _ot.ArrayLike) -> _ot.ArrayLike:
         """
@@ -219,7 +216,7 @@ class Flattening:
             flat_cmd = cmdMat[:, :n_modes] @ _cmd[:n_modes]
         elif isinstance(n_modes, (_np.ndarray, list)):
             _cmdMat = _np.zeros((cmdMat.shape[0], len(n_modes)))
-            _scmd = _np.zeros(len(n_modes))  # _cmd.shape[0])
+            _scmd = _np.zeros(len(n_modes))
             for i, mode in enumerate(n_modes):
                 _cmdMat.T[i] = cmdMat.T[mode]
                 _scmd[i] = _cmd[mode]
@@ -309,7 +306,11 @@ class Flattening:
             Default modes are [1,2,3] -> piston/tip/tilt.
         """
         try:
-            # DEPRECATED: this will be removed in future versions
+            import warnings
+
+            warnings.warn(
+                "filtering flag in `flag.txt` file is deprecated and will be removed in a future version of `opticalib`.",
+                DeprecationWarning)
             with open(
                 _os.path.join(self._path, _ifp.flagFile), "r", encoding="utf-8"
             ) as f:
@@ -418,6 +419,11 @@ class Flattening:
             _os.path.join(self._path, _ifp.cubeFile), True
         )
         try:
+            import warnings
+
+            warnings.warn(
+                "filtering flag in `flag.txt` file is deprecated and will be removed in a future version of `opticalib`.",
+                DeprecationWarning)
             # Backwards compatibility for rebinning
             with open(_os.path.join(self._path, _ifp.flagFile), "r") as file:
                 lines = file.readlines()
@@ -482,13 +488,13 @@ class Flattening:
         # cannot work. we should create a dedicated function, not necessarily linked to IFF or flattening
         return dp
 
-    def __get_mask_center(self, mask):
+    def __get_mask_center(self, mask: _ot.MaskData) -> tuple[int, int]:
         """
         Computes the center of the mask, which is used to align images and cubes.
 
         Parameters
         ----------
-        mask : ndarray
+        mask : MaskData
             Mask of the image or cube.
 
         Returns

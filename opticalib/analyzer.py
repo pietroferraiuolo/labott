@@ -269,7 +269,7 @@ def frame(idx: int, mylist: list[_ot.ImageData] | _ot.CubeData) -> _ot.ImageData
         img = mylist[:, :, idx]
     return img
 
-# TODO
+# TODO: Check for hardcoded assumptions on dimensions ecc...
 def spectrum(
     signal: _ot.ArrayLike, dt: float = 1, show: bool = None
 ) -> tuple[_ot.ArrayLike, _ot.ArrayLike]:
@@ -293,16 +293,9 @@ def spectrum(
         Frequency bins corresponding to the power spectrum.
     """
     nsig = signal.shape
-    if _np.size(nsig) == 1:
-        thedim = 0
-    else:
-        thedim = 1
-    if _np.size(nsig) == 1:
-        spe = _fft.rfft(signal, norm="ortho")
-        nn = _np.sqrt(spe.shape[thedim])  # modRB
-    else:
-        spe = _fft.rfft(signal, axis=1, norm="ortho")
-        nn = _np.sqrt(spe.shape[thedim])  # modRB
+    thedim = 0 if _np.size(nsig) == 1 else 1
+    spe = _fft.rfft(signal, axis=thedim, norm="ortho")
+    nn = _np.sqrt(spe.shape[thedim])  # modRB
     spe = (_np.abs(spe)) / nn
     freq = _fft.rfftfreq(signal.shape[thedim], d=dt)
     if _np.size(nsig) == 1:
@@ -313,13 +306,13 @@ def spectrum(
         _plt.figure()
         for i in range(0, len(spe)):
             _plt.plot(freq, spe[i, :], label=f"Channel {i}")
-        _plt.xlabel(r"Frequency [$Hz$]")
+        _plt.xlabel(r"Frequency $[\mathrm{Hz}]$")
         _plt.ylabel("PS Amplitude")
         _plt.legend(loc="best")
         _plt.show()
     return spe, freq
 
-# TODO: TO REMOVE
+# TODO: TO REMOVE -> equan to `intoFullFrame`
 def frame2ottFrame(
     img: _ot.ImageData, croppar: list[int], flipOffset: bool = True
 ) -> _ot.ImageData:
@@ -374,25 +367,17 @@ def timevec(tn: str) -> _ot.ArrayLike:
     flist = osu.getFileList(tn)
     nfile = len(flist)
     if "OPDImages" in fold:
-        tspace = 1.0 / 28.57
+        tspace = 1.0 / 28.57 # TODO: hardcoded!!
         timevector = range(nfile) * tspace
-    elif "OPD_series" in fold:
+    elif "OPDSeries" in fold:
         timevector = []
-        for i in flist:
-            pp = i.split(".")[0]
-            tni = pp.split("/")[-1]
-            y = tni[0:4]
-            mo = tni[4:6]
-            d = tni[6:8]
-            h = float(tni[9:11])
-            mi = float(tni[11:13])
-            s = float(tni[13:15])
-            jdi = sum(_jdcal.gcal2jd(y, mo, d)) + h / 24 + mi / 1440 + s / 86400
+        for f in flist:
+            tni = f.split("/")[-2]
+            jdi = track2jd(tni)
             timevector.append(jdi)
-        timevector = _np.array(timevec)
+        timevector = _np.array(timevector)
     return timevector
 
-# TODO
 def track2jd(tni: str):
     """
 
@@ -408,47 +393,15 @@ def track2jd(tni: str):
         DESCRIPTION.
 
     """
-    t = track2date(tni)
-    jdi = sum(_jdcal.gcal2jd(t[0], t[1], t[2])) + t[3] / 24 + t[4] / 1440 + t[5] / 86400
-    return jdi
-
-# TODO
-def track2date(tni: str) -> list[str | float]:
-    """
-    Converts a tracing number into a list containing year, month, day, hour,
-    minutes and seconds, divied.
-
-    Parameters
-    ----------
-    tni : str
-        Tracking number to be converted.
-
-    Returns
-    -------
-    time : list
-        List containing the date element by element.
-        [0] y : str
-            Year.
-        [1] mo : str
-            Month.
-        [2] d : str
-            Day.
-        [3] h : float
-            Hour.
-        [4] mi : float
-            Minutes.
-        [5] s : float
-            Seconds.
-    """
     y = tni[0:4]
     mo = tni[4:6]
     d = tni[6:8]
     h = float(tni[9:11])
     mi = float(tni[11:13])
     s = float(tni[13:15])
-    time = [y, mo, d, h, mi, s]
-    return time
-
+    t = [y, mo, d, h, mi, s]
+    jdi = sum(_jdcal.gcal2jd(t[0], t[1], t[2])) + t[3] / 24 + t[4] / 1440 + t[5] / 86400
+    return jdi
 
 def runningMean(vec: _ot.ArrayLike, npoints: int) -> _ot.ArrayLike:
     """
