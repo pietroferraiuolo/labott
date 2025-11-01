@@ -171,7 +171,7 @@ def saveCube(
 
     cube = _osu.loadCubeFromFilelist(tn_or_fl=tn, fold=_ifFold, key="mode_")
     # cube.mask = _roi.cubeMasterMask(cube) # w/ DP weird behavior
-    
+
     ## TODO ??
     # if register is not False:
     #     print(f"Applying registration with offset {register}...")
@@ -395,7 +395,7 @@ def iffRedux(
                 futures[j] = ex.submit(_read_mode, fileMat[j, :])
 
             # Compute (already vectorized inside pushPullRedux)
-            
+
             #img = pushPullRedux(imagelist, template, shuffle)
             #norm_img = img / (2 * ampVect[i])
 
@@ -627,14 +627,14 @@ def getTriggerFrame(tn: str, amplitude: int | float = None, roi: int = None) -> 
 def getRegFrames(tn: str, trigFrame: int) -> tuple[int, _ot.ArrayLike]:
     """
     Search for the registration frames in the images file list.
-    
+
     Parameters
     ----------
     tn : str
         Tracking number of the data in the OPDImages folder.
     trigFrame : int
         Trigger frame index.
-        
+
     Returns
     -------
     regStart : int

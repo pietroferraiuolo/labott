@@ -140,7 +140,7 @@ def getFileList(tn: str = None, fold: str = None, key: str = None) -> list[str]:
      '.../OPTData/IFFunctions/20160516_114916/mode_0003.fits',
      '.../OPTData/IFFunctions/20160516_114916/modesVector.fits']
     ```
-    
+
     Let's suppose we want only the list of 'mode_000x.fits' files:
 
     ```python

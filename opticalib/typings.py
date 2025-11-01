@@ -44,7 +44,7 @@ Reconstructor: TypeAlias = Union["ComputeReconstructor", None]
 class _MatrixProtocol(Protocol):
     def shape(self) -> tuple[int, int]: ...
     def __getitem__(self, key: Any) -> Any: ...
-    
+
 
 @runtime_checkable
 class _ImageDataProtocol(_MatrixProtocol, Protocol):
@@ -181,7 +181,7 @@ class InstanceCheck:
                         for row in obj
                     )
         return False
-    
+
     @staticmethod
     def is_mask_like(obj: Any) -> bool:
         """

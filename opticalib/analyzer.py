@@ -229,7 +229,7 @@ def runningDiff(tn_or_fl: str|list[str]|list[_ot.ImageData]|_ot.CubeData, gap: i
     elif _ot.isinstance_(tn_or_fl, "CubeData"):
         llist = tn_or_fl.transpose(2,0,1).tolist()
     nfile = len(llist)
-    npoints = int(nfile / gap) - 2    
+    npoints = int(nfile / gap) - 2
     idx0 = _np.arange(0, npoints * gap, gap)
     idx1 = idx0 + 1
     svec = _np.empty(npoints)
@@ -267,7 +267,7 @@ def frame(idx: int, mylist: list[_ot.ImageData] | _ot.CubeData) -> _ot.ImageData
             img = mylist[idx]
     else:
         img = mylist[:, :, idx]
-    return img
+return img
 
 # TODO: Check for hardcoded assumptions on dimensions ecc...
 def spectrum(
