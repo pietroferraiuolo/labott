@@ -278,7 +278,9 @@ def filterZernikeCube(
     ModesVec = _os.path.join(_intMatFold, tn, modesVecFile)
     cube, cube_header = _osu.load_fits(oldCube, True)
     zern2filter = zern_modes if zern_modes is not None else [1, 2, 3]
-    zfit = _zern.ZernikeFitter(cube[:, :, 0].mask)
+    # FIXME: a little bit slower without a mask. Half the speed
+    # should i use a circular mask?
+    zfit = _zern.ZernikeFitter()#cube[:, :, 0].mask)
 
     # for i in range(cube.shape[-1]):
     #     # filtered = _zern.removeZernike(cube[:, :, i], zern2filter)
@@ -290,10 +292,16 @@ def filterZernikeCube(
     ffcube = _np.ma.empty_like(cube)
 
     # Process each frame in-place (avoids intermediate list)
-    for i in _tqdm(range(cube.shape[-1]), desc=f"Removing Z[{', '.join(map(str, zern_modes))}]...", unit='modes'):
+    for i in _tqdm(
+        range(cube.shape[-1]), 
+        desc=f"Removing Z[{', '.join(map(str, zern_modes))}]...", 
+        unit='modes',
+        ncols=80
+    ):
         ffcube[:, :, i] = zfit.removeZernike(cube[:, :, i], zern2filter)
 
-    ffcube.mask = _roi.cubeMasterMask(ffcube)
+    # TODO: Problem with master mask... is it the data?
+    # ffcube.mask = _roi.cubeMasterMask(ffcube)
 
     if save:
         if cube_header:
@@ -380,7 +388,7 @@ def iffRedux(
         for j in range(min(prefetch, nmodes)):
             futures[j] = ex.submit(_read_mode, fileMat[j, :])
 
-        for i in _tqdm(range(nmodes), desc="Processing...", total=nmodes, unit='modes'):
+        for i in _tqdm(range(nmodes), desc="Processing...", total=nmodes, unit='modes', ncols=80):
             # Ensure current mode is scheduled
             if i not in futures:
                 futures[i] = ex.submit(_read_mode, fileMat[i, :])
@@ -587,6 +595,7 @@ def getTriggerFrame(tn: str, amplitude: int | float = None, roi: int = None) -> 
         wich can be inferred through the number of trigger zeros in the iffConfig.ini
         file.
     """
+    zfit = _zern.ZernikeFitter()
     infoT, _, _, _ = _getAcqInfo(tn)
     if amplitude is not None:
         infoT["amplitude"] = amplitude
@@ -608,7 +617,7 @@ def getTriggerFrame(tn: str, amplitude: int | float = None, roi: int = None) -> 
             for r in rois:
                 img1.mask[r == 0] = True
                 img0.mask[r == 0] = True
-        rr2check = _np.nanstd(_zern.removeZernike(img1 - img0, [1, 2, 3]))
+        rr2check = _np.nanstd(zfit.removeZernike(img1 - img0, [1, 2, 3]))
         print(f"Frame {i-1}: std = {rr2check:.2e}")
         if go > infoT["zeros"] + 1:
             msg = f"Frame {go}. Heading Zeros exceeded: std = {rr2check:.2e} < {thresh:.2e} (Amp/sqrt(3))"

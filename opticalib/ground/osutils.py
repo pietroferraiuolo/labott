@@ -456,14 +456,19 @@ def _ensure_on_cpu(data: _ot.ArrayLike) -> _ot.ArrayLike:
     ArrayLike
         Data ensured to be on CPU as a NumPy array or masked array.
     """
-    import xupy as _xu
+    try:
+        import xupy as _xu
 
-    if _xu.on_gpu:
-        if isinstance(data, _xu.ma.MaskedArray):
-            data_cpu = data.asmarray()
-            return data_cpu
-        else:
-            return _xu.asnumpy(data)
+        if _xu.on_gpu:
+            if isinstance(data, _xu.ma.MaskedArray):
+                data_cpu = data.asmarray()
+                return data_cpu
+            elif isinstance(data, _xu.ndarray):
+                return _xu.asnumpy(data)
+            elif 'numpy' in str(type(data)):
+                return data
+    except ImportError:
+        return data
     return data
 
 
