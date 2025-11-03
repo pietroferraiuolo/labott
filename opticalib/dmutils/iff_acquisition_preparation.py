@@ -405,5 +405,4 @@ class IFFCapturePreparation:
         numb = math.ceil(math.log(self._NActs, 2))
         hadm = hadamard(2**numb)  # 892, 1 segment
         cmdBase = hadm[1 : self._NActs + 1, 1 : self._NActs + 1]
-        # print('Removed 1st column of Hadamard matrix, or piston mode')
         return cmdBase

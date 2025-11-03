@@ -142,7 +142,7 @@ def getIffConfig(key: str, bpath: str = _cfold):
     modeId = _parse_val(cc[_modeIdName])
     modeAmp = _parse_val(cc[_modeAmpName])
     modalBase = cc[_modalBaseName]
-    template = _np.array(cc[_templateName])
+    template = _np.asarray(cc[_templateName])
     info = {
         "zeros": nzeros,
         "modes": modeId,
