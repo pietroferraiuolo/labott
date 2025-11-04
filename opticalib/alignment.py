@@ -366,7 +366,7 @@ class Alignment:
         print(f"Calibration loaded from '{tn}'")
 
     def _images_production(
-        self, template: _ot.ArrayLike|list[int], n_frames: int, n_repetitions: int
+        self, template: _ot.ArrayLike | list[int], n_frames: int, n_repetitions: int
     ) -> _ot.CubeData:
         """
         Acquire images based on the provided template and number of repetitions.
@@ -396,9 +396,11 @@ class Alignment:
                 logMsg2 += f"Matrix Column {k+1} : {self.cmdMat.T[k]}"
                 print(f"Matrix Column {k+1} : {self.cmdMat.T[k]}\n")
                 imglist = self._img_acquisition(k, template, n_frames)
-                #image = self._push_pull_redux(imglist, template) / self._cmdAmp[k]
+                # image = self._push_pull_redux(imglist, template) / self._cmdAmp[k]
                 template.insert(0, 1)
-                image = _ppr(imglist, template, normalization=6*self._cmdAmp[k]) # TODO: 6 -> sum of template weights?
+                image = _ppr(
+                    imglist, template, normalization=6 * self._cmdAmp[k]
+                )  # TODO: 6 -> sum of template weights?
                 template.pop(0)
                 results.append(image)
             if n_repetitions != 1:
@@ -407,8 +409,7 @@ class Alignment:
                 n_results = results
         return n_results
 
-
-#### OLD ALGORITHM - TO BE DELETED LATER
+    #### OLD ALGORITHM - TO BE DELETED LATER
     # def _zern_routine(
     #     self, imglist: list[_ot.ImageData] | _ot.CubeData
     # ) -> _ot.MatrixLike:
@@ -450,7 +451,6 @@ class Alignment:
     #     intMat = _np.array(coefflist).T
     #     return intMat
 
-
     def _zern_routine(
         self, imglist: list[_ot.ImageData] | _ot.CubeData
     ) -> _ot.MatrixLike:
@@ -478,7 +478,7 @@ class Alignment:
             else:
                 if self._correct_cavity is True:
                     img -= 2 * self._surface
-                coeff = self._zfit.fitOnROi(img, self._zvec2fit, 'global')
+                coeff = self._zfit.fitOnROi(img, self._zvec2fit, "global")
                 _logger.log(f"{self._zfit.fitOnROi.__qualname__}")
             coefflist.append(coeff[self._zvec2use])
         if len(coefflist) == 1:
@@ -486,8 +486,7 @@ class Alignment:
         intMat = _np.array(coefflist).T
         return intMat
 
-
-#### Deprecated - to be deleted later
+    #### Deprecated - to be deleted later
     # def _global_zern_on_roi(
     #     self, img: _ot.ImageData, auxmask: _ot.Optional[_ot.ImageData] = None
     # ):

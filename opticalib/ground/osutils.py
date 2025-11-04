@@ -407,6 +407,7 @@ def save_fits(
     else:
         _fits.writeto(filepath, data, header=header, overwrite=overwrite)
 
+
 def newtn() -> str:
     """
     Returns a timestamp in a string of the format `YYYYMMDD_HHMMSS`.
@@ -417,6 +418,7 @@ def newtn() -> str:
         Current time in a string format.
     """
     return _time.strftime("%Y%m%d_%H%M%S")
+
 
 def _header_from_dict(
     dictheader: dict[str, _ot.Any | tuple[_ot.Any, str]],
@@ -450,6 +452,7 @@ def _header_from_dict(
             header[key] = value
     return header
 
+
 def _ensure_on_cpu(data: _ot.ArrayLike) -> _ot.ArrayLike:
     """
     Ensures that the input data is on the CPU as a NumPy array or masked array.
@@ -473,7 +476,7 @@ def _ensure_on_cpu(data: _ot.ArrayLike) -> _ot.ArrayLike:
                 return data_cpu
             elif isinstance(data, _xu.ndarray):
                 return _xu.asnumpy(data)
-            elif 'numpy' in str(type(data)):
+            elif "numpy" in str(type(data)):
                 return data
     except ImportError:
         return data

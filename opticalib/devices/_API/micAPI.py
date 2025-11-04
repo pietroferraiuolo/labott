@@ -38,8 +38,6 @@ class BaseAdOpticaDm:
         self._aoClient._connect()
         self._enumerateDevices()
 
-
-
     def getCounter(self):
         """
         Function which returns the current shape of the mirror.

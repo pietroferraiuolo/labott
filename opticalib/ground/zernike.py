@@ -340,9 +340,9 @@ class ZernikeFitter:
             return img
         else:
             import xupy as xp
+
             if isinstance(img, xp.ma.MaskedArray):
                 img = img.asmarray()
             elif isinstance(img, xp.ndarray):
                 img = img.get()
         return img
-

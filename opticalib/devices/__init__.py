@@ -24,12 +24,6 @@ Contents:
 """
 
 from .interferometer import PhaseCam, AccuFiz
-from .deformable_mirrors import (
-    SplattDm,
-    AlpaoDm,
-    AdOpticaDm,
-    DP,
-    M4AU
-)
+from .deformable_mirrors import SplattDm, AlpaoDm, AdOpticaDm, DP, M4AU
 
 __all__ = ["AdOpticaDm", "PhaseCam", "AccuFiz", "SplattDm", "AlpaoDm", "DP", "M4AU"]

@@ -300,7 +300,7 @@ class _4DInterferometer(_api.BaseInterferometer):
         mask[idx, idy] = 1
         masked_ima = _np.ma.masked_array(data, mask=mask.astype(bool))
         return masked_ima
-    
+
     def _rename4D(self, folder: str) -> None:
         """
         Renames the produced 'x.4D' files into '0000x.4D'
@@ -322,6 +322,7 @@ class _4DInterferometer(_api.BaseInterferometer):
                     new_file = _os.path.join(fold, new_name)
                     _os.rename(old_file, new_file)
 
+
 class AccuFiz(_4DInterferometer):
     """
     Class for the AccuFiz Laser Interferometer.
@@ -334,6 +335,7 @@ class AccuFiz(_4DInterferometer):
         self.name = "AccuFiz" + str(model)
         super().__init__(model, ip, port)
 
+
 class PhaseCam(_4DInterferometer):
     """
     Class for the 4D Twyman-Green PhaseCam Laser Interferometer.
@@ -345,6 +347,7 @@ class PhaseCam(_4DInterferometer):
         """The constructor"""
         self.name = "PhaseCam" + str(model)
         super().__init__(model, ip, port)
+
 
 # class PhaseCam(_api.BaseInterferometer):
 #     """

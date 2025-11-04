@@ -197,11 +197,13 @@ class InstanceCheck:
         # Ensure shape is a tuple of length 2
         if not (isinstance(shape, tuple) and len(shape) == 2):
             return False
-        if not any([
-            obj.dtype.type == _np.bool_,
-            obj.dtype.type == _np.uint8,
-            obj.dtype.type == _np.int_,
-            ]):
+        if not any(
+            [
+                obj.dtype.type == _np.bool_,
+                obj.dtype.type == _np.uint8,
+                obj.dtype.type == _np.int_,
+            ]
+        ):
             return False
         if not _np.sum(obj) <= shape[0] * shape[1]:
             return False

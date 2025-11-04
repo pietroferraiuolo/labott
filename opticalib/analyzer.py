@@ -29,6 +29,7 @@ from scipy import stats as _stats, fft as _fft, ndimage as _ndimage
 
 _OPDSER = _foldname.OPD_SERIES_ROOT_FOLDER
 
+
 def averageFrames(
     tn: str,
     first: int = 0,
@@ -191,7 +192,9 @@ def openAverage(tn: str):
     return image
 
 
-def runningDiff(tn_or_fl: str|list[str]|list[_ot.ImageData]|_ot.CubeData, gap: int = 2):
+def runningDiff(
+    tn_or_fl: str | list[str] | list[_ot.ImageData] | _ot.CubeData, gap: int = 2
+):
     """
     Computes the running difference of the frames in a given tracking number.
 
@@ -227,7 +230,7 @@ def runningDiff(tn_or_fl: str|list[str]|list[_ot.ImageData]|_ot.CubeData, gap: i
         else:
             raise TypeError("Invalid list elements")
     elif _ot.isinstance_(tn_or_fl, "CubeData"):
-        llist = tn_or_fl.transpose(2,0,1).tolist()
+        llist = tn_or_fl.transpose(2, 0, 1).tolist()
     nfile = len(llist)
     npoints = int(nfile / gap) - 2
     idx0 = _np.arange(0, npoints * gap, gap)
@@ -238,6 +241,7 @@ def runningDiff(tn_or_fl: str|list[str]|list[_ot.ImageData]|_ot.CubeData, gap: i
         diff = zfit.removeZernike(diff)
         svec[i] = diff.std()
     return svec
+
 
 # TODO: TO REMOVE
 def frame(idx: int, mylist: list[_ot.ImageData] | _ot.CubeData) -> _ot.ImageData:
@@ -268,6 +272,7 @@ def frame(idx: int, mylist: list[_ot.ImageData] | _ot.CubeData) -> _ot.ImageData
     else:
         img = mylist[:, :, idx]
     return img
+
 
 # TODO: Check for hardcoded assumptions on dimensions ecc...
 def spectrum(
@@ -312,6 +317,7 @@ def spectrum(
         _plt.show()
     return spe, freq
 
+
 # TODO: TO REMOVE -> equan to `intoFullFrame`
 def frame2ottFrame(
     img: _ot.ImageData, croppar: list[int], flipOffset: bool = True
@@ -349,6 +355,7 @@ def frame2ottFrame(
     fullimg = _np.ma.masked_array(fullimg, fullmask)
     return fullimg
 
+
 # TODO
 def timevec(tn: str) -> _ot.ArrayLike:
     """
@@ -367,7 +374,7 @@ def timevec(tn: str) -> _ot.ArrayLike:
     flist = osu.getFileList(tn)
     nfile = len(flist)
     if "OPDImages" in fold:
-        tspace = 1.0 / 28.57 # TODO: hardcoded!!
+        tspace = 1.0 / 28.57  # TODO: hardcoded!!
         timevector = range(nfile) * tspace
     elif "OPDSeries" in fold:
         timevector = []
@@ -377,6 +384,7 @@ def timevec(tn: str) -> _ot.ArrayLike:
             timevector.append(jdi)
         timevector = _np.array(timevector)
     return timevector
+
 
 def track2jd(tni: str):
     """
@@ -403,6 +411,7 @@ def track2jd(tni: str):
     jdi = sum(_jdcal.gcal2jd(t[0], t[1], t[2])) + t[3] / 24 + t[4] / 1440 + t[5] / 86400
     return jdi
 
+
 def runningMean(vec: _ot.ArrayLike, npoints: int) -> _ot.ArrayLike:
     """
     Computes the running mean of a 1D array.
@@ -420,6 +429,7 @@ def runningMean(vec: _ot.ArrayLike, npoints: int) -> _ot.ArrayLike:
         Running mean of the input array.
     """
     return _np.convolve(vec, _np.ones(npoints), "valid") / npoints
+
 
 # TODO
 def readTemperatures(tn: str):
@@ -442,6 +452,7 @@ def readTemperatures(tn: str):
     temperatures = osu.load_fits(fname)
     return temperatures
 
+
 # TODO
 def readZernike(tn: str):
     """
@@ -461,6 +472,7 @@ def readZernike(tn: str):
     fname = _os.path.join(fold, "zernike.fits")
     zernikes = osu.load_fits(fname)
     return zernikes
+
 
 # TODO
 def zernikePlot(
@@ -582,7 +594,15 @@ def comp_filtered_image(
     imgout = _np.ma.masked_array(_np.real(imgf), mask=imgin.mask)
     if disp:
         imgs = [imgin, imgout, knrm, fmask1, fmask2, fmask3, fmask]
-        titles = ["Initial image", "Filtered image", "Frequency", "Fmask1", "Fmask2", "Fmask3", "Fmask"]
+        titles = [
+            "Initial image",
+            "Filtered image",
+            "Frequency",
+            "Fmask1",
+            "Fmask2",
+            "Fmask3",
+            "Fmask",
+        ]
         for i in range(len(imgs)):
             _plt.figure()
             _plt.imshow(imgs[i])
@@ -743,13 +763,14 @@ def pushPullReductionAlgorithm(
     imagelist: list[_ot.ImageData] | _ot.CubeData,
     template: _ot.ArrayLike,
     normalization: _ot.Optional[float | int] = None,
+    shuffle: int = 0,
 ):
     """
     Performs the basic operation of processing PushPull data.
 
     Parameters
     ----------
-    imglist : list of ImageData ! CubeData
+    imagelist : list of ImageData ! CubeData
         List of images for the PushPull acquisition, organized according to the template.
     template: int | ArrayLike
         Template for the PushPull acquisition.
@@ -764,17 +785,36 @@ def pushPullReductionAlgorithm(
     """
     template = _np.asarray(template)
     n_images = len(imagelist)
-    # Template weights computation
-    w = template.astype(_np.result_type(template, imagelist[0].data), copy=True)
-    if n_images > 2:
-        w[1:-1] *= 2.0
-    # OR-reduce all masks once
-    master_mask = _np.logical_or.reduce([_xp.asnumpy(ima.mask) for ima in imagelist])
-    # Compute weighted sum over realizations on raw data
-    stack = _np.stack([ima.data for ima in imagelist], axis=0)  # (n, H, W)
-    image = _xp.asnumpy(  # (H, W)
-        _xp.tensordot(_xp.asarray(w), _xp.asarray(stack), axes=(0, 0))
-    )
+    if shuffle == 0:
+        # Template weights computation
+        w = template.astype(_np.result_type(template, imagelist[0].data), copy=True)
+        if n_images > 2:
+            w[1:-1] *= 2.0
+        # OR-reduce all masks once
+        master_mask = _np.logical_or.reduce(
+            [_xp.asnumpy(ima.mask) for ima in imagelist]
+        )
+        # Compute weighted sum over realizations on raw data
+        stack = _np.stack([ima.data for ima in imagelist], axis=0)  # (n, H, W)
+        image = _xp.asnumpy(  # (H, W)
+            _xp.tensordot(_xp.asarray(w), _xp.asarray(stack), axes=(0, 0))
+        )
+    else:
+        print("Shuffle option")
+        for i in range(0, shuffle - 1):
+            for x in range(1, 2):
+                opd2add = (
+                    imagelist[i * 3 + x] * template[x]
+                    + imagelist[i * 3 + x - 1] * template[x - 1]
+                )
+                master_mask2add = _np.ma.mask_or(
+                    imagelist[i * 3 + x].mask, imagelist[i * 3 + x - 1].mask
+                )
+                if i == 0 and x == 1:
+                    master_mask = master_mask2add
+                else:
+                    master_mask = _np.ma.mask_or(master_mask, master_mask2add)
+                image += opd2add
     if normalization is None:
         norm_factor = _np.max(((template.shape[0] - 1), 1))
     else:
@@ -817,6 +857,43 @@ def createCube(fl_or_il: list[str], register: bool = False):
     cube = _np.ma.dstack(fl_or_il)
     return cube
 
+
+def removeZernikeFromCube(
+    cube: _ot.CubeData, zmodes: _ot.ArrayLike = None
+) -> _ot.CubeData:
+    """
+    Removes Zernike modes from each frame in a cube of images.
+
+    Parameters
+    ----------
+    cube : ndarray
+        Data cube containing the images/frames stacked.
+    zmodes : ndarray, optional
+        Zernike modes to remove. If None, the first 3 modes are removed.
+
+    Returns
+    -------
+    newCube : ndarray
+        Cube with Zernike modes removed from each frame.
+    """
+    from tqdm import tqdm
+
+    # FIXME: a little bit slower without a mask. Half the speed
+    # should i use a circular mask?
+    zfit = zern.ZernikeFitter()
+    if zmodes is None:
+        zmodes = _np.array(range(1, 4))
+    newCube = _np.ma.empty_like(cube)
+    for i in tqdm(
+        range(cube.shape[-1]),
+        desc=f"Removing Z[{', '.join(map(str, zmodes))}]...",
+        unit="image",
+        ncols=80,
+    ):
+        newCube[:, :, i] = zfit.removeZernike(cube[:, :, i], zmodes)
+    return newCube
+
+
 def makeCubeMasterMask(cube: _ot.CubeData) -> _ot.CubeData:
     """
     Creates a master mask for a cube of images by performing a logical OR operation
@@ -832,8 +909,11 @@ def makeCubeMasterMask(cube: _ot.CubeData) -> _ot.CubeData:
     master_mask : ndarray
         Master mask for the cube.
     """
-    master_mask = _np.logical_or.reduce([cube[:, :, i].mask for i in range(cube.shape[2])])
+    master_mask = _np.logical_or.reduce(
+        [cube[:, :, i].mask for i in range(cube.shape[2])]
+    )
     return master_mask
+
 
 def modeRebinner(
     img: _ot.ImageData, rebin: int, method: str = "averaging"

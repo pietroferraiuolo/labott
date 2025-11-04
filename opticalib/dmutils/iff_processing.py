@@ -76,7 +76,6 @@ def process(
     register: bool = False,
     save: bool = False,
     rebin: int = 1,
-    roi: int = None, # ?
     *,
     nworkers: int = 1,
     nmode_prefetch: int = 0,
@@ -277,39 +276,20 @@ def filterZernikeCube(
     CmdMat = _os.path.join(_intMatFold, tn, cmdMatFile)
     ModesVec = _os.path.join(_intMatFold, tn, modesVecFile)
     cube, cube_header = _osu.load_fits(oldCube, True)
-    zern2filter = zern_modes if zern_modes is not None else [1, 2, 3]
-    # FIXME: a little bit slower without a mask. Half the speed
-    # should i use a circular mask?
-    zfit = _zern.ZernikeFitter()#cube[:, :, 0].mask)
+    zern_modes = zern_modes if zern_modes is not None else [1, 2, 3]
+    from opticalib.analyzer import removeZernikeFromCube
 
-    # for i in range(cube.shape[-1]):
-    #     # filtered = _zern.removeZernike(cube[:, :, i], zern2filter)
-    #     filtered = zfit.removeZernike(cube[:, :, i], zern2filter)
-    #     fcube.append(filtered)
-    # ffcube = _np.ma.dstack(fcube)
-
-    # Preallocate output cube with same shape and dtype
-    ffcube = _np.ma.empty_like(cube)
-
-    # Process each frame in-place (avoids intermediate list)
-    for i in _tqdm(
-        range(cube.shape[-1]), 
-        desc=f"Removing Z[{', '.join(map(str, zern_modes))}]...", 
-        unit='modes',
-        ncols=80
-    ):
-        ffcube[:, :, i] = zfit.removeZernike(cube[:, :, i], zern2filter)
-
+    ffcube = removeZernikeFromCube(cube, zern_modes)
     # TODO: Problem with master mask... is it the data?
     # ffcube.mask = _roi.cubeMasterMask(ffcube)
 
     if save:
         if cube_header:
-            zern2filter = "[" + ",".join(map(str, zern2filter)) + "]"
+            zern_modes = "[" + ",".join(map(str, zern_modes)) + "]"
             cube_header.update(
                 {
                     "FILTERED": (True, "whether the cube has zernike removed or not"),
-                    "ZREMOVED": (zern2filter, "the zernike modes removed"),
+                    "ZREMOVED": (zern_modes, "the zernike modes removed"),
                 }
             )
         _osu.save_fits(newCube, ffcube, header=cube_header)
@@ -368,6 +348,7 @@ def iffRedux(
     - prefetch controls how many future modes to keep in-flight.
     """
     from opticalib.analyzer import pushPullReductionAlgorithm
+
     fold = _os.path.join(_ifFold, tn)
     nmodes = len(modeList)
 
@@ -388,7 +369,9 @@ def iffRedux(
         for j in range(min(prefetch, nmodes)):
             futures[j] = ex.submit(_read_mode, fileMat[j, :])
 
-        for i in _tqdm(range(nmodes), desc="Processing...", total=nmodes, unit='modes', ncols=80):
+        for i in _tqdm(
+            range(nmodes), desc="Processing...", total=nmodes, unit="modes", ncols=80
+        ):
             # Ensure current mode is scheduled
             if i not in futures:
                 futures[i] = ex.submit(_read_mode, fileMat[i, :])
@@ -404,13 +387,14 @@ def iffRedux(
 
             # Compute (already vectorized inside pushPullRedux)
 
-            #img = pushPullRedux(imagelist, template, shuffle)
-            #norm_img = img / (2 * ampVect[i])
+            # img = pushPullRedux(imagelist, template, shuffle)
+            # norm_img = img / (2 * ampVect[i])
 
             norm_img = pushPullReductionAlgorithm(
                 imagelist,
                 template,
-                normalization=(_np.max(((template.shape[0] - 1), 1)) *2 * ampVect[i])
+                normalization=(_np.max(((template.shape[0] - 1), 1)) * 2 * ampVect[i]),
+                shuffle=shuffle,
             )
 
             img_name = _os.path.join(fold, f"mode_{int(modeList[i]):04d}.fits")
@@ -420,94 +404,6 @@ def iffRedux(
                 "TEMPLATE": (len(template), "push-pull length"),
             }
             _osu.save_fits(img_name, norm_img, overwrite=True, header=header)
-
-    ## LEGACY
-    # for i in range(0, nmodes):
-    #     imagelist = _read_mode(fileMat[i, :])
-    #     img = pushPullRedux(imagelist, template, shuffle)
-    #     norm_img = img / (2 * ampVect[i])
-    #     img_name = _os.path.join(fold, f"mode_{modeList[i]:04d}.fits")
-    #     header = {}
-    #     header["MODEID"] = (modeList[i], 'mode id')
-    #     header["AMP"] = (ampVect[i], 'mode amplitude')
-    #     header["TEMPLATE"] = (len(template), 'push-pull length')
-    #     _osu.save_fits(img_name, norm_img, overwrite=True, header=header)
-
-
-def pushPullRedux(
-    imglist: list[_ot.ImageData] | _ot.CubeData,
-    template: _ot.ArrayLike,
-    shuffle: int = 0,
-) -> _ot.ImageData:
-    """
-    Performs the basic operation of processing PushPull data.
-
-    Parameters
-    ----------
-    imglist : list of ImageData ! CubeData
-        List of images for the PushPull acquisition, organized according to the template.
-    template: int | ArrayLike
-        Template for the PushPull acquisition.
-    shuffle: int, optional
-        A value different from 0 activates the shuffle option, and the imput
-        value is the number of repetition for each mode's templated sampling.
-        The default value is 0, which means the shuffle option is OFF.
-
-    Returns
-    -------
-    image: masked_array
-        Final processed mode's image.
-    """
-    image_list = []
-    template = _np.asarray(template)
-    n_images = len(imglist)
-    if shuffle == 0:
-        ## NEW ALGORITHM: VECTORIZED COMPUTATION
-        # Template weights computation
-        w = template.astype(_np.result_type(template, imglist[0].data), copy=True)
-        if n_images > 2:
-            w[1:-1] *= 2.0
-        # OR-reduce all masks once
-        master_mask = _np.logical_or.reduce([_xp.asnumpy(ima.mask) for ima in imglist])
-        # Compute weighted sum over realizations on raw data
-        stack = _np.stack([ima.data for ima in imglist], axis=0)  # (n, H, W)
-        image = _xp.asnumpy(  # (H, W)
-            _xp.tensordot(_xp.asarray(w), _xp.asarray(stack), axes=(0, 0))
-        )
-        ##
-
-        # for x in range(1, n_images):
-        #     opd2add = (
-        #         imglist[x] * template[x] + imglist[x - 1] * template[x - 1]
-        #     )
-        #     master_mask2add = _np.ma.mask_or(
-        #         imglist[x].mask, imglist[x - 1].mask
-        #     )
-        #     if x == 1:
-        #         master_mask = master_mask2add
-        #     else:
-        #         master_mask = _np.ma.mask_or(master_mask, master_mask2add)
-        #     image += opd2add
-    else:
-        print("Shuffle option")
-        for i in range(0, shuffle - 1):
-            for x in range(1, 2):
-                opd2add = (
-                    image_list[i * 3 + x] * template[x]
-                    + image_list[i * 3 + x - 1] * template[x - 1]
-                )
-                master_mask2add = _np.ma.mask_or(
-                    image_list[i * 3 + x].mask, image_list[i * 3 + x - 1].mask
-                )
-                if i == 0 and x == 1:
-                    master_mask = master_mask2add
-                else:
-                    master_mask = _np.ma.mask_or(master_mask, master_mask2add)
-                image += opd2add
-
-    template_norm_factor = _np.max(((template.shape[0] - 1), 1))
-    image = _np.ma.masked_array(image, mask=master_mask) / template_norm_factor
-    return image
 
 
 def registrationRedux(tn: str, fileMat: list[str]) -> list[_ot.ImageData]:
@@ -526,6 +422,8 @@ def registrationRedux(tn: str, fileMat: list[str]) -> list[_ot.ImageData]:
     imgList : ArrayLike
         List of the processed registration images.
     """
+    from opticalib.analyzer import pushPullReductionAlgorithm
+
     _, infoR, _, _ = _getAcqInfo(tn)
     template = infoR["template"]
     if _np.array_equal(fileMat, _np.array([])) and len(infoR["modesid"]) == 0:
@@ -535,7 +433,7 @@ def registrationRedux(tn: str, fileMat: list[str]) -> list[_ot.ImageData]:
     imglist = []
     for i in range(0, nActs - 1):
         imgs = [_osu.read_phasemap(x) for x in fileMat[i, :]]
-        img = pushPullRedux(imgs, template)
+        img = pushPullReductionAlgorithm(imgs, template)
         imglist.append(img)
     # cube = _np.ma.masked_array(imglist)
     # _osu.save_fits(_os.path.join(_intMatFold, tn, "regActCube.fits"), cube)
@@ -612,7 +510,7 @@ def getTriggerFrame(tn: str, amplitude: int | float = None, roi: int = None) -> 
         img1 = _osu.read_phasemap(fileList[i])
         if not roi is None:
             rois = _roi.roiGenerator(img0)
-            roi2use = rois[roi] # ??
+            roi2use = rois[roi]  # ??
             _ = rois.pop(roi)
             for r in rois:
                 img1.mask[r == 0] = True
@@ -741,8 +639,7 @@ def _copyFromIffToIM(name: str, tn: str) -> None:
 
 
 def _getCubeList(
-    tnlist: str,
-    cubeNames: _ot.Optional[list[str]] = None
+    tnlist: str, cubeNames: _ot.Optional[list[str]] = None
 ) -> tuple[list[_ot.ImageData], list[_ot.MatrixLike], _ot.ArrayLike, int]:
     """
     Retireves the cubes from each tn in the tnlist.

@@ -179,11 +179,11 @@ class Flattening:
         data = [cmd, deltacmd, imgstart, imgflat]
         fold = _os.path.join(_fn.FLAT_ROOT_FOLDER, new_tn)
         header = {}
-        header['CALDATA'] = (self.tn, 'calibration data used')
-        header['MODFLAT'] = (str(modes2flat), 'modes used for flattening')
-        header['MDISCAR'] = (modes2discard, 'modes discarded in reconstructor')
-        header['DMNAME'] = (dm.name, 'deformable mirror name')
-        header['INTERF'] = (interf.name, 'interferometer used')
+        header["CALDATA"] = (self.tn, "calibration data used")
+        header["MODFLAT"] = (str(modes2flat), "modes used for flattening")
+        header["MDISCAR"] = (modes2discard, "modes discarded in reconstructor")
+        header["DMNAME"] = (dm.name, "deformable mirror name")
+        header["INTERF"] = (interf.name, "interferometer used")
         if not _os.path.exists(fold):
             _os.mkdir(fold)
         for f, d in zip(files, data):
@@ -308,7 +308,8 @@ class Flattening:
 
             warnings.warn(
                 "filtering flag in `flag.txt` file is deprecated and will be removed in a future version of `opticalib`.",
-                DeprecationWarning)
+                DeprecationWarning,
+            )
             with open(
                 _os.path.join(self._path, _ifp.flagFile), "r", encoding="utf-8"
             ) as f:
@@ -422,7 +423,8 @@ class Flattening:
 
             warnings.warn(
                 "filtering flag in `flag.txt` file is deprecated and will be removed in a future version of `opticalib`.",
-                DeprecationWarning)
+                DeprecationWarning,
+            )
             # Backwards compatibility for rebinning
             with open(_os.path.join(self._path, _ifp.flagFile), "r") as file:
                 lines = file.readlines()

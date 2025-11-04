@@ -175,6 +175,7 @@ class AdOpticaDm(_api.BaseAdOpticaDm, _api.base_devices.BaseDeformableMirror):
                         path = _os.path.join(datafold, f"image_{i:05d}.fits")
                         _sf(path, img)
 
+
 class DP(AdOpticaDm):
     """
     Deformable Mirror interface for the Deformable Platform (DP) of the ELT.
@@ -186,7 +187,7 @@ class DP(AdOpticaDm):
         """The Constructor"""
         self._name = "DP"
         super().__init__(tn)
-    
+
     def set_shape(
         self,
         cmd: _ot.ArrayLike | list[float],
@@ -228,7 +229,7 @@ class DP(AdOpticaDm):
                     self._aoClient.mirrorCommand(cmd * i * incremental)
         else:
             self._aoClient.mirrorCommand(cmd)
-    
+
     def read_buffer(self, shell: int = 0):
         """
         Reads the internal buffers of the DP DM.
@@ -240,7 +241,7 @@ class DP(AdOpticaDm):
         """
         s = slice(0, 111) if shell == 0 else slice(111, 222)
         self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.config(
-            _np.r_[s], self._BUFFER_LEN, 'mirrActMap', decFactor=5, startPointer=0
+            _np.r_[s], self._BUFFER_LEN, "mirrActMap", decFactor=5, startPointer=0
         )
         self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.start()
         self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.waitStop()
@@ -248,10 +249,10 @@ class DP(AdOpticaDm):
         actPos = _np.zeros((111, self._BUFFER_LEN))
         actForce = _np.zeros((111, self._BUFFER_LEN))
         for act_ in range(111):
-            tmp = bufData['ch%04d' % act_]
-            actPos[act_,:] = tmp[:,4]
-            actForce[act_,:] = tmp[:,16]
-        
+            tmp = bufData["ch%04d" % act_]
+            actPos[act_, :] = tmp[:, 4]
+            actForce[act_, :] = tmp[:, 16]
+
 
 class M4AU(AdOpticaDm):
     """
@@ -264,6 +265,7 @@ class M4AU(AdOpticaDm):
         """The Constructor"""
         self._name = "M4AU"
         super().__init__(tn)
+
 
 class AlpaoDm(_api.BaseAlpaoMirror, _api.base_devices.BaseDeformableMirror):
     """
