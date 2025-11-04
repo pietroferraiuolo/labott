@@ -195,7 +195,7 @@ def getFileList(tn: str = None, fold: str = None, key: str = None) -> list[str]:
     return fl
 
 
-def tnRange(tn0: str, tn1: str) -> list[str]:
+def tnRange(tn0: str, tn1: str, complete_paths: bool = False) -> list[str]:
     """
     Returns the list of tracking numbers between tn0 and tn1, within the same
     folder, if they both exist in it.
@@ -206,6 +206,8 @@ def tnRange(tn0: str, tn1: str) -> list[str]:
         Starting tracking number.
     tn1 : str
         Finish tracking number.
+    complete_paths : bool, optional
+        Whether to return the full path of the tracking numbers or only their names.
 
     Returns
     -------
@@ -229,7 +231,10 @@ def tnRange(tn0: str, tn1: str) -> list[str]:
             tn_folds = sorted(_os.listdir(fold_path))
             id0 = tn_folds.index(tn0)
             id1 = tn_folds.index(tn1)
-            tnMat = [_os.path.join(fold_path, tn) for tn in tn_folds[id0 : id1 + 1]]
+            if complete_paths:
+                tnMat = [_os.path.join(fold_path, tn) for tn in tn_folds[id0 : id1 + 1]]
+            else:
+                tnMat = tn_folds[id0 : id1 + 1]
         else:
             raise FileNotFoundError("The tracking numbers are in different foldes")
     else:
@@ -240,9 +245,12 @@ def tnRange(tn0: str, tn1: str) -> list[str]:
                 tn_folds = sorted(_os.listdir(fold_path))
                 id0 = tn_folds.index(tn0)
                 id1 = tn_folds.index(tn1)
-                tnMat.append(
-                    [_os.path.join(fold_path, tn) for tn in tn_folds[id0 : id1 + 1]]
-                )
+                if not complete_paths:
+                    tnMat.append(tn_folds[id0 : id1 + 1])
+                else:
+                    tnMat.append(
+                        [_os.path.join(fold_path, tn) for tn in tn_folds[id0 : id1 + 1]]
+                    )
     return tnMat
 
 

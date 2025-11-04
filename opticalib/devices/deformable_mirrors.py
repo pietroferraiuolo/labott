@@ -228,7 +228,30 @@ class DP(AdOpticaDm):
                     self._aoClient.mirrorCommand(cmd * i * incremental)
         else:
             self._aoClient.mirrorCommand(cmd)
+    
+    def read_buffer(self, shell: int = 0):
+        """
+        Reads the internal buffers of the DP DM.
 
+        Returns
+        -------
+        shell : int
+            The shell ID to read buffers from. Either 0 (dx) or 1 (sx).
+        """
+        s = slice(0, 111) if shell == 0 else slice(111, 222)
+        self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.config(
+            _np.r_[s], self._BUFFER_LEN, 'mirrActMap', decFactor=5, startPointer=0
+        )
+        self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.start()
+        self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.waitStop()
+        bufData = self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.read()
+        actPos = _np.zeros((111, self._BUFFER_LEN))
+        actForce = _np.zeros((111, self._BUFFER_LEN))
+        for act_ in range(111):
+            tmp = bufData['ch%04d' % act_]
+            actPos[act_,:] = tmp[:,4]
+            actForce[act_,:] = tmp[:,16]
+        
 
 class M4AU(AdOpticaDm):
     """

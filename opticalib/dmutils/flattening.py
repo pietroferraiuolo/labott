@@ -144,7 +144,6 @@ class Flattening:
         interf: _ot.InterferometerDevice,
         modes2flat: int | _ot.ArrayLike,
         modes2discard: _ot.Optional[int] = None,
-        cmdOffset: _ot.Optional[_ot.ArrayLike] = None,
         nframes: int = 5,
     ) -> None:
         f"""
@@ -166,8 +165,7 @@ class Flattening:
         """
         new_tn = _ts()
         imgstart = interf.acquire_map(nframes, rebin=self.rebin)
-        self.loadImage2Shape(imgstart)
-        self.computeRecMat(modes2discard)
+        self.loadImage2Shape(imgstart, compute=modes2discard)
         deltacmd = self.computeFlatCmd(modes2flat)
         cmd = dm.get_shape()
         dm.set_shape(deltacmd, differential=True)
@@ -401,9 +399,10 @@ class Flattening:
         roll = (xcm - xci, ycm - yci)
         img = _np.roll(img, roll, axis=(0, 1))
         if self.filteredModes is not None:
-            from opticalib.ground import zernike
+            from opticalib.ground.zernike import ZernikeFitter
 
-            img = zernike.removeZernike(img, self.filteredModes)
+            zfit = ZernikeFitter()
+            img = zfit.removeZernike(img, self.filteredModes)
         return img
 
     def _loadIntCube(self) -> _ot.CubeData:

@@ -28,6 +28,8 @@ from .deformable_mirrors import (
     SplattDm,
     AlpaoDm,
     AdOpticaDm,
+    DP,
+    M4AU
 )
 
-__all__ = ["AdOpticaDm", "PhaseCam", "AccuFiz", "SplattDm", "AlpaoDm"]
+__all__ = ["AdOpticaDm", "PhaseCam", "AccuFiz", "SplattDm", "AlpaoDm", "DP", "M4AU"]
