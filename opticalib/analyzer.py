@@ -894,7 +894,7 @@ def removeZernikeFromCube(
     return newCube
 
 
-def makeCubeMasterMask(cube: _ot.CubeData) -> _ot.CubeData:
+def makeCubeMasterMask(cube: _ot.CubeData, apply: bool = False) -> _ot.CubeData:
     """
     Creates a master mask for a cube of images by performing a logical OR operation
     across all individual image masks.
@@ -903,16 +903,23 @@ def makeCubeMasterMask(cube: _ot.CubeData) -> _ot.CubeData:
     ----------
     cube : ndarray
         Data cube containing the images/frames stacked.
+    apply : bool, optional
+        If True, applies the master mask to all frames in the cube and 
+        returns the modified cube.
 
     Returns
     -------
-    master_mask : ndarray
-        Master mask for the cube.
+    master_mask or cube: MaskData or CubeData
+        Master mask for the cube or the cube with the master mask applied.
     """
     master_mask = _np.logical_or.reduce(
         [cube[:, :, i].mask for i in range(cube.shape[2])]
     )
-    return master_mask
+    if apply:
+        cube.mask = _np.broadcast_to(master_mask[:, :, None], cube.shape)
+        return cube
+    else:
+        return master_mask
 
 
 def modeRebinner(
