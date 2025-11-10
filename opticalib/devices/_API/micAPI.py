@@ -169,4 +169,3 @@ class BaseAdOpticaDm:
         Function which enumerates the connected devices.
         """
         self._aoClient.aoSystem.aoSubSystem0.deviceEnum()
-        self._BUFFER_LEN = 2048  # max 65535 or 16384

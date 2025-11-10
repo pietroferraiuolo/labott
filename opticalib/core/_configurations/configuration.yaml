@@ -31,6 +31,10 @@ DEVICES:
     Splatt:
       ip: 193.206.155.220
       port: 9090
+  CAMERAS:
+    AVT_MANTA_5G: # example camera
+      id: 'DEV_000F314DE425'
+      ip: '10.0.0.3'
 
 INFLUENCE.FUNCTIONS:
   DM:

@@ -15,6 +15,7 @@ import numpy as _np
 import time as _time
 from . import _API as _api
 from opticalib import typings as _ot
+from contextlib import contextmanager as _contextmanager
 from opticalib.core.root import OPD_IMAGES_ROOT_FOLDER as _opdi
 from opticalib.ground.osutils import newtn as _ts, save_fits as _sf
 from opticalib.core import exceptions as _oe
@@ -216,7 +217,8 @@ class DP(AdOpticaDm):
             )
         if differential:
             self._lastCmd += cmd
-        self._lastCmd = cmd
+        else:
+            self._lastCmd = cmd
         if incremental:
             dc = _np.ceil((1 / incremental))
             if dc < 1 and incremental > 1.0:
@@ -224,34 +226,92 @@ class DP(AdOpticaDm):
                 incremental = 1.0 / incremental
             for i in range(dc):
                 if i * incremental > 1.0:
-                    self._aoClient.mirrorCommand(cmd)
+                    self._aoClient.mirrorCommand(self._lastCmd)
                 else:
-                    self._aoClient.mirrorCommand(cmd * i * incremental)
+                    self._aoClient.mirrorCommand(self._lastCmd * i * incremental)
         else:
-            self._aoClient.mirrorCommand(cmd)
+            self._aoClient.mirrorCommand(self._lastCmd)
 
-    def read_buffer(self, shell: int = 0):
+    @_contextmanager
+    def read_buffer(self, npoints_per_cmd: int = 100):
         """
-        Reads the internal buffers of the DP DM.
-
-        Returns
+        Context manager for reading internal buffers of the DP DM during operations.
+        
+        The buffer data is acquired while executing commands within the context,
+        and stored in `self.bufferData` upon exit.
+        
+        Parameters
+        ----------
+        npoints_per_cmd : int, optional
+            Number of data points to acquire per command (default: 100)
+            
+        Yields
+        ------
+        dict
+            A dictionary that will be populated with buffer results:
+            - 'actPos': actuator positions (222, buffer_length)
+            - 'actForce': actuator forces (222, buffer_length)
+            
+        Example
         -------
-        shell : int
-            The shell ID to read buffers from. Either 0 (dx) or 1 (sx).
+        >>> with dm.read_buffer(npoints_per_cmd=150) as buf:
+        ...     dm.runCmdHistory(interf=myInterf, save='test_run')
+        >>> print(buf['actPos'].shape)  # Access the buffer data
+        (111, 33300)
+        >>> # Or access via class attribute
+        >>> print(dm.bufferData['actPos'].shape)
         """
-        s = slice(0, 111) if shell == 0 else slice(111, 222)
+        # Setup: Configure and start buffer acquisition
+        nActs = 222
+        if self._tCmdHistory is not None:
+            totframes = self._tCmdHistory.shape[-1]
+        else:
+            totframes = 0
+        triggered = _dmc()["triggerMode"]
+        if triggered is not False:
+            thistfreq = triggered.get("frequency", 1.0)
+        buffer_len = npoints_per_cmd * totframes + (nActs*2) # Extra margin
+        clockfreq = self._aoClient.aoSystem.aoSubSystem0.sysConf.gen.cntFreq()
+        thistdecim = int(clockfreq / thistfreq)
+        diagdecim = int(thistdecim / npoints_per_cmd)
+        
         self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.config(
-            _np.r_[s], self._BUFFER_LEN, "mirrActMap", decFactor=5, startPointer=0
+            _np.r_[0:nActs],
+            buffer_len,
+            "mirrActMap",
+            decFactor=diagdecim,
+            startPointer=0
         )
         self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.start()
-        self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.waitStop()
-        bufData = self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.read()
-        actPos = _np.zeros((111, self._BUFFER_LEN))
-        actForce = _np.zeros((111, self._BUFFER_LEN))
-        for act_ in range(111):
-            tmp = bufData["ch%04d" % act_]
-            actPos[act_, :] = tmp[:, 4]
-            actForce[act_, :] = tmp[:, 16]
+        
+        # Create a result container that will be populated on exit
+        result = {}
+        
+        try:
+            # Yield control back to the caller
+            yield result
+            
+        finally:
+            # Cleanup: Stop acquisition and read data
+            self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.waitStop()
+            bufData = self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.read()
+            
+            # Process the buffer data
+            actPos = _np.zeros((nActs, buffer_len))
+            actForce = _np.zeros((nActs, buffer_len))
+            
+            for act_idx in range(nActs):
+                tmp = bufData[f"ch{act_idx:04d}"]
+                actPos[act_idx, :] = tmp[:, 4]
+                actForce[act_idx, :] = tmp[:, 16]
+            
+            # Store in both the yielded dict and class attribute
+            result['actPos'] = actPos
+            result['actForce'] = actForce
+            result['rawData'] = bufData
+            
+            # Also store as class attribute for later access
+            self.bufferData = result.copy()
 
 
 class M4AU(AdOpticaDm):

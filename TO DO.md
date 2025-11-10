@@ -36,7 +36,7 @@
 
 $\bar{t_e}$ = Average Execution Time; **i** = initial ; **f** = final (after optimization)
 
-| function | $\bar{t_e^i}$ [s] | $\bar{t_e^f}$ [s] | gain |changes | notes |
-| -------- | --------------- | -------------- | ------- | ----- | --- |
-|`iffRedux` | 41.2 | 14.9 | ~63%  | Computation vectorization, GPU, I/O parallelization and prefetching | Test done with DP data *tn=20250911_110614*: ~1200 images to be processed. I/O sweet spot performance reached with n_workers = 8, 1 modes prefetch |
-| `filterZernikeCube` | 43 | 22 | ~50%  | Fitting algorithm optimization with little GPU support | modes fitted: [1,2,3] |
+| function | $\bar{t_e^i}$ [s] | $\bar{t_e^f}$ [s] | gain |changes | notes | GPU |
+| -------- | --------------- | -------------- | ------- | ----- | --- | --- |
+|`iffRedux` | 41.2 | 14.9 | ~63%  | Computation vectorization, GPU, I/O parallelization and prefetching | Test done with DP data *tn=20250911_110614*: ~1200 images to be processed. I/O sweet spot performance reached with n_workers = 8, 1 modes prefetch | NVIDIA RTX 5080 Mobile |
+| `filterZernikeCube` | 43 | 22 | ~50%  | Fitting algorithm optimization with little GPU support | modes fitted: [1,2,3] | NVIDIA RTX 5080 Mobile |
