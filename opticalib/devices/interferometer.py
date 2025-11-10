@@ -293,6 +293,19 @@ class PhaseCam(_api.BaseInterferometer):
         self._i4d = _api.I4D(self.ip, self.port)
         self._ic = _InterferometerConverter()
 
+    def get_interferogram(self, index: int):
+        json_data = self._i4d.getInterferogram(index)
+        data = _np.array(json_data["Data"], dtype=float)
+        width = json_data["Width"]
+        height = json_data["Height"]
+
+        #masked_ima = self._fromDataArrayToMaskedArray(
+        #    width, height, data #* 632.8e-9
+        #)
+        #masked_ima = _modeRebinner(masked_ima, rebin)
+        return data
+        
+
     def acquire_map(
         self, nframes: int = 1, delay: int | float = 0, rebin: int = 1
     ) -> _ot.ImageData:
