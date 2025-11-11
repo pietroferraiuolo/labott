@@ -972,10 +972,10 @@ def cubeRebinner(
     newCube : ndarray
         Rebinned cube.
     """
-    newCube = _np.ma.empty_like(cube)
+    newCube = []
     for i in range(cube.shape[-1]):
-        newCube[:, :, i] = modeRebinner(cube[:, :, i], rebin, method=method)
-    return newCube
+        newCube.append(modeRebinner(cube[:, :, i], rebin, method=method))
+    return _np.ma.dstack(newCube)
 
 
 # From ARTE #

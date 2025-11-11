@@ -3,7 +3,7 @@
 ######################################
 
 SYSTEM:
-  data_path: ''
+  data_path: '/mnt/disco1/Data/M4Data'
   simulated.devices:
     dm: true
     interferometer: true
