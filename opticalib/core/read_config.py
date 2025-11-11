@@ -380,7 +380,7 @@ def getCamerasConfig(device_name: str = None):
     config : dict
         The defined cameras parameters.
     """
-    config = (load_yaml_config(_cfile))['DEVICES']["CAMERAS"]
+    config = (load_yaml_config(_cfile))["DEVICES"]["CAMERAS"]
     if device_name is not None:
         try:
             config = config[device_name]
@@ -458,6 +458,7 @@ def getAlignmentConfig():
 
     return alignmentConfig(config)
 
+
 def getStitchingConfig():
     """
     Reads the stitching settings in the configuration file.
@@ -469,4 +470,3 @@ def getStitchingConfig():
     """
     config = (load_yaml_config(_cfile))["STITCHING"]
     return config
-

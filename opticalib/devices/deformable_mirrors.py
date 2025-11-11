@@ -236,22 +236,22 @@ class DP(AdOpticaDm):
     def read_buffer(self, npoints_per_cmd: int = 100):
         """
         Context manager for reading internal buffers of the DP DM during operations.
-        
+
         The buffer data is acquired while executing commands within the context,
         and stored in `self.bufferData` upon exit.
-        
+
         Parameters
         ----------
         npoints_per_cmd : int, optional
             Number of data points to acquire per command (default: 100)
-            
+
         Yields
         ------
         dict
             A dictionary that will be populated with buffer results:
             - 'actPos': actuator positions (222, buffer_length)
             - 'actForce': actuator forces (222, buffer_length)
-            
+
         Example
         -------
         >>> with dm.read_buffer(npoints_per_cmd=150) as buf:
@@ -270,46 +270,46 @@ class DP(AdOpticaDm):
         triggered = _dmc()["triggerMode"]
         if triggered is not False:
             thistfreq = triggered.get("frequency", 1.0)
-        buffer_len = npoints_per_cmd * totframes + (nActs*2) # Extra margin
+        buffer_len = npoints_per_cmd * totframes + (nActs * 2)  # Extra margin
         clockfreq = self._aoClient.aoSystem.aoSubSystem0.sysConf.gen.cntFreq()
         thistdecim = int(clockfreq / thistfreq)
         diagdecim = int(thistdecim / npoints_per_cmd)
-        
+
         self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.config(
             _np.r_[0:nActs],
             buffer_len,
             "mirrActMap",
             decFactor=diagdecim,
-            startPointer=0
+            startPointer=0,
         )
         self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.start()
-        
+
         # Create a result container that will be populated on exit
         result = {}
-        
+
         try:
             # Yield control back to the caller
             yield result
-            
+
         finally:
             # Cleanup: Stop acquisition and read data
             self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.waitStop()
             bufData = self._aoClient.aoSystem.aoSubSystem0.support.diagBuf.read()
-            
+
             # Process the buffer data
             actPos = _np.zeros((nActs, buffer_len))
             actForce = _np.zeros((nActs, buffer_len))
-            
+
             for act_idx in range(nActs):
                 tmp = bufData[f"ch{act_idx:04d}"]
                 actPos[act_idx, :] = tmp[:, 4]
                 actForce[act_idx, :] = tmp[:, 16]
-            
+
             # Store in both the yielded dict and class attribute
-            result['actPos'] = actPos
-            result['actForce'] = actForce
-            result['rawData'] = bufData
-            
+            result["actPos"] = actPos
+            result["actForce"] = actForce
+            result["rawData"] = bufData
+
             # Also store as class attribute for later access
             self.bufferData = result.copy()
 

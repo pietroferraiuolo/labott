@@ -90,7 +90,7 @@ class VimbaXCam:
 
             elif mode == "async":
                 aframes = []
-                
+
                 def frame_handler(
                     cam: _vmbpy.Camera, stream: _vmbpy.Stream, frame: _vmbpy.Frame
                 ):
@@ -112,7 +112,7 @@ class VimbaXCam:
                 finally:
                     cam.stop_streaming()
 
-                frames = [f.as_numpy_ndarray().transpose(2,0,1) for f in aframes]
+                frames = [f.as_numpy_ndarray().transpose(2, 0, 1) for f in aframes]
 
             else:
                 raise ValueError("Invalid mode. Choose either 'sync' or 'async'.")

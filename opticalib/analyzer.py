@@ -904,7 +904,7 @@ def makeCubeMasterMask(cube: _ot.CubeData, apply: bool = False) -> _ot.CubeData:
     cube : ndarray
         Data cube containing the images/frames stacked.
     apply : bool, optional
-        If True, applies the master mask to all frames in the cube and 
+        If True, applies the master mask to all frames in the cube and
         returns the modified cube.
 
     Returns
