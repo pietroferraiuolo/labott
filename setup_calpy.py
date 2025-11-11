@@ -19,15 +19,15 @@ no option : Initialize an IPython --pylab shell
             the opticalib package.
 
 -f <path> --create : Create the configuration file in the specified path, 
-                     as well as the complete folder tree and enters the 
-                     ipython session. The `data_path` variable in the 
-                     created configuration file is automatically set to 
-                     the path of the configuration file.
-
+                     as well as the complete data folder tree, and enters 
+                     an ipython session importing opticalib. The created
+                     configuration file is already updated with the provided
+                     data path.
+                     
 -c <path> : Create the configuration file in the specified path, as well as 
-            the complete folder tree, and exit. The `data_path` variable in
-            the created configuration file is automatically set to the path 
-            of the configuration file.
+            the complete  data folder tree, and exit. The created
+            configuration file is already updated with the provided
+            data path.
 
 -h |--help : Shows this help message
 
