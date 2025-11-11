@@ -224,6 +224,8 @@ class DP(AdOpticaDm):
             if dc < 1 and incremental > 1.0:
                 dc = incremental
                 incremental = 1.0 / incremental
+            else:
+                dc = int(dc)
             for i in range(dc):
                 if i * incremental > 1.0:
                     self._aoClient.mirrorCommand(self._lastCmd)
