@@ -63,19 +63,19 @@ def averageFrames(
         Final image of averaged frames.
 
     """
-    fileList = osu.getFileList(tn, fold=_OPDSER.split("/")[-1], key="20")
-    fl = _np.asarray(fileList)
+    fl = osu.getFileList(tn, fold=_OPDSER.split("/")[-1], key="20")
     s = slice(first, last) if last != -1 else slice(first, None)
     fl = fl[s] if file_selector is None else fl[file_selector]
     # elif file_selector is not None:
     #     first = 0
-    #     last = len(fileList)
+    #     last = len(fl)
     #     fl = [
-    #         fileList[x]
+    #         fl[x]
     #         for x in _np.arange(first, last, 1)
     #         if file_selector is None or x in file_selector
     #     ]
     imcube = createCube(fl)
+    
     if thresh is False:
         aveimg = _np.ma.mean(imcube, axis=2)
     else:
