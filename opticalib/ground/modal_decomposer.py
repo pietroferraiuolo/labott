@@ -71,9 +71,17 @@ from abc import abstractmethod, ABC
 from . import roi as _roi
 from opticalib import typings as _t
 from arte.utils.zernike_generator import ZernikeGenerator
+from arte.atmo.utils import getFullKolmogorovCovarianceMatrix
+from arte.utils.karhunen_loeve_generator import KarhunenLoeveGenerator as  KLGenerator
+from arte.utils.rbf_generator import RBFGenerator
+
 from arte.types.mask import CircularMask
 
 fac = _math.factorial
+
+
+import functools
+# CHECKOUT: https://github.com/ArcetriAdaptiveOptics/arte/blob/master/arte/utils/base_modal_decomposer.py
 
 
 class _ModeFitter(ABC):
@@ -98,32 +106,38 @@ class _ModeFitter(ABC):
             If None, a default CircularMask will be created.
         """
         if fit_mask is not None:
-            if isinstance(fit_mask, CircularMask):
-                self._fit_mask = fit_mask
-            elif isinstance(fit_mask, _np.ndarray):
-                self._fit_mask = CircularMask.fromMaskedArray(
-                    _np.ma.masked_array(fit_mask, mask=fit_mask == 0),
-                    method="COG",
-                )
-            else:
-                self._fit_mask = CircularMask.fromMaskedArray(
-                    fit_mask, mask=fit_mask.mask, method="COG"
-                )
-            self.auxmask = self._fit_mask.as_masked_array()
-            self._mgen = self._create_modes_generator(self._fit_mask)
+            self.setFitMask(fit_mask=fit_mask, method='COG')
         else:
             self._fit_mask = None
             self.auxmask = None
             self._mgen = None
-
-    @abstractmethod
-    def _create_fitting_matrix(self, modes: list[int]) -> _t.MatrixLike:
+    
+    @functools.cache
+    def _create_fitting_matrix(
+        self, modes: list[int], mask: _t.MaskData
+    ) -> _t.MatrixLike:
         """
-        Create the fitting matrix for the given basis modes.
+        Create the fitting matrix for the given modes.
+        
+        Parameters
+        ----------
+        modes : list[int]
+            List of modal indices.
+        mask : MaskData
+            Boolean mask defining the fitting area.
+        
+        Returns
+        -------
+        mat : MatrixLike
+            Fitting matrix for the specified modes.
         """
-        raise NotImplementedError(
-            "Subclasses must implement the `_create_fitting_matrix` method."
-        )
+        # mat = []
+        # for zmode in modes:
+        #     vv = self._get_mode_from_generator(zmode)
+        #     mat.append(vv[mask])
+        # mat = _np.array(mat)
+        # return mat
+        return _np.vstack([self._get_mode_from_generator(zmode)[mask] for zmode in modes])
 
     @abstractmethod
     def _create_modes_generator(self, mask: _t.MaskData) -> object:
@@ -155,7 +169,7 @@ class _ModeFitter(ABC):
         """
         return self.auxmask
 
-    def setFitMask(self, fit_mask: _t.ImageData, method: str = "GOC") -> None:
+    def setFitMask(self, fit_mask: _t.ImageData, method: str = "COG") -> None:
         """
         Set the fitting mask.
 
@@ -164,7 +178,7 @@ class _ModeFitter(ABC):
         fit_mask : ImageData or CircularMask or np.ndarray
             Mask to be used for fitting. Can be an ImageData, CircularMask, or ndarray.
         method : str, optional
-            Method used my the `CircularMask.fromMaskedArray` function. Default is 'COG'.
+            Method used by the `CircularMask.fromMaskedArray` function. Default is 'COG'.
         """
         if isinstance(fit_mask, CircularMask):
             self._fit_mask = fit_mask
@@ -178,8 +192,9 @@ class _ModeFitter(ABC):
         self.auxmask = self._fit_mask.as_masked_array()
         self._mgen = self._create_modes_generator(self._fit_mask)
 
+
     def fit(
-        self, image: _t.ImageData, zernike_index_vector: list[int]
+        self, image: _t.ImageData, mode_index_vector: list[int]
     ) -> tuple[_t.ArrayLike, _t.ArrayLike]:
         """
         Fit Zernike modes to an image.
@@ -187,23 +202,23 @@ class _ModeFitter(ABC):
         Parameters
         ----------
         image : ImageData
-            Image for Zernike fit.
-        zernike_index_vector : list[int]
-            List containing the index of Zernike modes to be fitted starting from 1.
+            Image for modal fit.
+        mode_index_vector : list[int]
+            List containing the index of modes to be fitted.
+            If they are Zernike modes, the first index is 1.
 
         Returns
         -------
         coeff : numpy array
-            Vector of Zernike coefficients.
+            Vector of modal coefficients.
         mat : numpy array
-            Matrix of Zernike polynomials.
+            Modes matrix.
         """
         image = self._make_sure_on_cpu(image)
 
         with self._temporary_zgen_from_image(image) as (pimage, _):
             mask = pimage.mask == 0
-            mat = self._create_fitting_matrix(zernike_index_vector, mask)
-
+            mat = self._create_fitting_matrix(mode_index_vector, mask)
             A = mat.T
             B = _np.transpose(pimage.compressed())
             coeffs = _np.linalg.lstsq(A, B, rcond=None)[0]
@@ -225,8 +240,8 @@ class _ModeFitter(ABC):
         image : ImageData
             Image for modal fit.
         modes2fit : list[int], optional
-            List containing the index of  modes to be fitted starting from 1.
-            Default is [1,2,3].
+            List containing the index of modes to be fitted.
+            If they are Zernike modes, the first index is 1.
         mode : str, optional
             Mode of fitting.
             - `global` will return the mean of the fitted coefficient of each ROI
@@ -242,8 +257,6 @@ class _ModeFitter(ABC):
         """
         if mode not in ["global", "local"]:
             raise ValueError("mode must be 'global' or 'local'")
-        if modes2fit is None:
-            modes2fit = [1, 2, 3]
         roiimg = _roi.roiGenerator(image)
         nroi = len(roiimg)
         print("Found " + str(nroi) + " ROI")
@@ -280,16 +293,37 @@ class _ModeFitter(ABC):
         elif image is not None:
             image = self._make_sure_on_cpu(image)
             mm = _np.where(image.mask == 0)
-            zernike_surface = _np.zeros(image.shape)
+            surface = _np.zeros(image.shape)
             coeff, mat = self.fit(image, modes)
-            zernike_surface[mm] = _np.dot(mat, coeff)
-            surface = _np.ma.masked_array(zernike_surface, mask=image.mask)
+            surface[mm] = _np.dot(mat, coeff)
+            surface = _np.ma.masked_array(surface, mask=image.mask)
         elif image is None and self._mgen is not None:
             surface = self._get_mode_from_generator(modes[0])
             if len(modes) > 1:
                 for mode in modes[1:]:
                     surface += self._get_mode_from_generator(mode)
         return surface
+    
+    def filterModes(
+        self, image: _t.ImageData, mode_index_vector: list[int]
+    ) -> _t.ImageData:
+        """
+        Remove modes from the image using the current fit mask.
+
+        Parameters
+        ----------
+        image : ImageData
+            Image from which to remove modes.
+        zernike_index_vector : list[int], optional
+            List of mode indices to be removed.
+
+        Returns
+        -------
+        new_ima : ImageData
+            Filtered image.
+        """
+        surf = self.makeSurface(mode_index_vector, image)
+        return _np.ma.masked_array(image - surf, image.mask)
 
     @_contextmanager
     def no_mask(self):
@@ -319,22 +353,22 @@ class _ModeFitter(ABC):
             self.auxmask = prev_auxmask
 
     @_contextmanager
-    def _temporary_zgen_from_image(self, image: _t.ImageData):
+    def _temporary_mgen_from_image(self, image: _t.ImageData):
         """
-        Context manager to temporarily create a ZernikeGenerator from an image
-        when self._zgen is None, and restore the original state afterwards.
+        Context manager to temporarily create a ModalGenerator from an image
+        when self._mgen is None, and restore the original state afterwards.
 
         Parameters
         ----------
         image : ImageData
-            Image from which to create a temporary ZernikeGenerator
+            Image from which to create a temporary ModalGenerator
 
         Yields
         ------
         tuple
             (modified_image, was_temporary) where was_temporary indicates if a temp generator was created
         """
-        prev_zgen = self._mgen
+        prev_mgen = self._mgen
         was_temporary = False
 
         try:
@@ -347,7 +381,8 @@ class _ModeFitter(ABC):
             yield image, was_temporary
         finally:
             if was_temporary:
-                self._mgen = prev_zgen
+                self._mgen = prev_mgen
+                
 
     def _create_fit_mask_from_img(self, image: _t.ImageData) -> CircularMask:
         """
@@ -394,6 +429,8 @@ class _ModeFitter(ABC):
             elif isinstance(img, xp.ndarray):
                 img = img.get()
         return img
+    
+    
 
 
 class ZernikeFitter(_ModeFitter):
@@ -432,33 +469,7 @@ class ZernikeFitter(_ModeFitter):
         """
         if zernike_index_vector is None:
             zernike_index_vector = [1, 2, 3]
-        surf = self.makeSurface(zernike_index_vector, image)
-        return _np.ma.masked_array(image - surf, image.mask)
-
-    def _create_fitting_matrix(
-        self, modes: list[int], mask: _t.MaskData
-    ) -> _t.MatrixLike:
-        """
-        Create the fitting matrix for the given Zernike modes.
-        
-        Parameters
-        ----------
-        modes : list[int]
-            List of Zernike mode indices.
-        mask : MaskData
-            Boolean mask defining the fitting area.
-        
-        Returns
-        -------
-        mat : MatrixLike
-            Fitting matrix for the specified Zernike modes.
-        """
-        mat = []
-        for zmode in modes:
-            vv = self._mgen.getZernike(zmode)
-            mat.append(vv[mask])
-        mat = _np.array(mat)
-        return mat
+        return self.filterModes(image=image, mode_index_vector=zernike_index_vector)
 
     def _create_modes_generator(self, mask: CircularMask) -> CircularMask:
         """
@@ -471,6 +482,7 @@ class ZernikeFitter(_ModeFitter):
         """
         return ZernikeGenerator(mask)
 
+    @functools.cache
     def _get_mode_from_generator(self, mode_index: int) -> _t.ImageData:
         """
         Get the mode defined on the mask from the generator.
@@ -486,3 +498,107 @@ class ZernikeFitter(_ModeFitter):
             The Zernike mode image corresponding to the given index.
         """
         return self._mgen.getZernike(mode_index)
+    
+
+class KLFitter(_ModeFitter):
+    """
+    Class for fitting Karhunen-Loeve modes to an image.
+
+    Parameters
+    ----------
+    fit_mask : ImageData or CircularMask or np.ndarray, optional
+        Mask to be used for fitting. Can be an ImageData, CircularMask, or ndarray.
+        If None, a default CircularMask will be created.
+    """
+
+    def __init__(self, nKLModes, fit_mask: _t.Optional[_t.ImageData] = None):
+        """The Initiator."""
+        # Defines the auxmask (if any) mask from the Parent class
+        self.nModes = nKLModes
+        super().__init__(fit_mask)
+
+    def _create_modes_generator(self, mask: CircularMask) -> CircularMask:
+        """
+        Create a default CircularMask for fitting.
+
+        Returns
+        -------
+        klgen : KarhunenLoeveGenerator
+            The Karhunen-Loeve Generator defined on the created Circular Mask.
+        """
+        zz = ZernikeGenerator(mask)
+        zbase = _np.rollaxis(
+            _np.ma.masked_array([zz.getZernike(n) for n in range(2, self.nModes + 2)]),0,3)
+        kl = KLGenerator(mask, getFullKolmogorovCovarianceMatrix(self.nModes))
+        kl.generateFromBase(zbase)
+        return kl
+
+    @functools.cache
+    def _get_mode_from_generator(self, mode_index: int) -> _t.ImageData:
+        """
+        Get the mode defined on the mask from the generator.
+
+        Parameters
+        ----------
+        mode_index : int
+            Index of the mode to retrieve.
+
+        Returns
+        -------
+        mode_image : ImageData
+            The mode image corresponding to the given index.
+        """
+        return self._mgen.getKL(mode_index)
+    
+
+class RBFitter(_ModeFitter):
+    """
+    Class for fitting radial-basis functions to an image.
+
+    Parameters
+    ----------
+    fit_mask : ImageData or CircularMask or np.ndarray, optional
+        Mask to be used for fitting. Can be an ImageData, CircularMask, or ndarray.
+        If None, a default CircularMask will be created.
+    """
+
+    def __init__(self, coords, rbfFunction="TPS_RBF", eps=1.0, 
+                 fit_mask: _t.Optional[_t.ImageData] = None):
+        """The Initiator."""
+        self.rbfFunction = rbfFunction
+        self._coordinates = coords
+        self._eps = eps
+        # Defines the auxmask (if any) mask from the Parent class
+        super().__init__(fit_mask)
+
+    def _create_modes_generator(self, mask: CircularMask) -> CircularMask:
+        """
+        Create a default CircularMask for fitting.
+
+        Returns
+        -------
+        zgen : ZernikeGenerator
+            The Zernike Generator defined on the created Circular Mask.
+        """
+        rbf = RBFGenerator(mask, self._coordinates, 
+                           rbfFunction=self.rbfFunction, eps=self._eps)
+        rbf.generate()
+        return rbf
+
+    @functools.cache
+    def _get_mode_from_generator(self, mode_index: int) -> _t.ImageData:
+        """
+        Get the mode defined on the mask from the generator.
+
+        Parameters
+        ----------
+        mode_index : int
+            Index of the mode to retrieve.
+
+        Returns
+        -------
+        mode_image : ImageData
+            The mode image corresponding to the given index.
+        """
+        return self._mgen.getRBF(mode_index)
+    
