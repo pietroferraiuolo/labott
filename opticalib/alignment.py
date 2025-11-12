@@ -85,7 +85,7 @@ import numpy as _np
 from .core.root import folders as _fn
 from .core.read_config import getAlignmentConfig as _gac
 from .ground import logger as _logger, roi as roigen
-from .ground.zernike import ZernikeFitter as _zfitter
+from .ground.modal_decomposer import ZernikeFitter as _zfitter
 from .ground.osutils import load_fits as _rfits, save_fits as _sfits, newtn as _ts
 from . import typings as _ot
 from .analyzer import pushPullReductionAlgorithm as _ppr

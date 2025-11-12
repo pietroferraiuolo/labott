@@ -400,7 +400,7 @@ class Flattening:
         roll = (xcm - xci, ycm - yci)
         img = _np.roll(img, roll, axis=(0, 1))
         if self.filteredModes is not None:
-            from opticalib.ground.zernike import ZernikeFitter
+            from opticalib.ground.modal_decomposer import ZernikeFitter
 
             zfit = ZernikeFitter()
             img = zfit.removeZernike(img, self.filteredModes)

@@ -48,7 +48,7 @@ from opticalib import typings as _ot
 from opticalib.core.root import _folds
 from opticalib.core import read_config as _rif
 from concurrent.futures import ThreadPoolExecutor as _tpe
-from opticalib.ground import osutils as _osu, zernike as _zern, roi as _roi
+from opticalib.ground import modal_decomposer as _zern, osutils as _osu, roi as _roi
 
 # from scripts.misc.IFFPackage import actuator_identification_lib as _fa
 

@@ -21,7 +21,7 @@ import numpy as _np
 import jdcal as _jdcal
 import matplotlib.pyplot as _plt
 from . import typings as _ot
-from .ground import zernike as zern
+from .ground import modal_decomposer as zern
 from .ground import osutils as osu
 from .core import root as _foldname
 from .ground.geo import qpupil as _qpupil
