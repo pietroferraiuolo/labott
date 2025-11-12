@@ -1,6 +1,5 @@
 import os
 import sys
-import shutil
 import subprocess
 import importlib.util
 
@@ -84,9 +83,11 @@ def main():
     # -f <path> [--create] is passed
     elif len(sys.argv) > 2 and sys.argv[1] == '-f' and sys.argv[2]:
         config_path = sys.argv[2]
+        config_path = os.path.expanduser(config_path)
         # Use robust absolute path detection (works on Windows and Unix)
         if not os.path.isabs(config_path):
-            config_path = os.path.join(home, config_path)
+            current_path = os.getcwd()
+            config_path = os.path.join(current_path, config_path)
         if not '.yaml' in config_path:
             try:
                 config_path = check_dir(config_path)
@@ -112,9 +113,11 @@ def main():
     # -c <path> is passed
     elif len(sys.argv) > 2 and sys.argv[1] == '-c' and sys.argv[2]:
         config_path = sys.argv[2]
+        config_path = os.path.expanduser(config_path)
         # Use robust absolute path detection (works on Windows and Unix)
         if not os.path.isabs(config_path):
-            config_path = os.path.join(home, config_path)
+            current_path = os.getcwd()
+            config_path = os.path.join(current_path, config_path)
         if not '.yaml' in config_path:
             try:
                 config_path = check_dir(config_path)
