@@ -1,4 +1,4 @@
-numpy<=1.26.4
+numpy
 scipy
 scikit-learn
 astropy
@@ -12,4 +12,4 @@ thin-plate-spline
 ruamel.yaml
 tqdm
 arte
-torch-tps
+xupy
