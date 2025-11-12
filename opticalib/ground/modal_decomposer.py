@@ -325,7 +325,6 @@ class _ModeFitter(ABC):
         surf = self.makeSurface(mode_index_vector, image)
         return _np.ma.masked_array(image - surf, image.mask)
 
-##########################################################################################################
     @_contextmanager
     def no_mask(self):
         """
@@ -354,15 +353,15 @@ class _ModeFitter(ABC):
             self.auxmask = prev_auxmask
 
     @_contextmanager
-    def _temporary_zgen_from_image(self, image: _t.ImageData):
+    def _temporary_mgen_from_image(self, image: _t.ImageData):
         """
-        Context manager to temporarily create a ZernikeGenerator from an image
-        when self._zgen is None, and restore the original state afterwards.
+        Context manager to temporarily create a ModalGenerator from an image
+        when self._mgen is None, and restore the original state afterwards.
 
         Parameters
         ----------
         image : ImageData
-            Image from which to create a temporary ZernikeGenerator
+            Image from which to create a temporary ModalGenerator
 
         Yields
         ------
@@ -376,15 +375,14 @@ class _ModeFitter(ABC):
             if self._mgen is None:
                 self._mgen = self._create_fit_mask_from_img(image)
                 image = _np.ma.masked_array(
-                    image.data, mask=self._mgen._boolean_mask.copy() # ARE YOU SURE THIS WORKS ???
+                    image.data, mask=self._mgen._boolean_mask.copy()
                 )
                 was_temporary = True
             yield image, was_temporary
         finally:
             if was_temporary:
                 self._mgen = prev_mgen
-
-###############################################################################################################
+                
 
     def _create_fit_mask_from_img(self, image: _t.ImageData) -> CircularMask:
         """
