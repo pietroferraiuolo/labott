@@ -1,6 +1,5 @@
 # Opticalib Test Suite
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/pietroferraiuolo/GRASP/python-test.yaml)
 
 This directory contains the test suite for the `opticalib` package, focusing on the core and ground modules.
 
