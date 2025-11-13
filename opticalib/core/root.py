@@ -1,6 +1,6 @@
 """
 this module is at the heart of the package, as it defines its folder structure
-and the configuration file reader and writer. Also, it is fundamental for the 
+and the configuration file reader and writer. Also, it is fundamental for the
 `calpy` custom entry point functionalities.
 """
 

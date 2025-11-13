@@ -141,9 +141,11 @@ def draw_mask(img, cx, cy, r, out=0):
     # plt.imshow(img1)
     return img1
 
+
 # from arte.types.mask import CircularMask
 
 # CircularMask
+
 
 def draw_circular_mask(img_or_mask: _t.ImageData, radius: float) -> _t.ImageData:
     """
@@ -159,12 +161,12 @@ def draw_circular_mask(img_or_mask: _t.ImageData, radius: float) -> _t.ImageData
     circular_mask: np.ma.maskedArray
         Circular mask fitting the input image or mask.
     """
-    if hasattr(img_or_mask, 'mask'):
+    if hasattr(img_or_mask, "mask"):
         img_data = img_or_mask.data
         img_mask = img_or_mask.mask
     else:
         img_data = img_mask = img_or_mask
-    coords = qpupil(-1*img_mask+1)
+    coords = qpupil(-1 * img_mask + 1)
     circular_mask = draw_mask(img_data * 0, coords[0], coords[1], radius, out=0)
     return circular_mask
 

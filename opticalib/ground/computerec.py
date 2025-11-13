@@ -9,6 +9,7 @@ Author(s):
 """
 
 import numpy as _np
+import xupy as _xp
 from . import logger as _log
 from . import osutils as _osu
 import matplotlib.pyplot as _plt
@@ -16,6 +17,7 @@ from opticalib import typings as _ot
 from opticalib.core.root import folders as _fn
 
 _intMatFold = _fn.INTMAT_ROOT_FOLDER
+
 
 class ComputeReconstructor:
     """
@@ -56,7 +58,7 @@ class ComputeReconstructor:
         self._filtered_sv = None
 
     def run(
-        self, Interactive: bool = False, sv_threshold: int | float = None
+        self, sv_threshold: int | float = None, interactive: bool = False
     ) -> _ot.MatrixLike:
         """
         Compute the reconstruction matrix from the interaction matrix and the image
@@ -78,17 +80,19 @@ class ComputeReconstructor:
         recMat : MatrixLike
             Reconstruction matrix.
         """
-        self._logger.info("Computing reconstructor")
+        self._logger.info("Reconstructor Computation:")
         self._computeIntMat()
-        self._logger.info("Computing singular values")
-        self._intMat_U, self._intMat_S, self._intMat_Vt = _np.linalg.svd(
-            self._intMat, full_matrices=False
-        )
-        if Interactive:
+        self._logger.info("SVD of Interaction Matrix")
+        IM = _xp.asarray(self._intMat, dtype=_xp.float)
+        U, S, Vt = _xp.linalg.svd(IM, full_matrices=False)
+        self._intMat_U, self._intMat_S, self._intMat_Vt = [
+            _xp.asnumpy(x) for x in (U, S, Vt)
+        ]
+        if interactive:
             self._threshold = self.make_interactive_plot(self._intMat_S)
         else:
             if sv_threshold is None:
-                return _np.linalg.pinv(self._intMat)
+                return _xp.asnumpy(_xp.linalg.pinv(IM))
             elif isinstance(sv_threshold, int):
                 self._threshold = {
                     "y": _np.finfo(_np.float32).eps,
@@ -99,15 +103,35 @@ class ComputeReconstructor:
                     "y": sv_threshold,
                     "x": _np.argmin(_np.abs(self._intMat_S - sv_threshold)),
                 }
-        sv_threshold = self._intMat_S.copy()
+        sv_threshold = S.copy()
         sv_threshold[self._threshold["x"] :] = 0
         sv_inv_threshold = sv_threshold * 0
         sv_inv_threshold[0 : self._threshold["x"]] = (
             1 / sv_threshold[0 : self._threshold["x"]]
         )
         self._filtered_sv = sv_inv_threshold
-        self._logger.info("Assembling reconstructor")
-        return self._intMat_Vt.T @ _np.diag(sv_inv_threshold) @ self._intMat_U.T
+        self._logger.info("Computing Reconstructor Matrix: Vt.T @ S_inv @ U.T")
+        return _xp.asnumpy(Vt.T @ _xp.diag(sv_inv_threshold) @ U.T)
+
+    def getSVD(self):
+        """
+        Returns the SVD components of the interaction matrix.
+
+        Returns
+        -------
+        U : MatrixLike
+            Left singular vectors.
+        S : ArrayLike
+            Singular values.
+        Vt : MatrixLike
+            Right singular vectors transposed.
+        """
+        if not all(
+            [x is not None for x in (self._intMat_U, self._intMat_S, self._intMat_Vt)]
+        ):
+            return self._intMat_U, self._intMat_S, self._intMat_Vt
+        else:
+            print("SVD has not been computed yet. Run the 'run' method first.")
 
     def loadShape2Flat(self, img: _ot.ImageData) -> "ComputeReconstructor":
         """
@@ -119,8 +143,8 @@ class ComputeReconstructor:
         img : ImageData
             The image to compute the new recontructor.
         """
-        self._shape2flat = img
-        self._imgMask = img.mask
+        self._shape2flat = img.copy()
+        self._imgMask = self._shape2flat.mask
         return self
 
     def loadInteractionCube(
@@ -164,16 +188,22 @@ class ComputeReconstructor:
         print("...", end="\a", flush=True)
         try:
             self._setAnalysisMask()
-            self._intMat = _np.array(
-                [
-                    (self._intMatCube[:, :, i].data)[self._analysisMask == 0]
-                    for i in range(self._intMatCube.shape[2])
-                ]
-            )
+            # New efficient way - TOTRY
+            n_images = self._intMatCube.shape[2]
+            reshaped = self._intMatCube.data.reshape(-1, n_images)
+            mask_flat = (self._analysisMask == 0).ravel()
+            intMat = reshaped[mask_flat, :].T
+            # self._intMat = _np.array(
+            #     [
+            #         (self._intMatCube[:, :, i].data)[self._analysisMask == 0]
+            #         for i in range(self._intMatCube.shape[2])
+            #     ]
+            # )
         except Exception as e:
             self._logger.error("Error in computing interaction matrix from cube:%s", e)
             raise e
-        self._logger.info("Computed interaction matrix of shape %s", self._intMat.shape)
+        self._logger.info("Computed interaction matrix of shape %s", intMat.shape)
+        return intMat
 
     def _setAnalysisMask(self):
         """

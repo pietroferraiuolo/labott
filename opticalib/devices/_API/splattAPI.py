@@ -1,4 +1,5 @@
 import Pyro4
+import configparser
 import numpy as np
 from opticalib.core.exceptions import DeviceNotFoundError
 import matplotlib.pyplot as plt
@@ -95,8 +96,8 @@ class SPLATTEngine:
         plt.xlim([min(x) - margin, max(x) + margin])
         plt.ylim([min(y) - margin, max(y) + margin])
         for i in range(self.nActs):
-            plt.text(x[i], y[i] + margin, str(indices[i]))
-        plt.text(x[15], y[15] * 1.2, "G")
+            plt.text(x[i] * 2 / 3, y[i] + margin * 2 / 3, str(indices[i]))
+        plt.text(x[15], y[15] * 1.3, "G")
 
     def read_state(self):
         pos = self.get_position()

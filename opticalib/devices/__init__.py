@@ -10,24 +10,20 @@ Author(s):
 
 Description:
 ------------
-This module contains the classes for interfacing the devices used in optical 
+This module contains the classes for interfacing the devices used in optical
 benches, or in general optical devices.
 
 Contents:
 ---------
-- deformable_mirrors.py: Contains classes for different deformable mirrors. 
-  The definitions and low level interfaces to these devices are handled in the 
+- deformable_mirrors.py: Contains classes for different deformable mirrors.
+  The definitions and low level interfaces to these devices are handled in the
   `_API` submodule.
-- interferometer.py: Contains classes for different interferometers. The 
-  definitions and low level interfaces to these devices are handled in the 
+- interferometer.py: Contains classes for different interferometers. The
+  definitions and low level interfaces to these devices are handled in the
   `_API` submodule.
 """
 
 from .interferometer import PhaseCam, AccuFiz
-from .deformable_mirrors import (
-    SplattDm,
-    AlpaoDm,
-    AdOpticaDm,
-)
+from .deformable_mirrors import SplattDm, AlpaoDm, AdOpticaDm, DP, M4AU
 
-__all__ = ["AdOpticaDm", "PhaseCam", "AccuFiz", "SplattDm", "AlpaoDm"]
+__all__ = ["AdOpticaDm", "PhaseCam", "AccuFiz", "SplattDm", "AlpaoDm", "DP", "M4AU"]

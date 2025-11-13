@@ -117,13 +117,33 @@ class Flattening:
         self._flatResidue = None
         self._flatteningModes = None
 
+    @property
+    def RM(self):
+        """
+        Reconstruction matrix property.
+        """
+        return self._recMat
+
+    @property
+    def CM(self):
+        """
+        Command matrix property.
+        """
+        return self._cmdMat
+
+    @property
+    def IM(self):
+        """
+        Interaction cube property.
+        """
+        return self._rec._intMat
+
     def applyFlatCommand(
         self,
         dm: _ot.DeformableMirrorDevice,
         interf: _ot.InterferometerDevice,
         modes2flat: int | _ot.ArrayLike,
         modes2discard: _ot.Optional[int] = None,
-        cmdOffset: _ot.Optional[_ot.ArrayLike] = None,
         nframes: int = 5,
     ) -> None:
         f"""
@@ -145,15 +165,10 @@ class Flattening:
         """
         new_tn = _ts()
         imgstart = interf.acquire_map(nframes, rebin=self.rebin)
-        self.loadImage2Shape(imgstart)
-        self.computeRecMat(modes2discard)
+        self.loadImage2Shape(imgstart, compute=modes2discard)
         deltacmd = self.computeFlatCmd(modes2flat)
         cmd = dm.get_shape()
-        # TODO
-        ## Modifiche DP: da sistemare poi
-        # dm.set_shape(deltacmd, differential=True)
-        for i in range(1, 5):
-            dm.set_shape(cmdOffset + deltacmd * 0.2 * i)
+        dm.set_shape(deltacmd, differential=True)
         imgflat = interf.acquire_map(nframes, rebin=self.rebin)
         files = [
             "flatCommand.fits",
@@ -163,17 +178,18 @@ class Flattening:
         ]
         data = [cmd, deltacmd, imgstart, imgflat]
         fold = _os.path.join(_fn.FLAT_ROOT_FOLDER, new_tn)
+        header = {}
+        header["CALDATA"] = (self.tn, "calibration data used")
+        header["MODFLAT"] = (str(modes2flat), "modes used for flattening")
+        header["MDISCAR"] = (modes2discard, "modes discarded in reconstructor")
+        header["DMNAME"] = (dm.name, "deformable mirror name")
+        header["INTERF"] = (interf.name, "interferometer used")
         if not _os.path.exists(fold):
             _os.mkdir(fold)
         for f, d in zip(files, data):
             path = _os.path.join(fold, f)
-            if isinstance(d, _np.ma.masked_array):
-                _osu.save_fits(path, d)
-            else:
-                _osu.save_fits(path, d)
-        with open(_os.path.join(fold, "info.txt"), "w") as info:
-            info.write(f"Flattened with `{self.tn}` data")
-        print(f"Flat command saved in {'/'.join(fold.split('/')[-2:])}")
+            _osu.save_fits(path, d, header=header)
+        print(f"Flat command saved in .../{'/'.join(fold.split('/')[-2:])}")
 
     def computeFlatCmd(self, n_modes: int | _ot.ArrayLike) -> _ot.ArrayLike:
         """
@@ -198,7 +214,7 @@ class Flattening:
             flat_cmd = cmdMat[:, :n_modes] @ _cmd[:n_modes]
         elif isinstance(n_modes, (_np.ndarray, list)):
             _cmdMat = _np.zeros((cmdMat.shape[0], len(n_modes)))
-            _scmd = _np.zeros(len(n_modes))  # _cmd.shape[0])
+            _scmd = _np.zeros(len(n_modes))
             for i, mode in enumerate(n_modes):
                 _cmdMat.T[i] = cmdMat.T[mode]
                 _scmd[i] = _cmd[mode]
@@ -243,7 +259,7 @@ class Flattening:
         """
         print("Computing recontruction matrix...")
         self._recMat = self._rec.run(sv_threshold=threshold)
-    
+
     def getSVDmatrices(self) -> tuple[_ot.ArrayLike, _ot.ArrayLike, _ot.ArrayLike]:
         """
         Returns the U, S, Vt matrices from the SVD decomposition of the interaction matrix.
@@ -258,7 +274,7 @@ class Flattening:
             Right singular vectors (transposed).
         """
         return self._rec._intMat_U, self._rec._intMat_S, self._rec._intMat_Vt
-    
+
     def plotEigenvalues(self) -> None:
         """
         Plots the eigenvalues of the interaction matrix.
@@ -288,7 +304,12 @@ class Flattening:
             Default modes are [1,2,3] -> piston/tip/tilt.
         """
         try:
-            # DEPRECATED: this will be removed in future versions
+            import warnings
+
+            warnings.warn(
+                "filtering flag in `flag.txt` file is deprecated and will be removed in a future version of `opticalib`.",
+                DeprecationWarning,
+            )
             with open(
                 _os.path.join(self._path, _ifp.flagFile), "r", encoding="utf-8"
             ) as f:
@@ -379,9 +400,10 @@ class Flattening:
         roll = (xcm - xci, ycm - yci)
         img = _np.roll(img, roll, axis=(0, 1))
         if self.filteredModes is not None:
-            from opticalib.ground import zernike
+            from opticalib.ground.modal_decomposer import ZernikeFitter
 
-            img = zernike.removeZernike(img, self.filteredModes)
+            zfit = ZernikeFitter()
+            img = zfit.removeZernike(img, self.filteredModes)
         return img
 
     def _loadIntCube(self) -> _ot.CubeData:
@@ -397,6 +419,12 @@ class Flattening:
             _os.path.join(self._path, _ifp.cubeFile), True
         )
         try:
+            import warnings
+
+            warnings.warn(
+                "filtering flag in `flag.txt` file is deprecated and will be removed in a future version of `opticalib`.",
+                DeprecationWarning,
+            )
             # Backwards compatibility for rebinning
             with open(_os.path.join(self._path, _ifp.flagFile), "r") as file:
                 lines = file.readlines()
@@ -461,13 +489,13 @@ class Flattening:
         # cannot work. we should create a dedicated function, not necessarily linked to IFF or flattening
         return dp
 
-    def __get_mask_center(self, mask):
+    def __get_mask_center(self, mask: _ot.MaskData) -> tuple[int, int]:
         """
         Computes the center of the mask, which is used to align images and cubes.
 
         Parameters
         ----------
-        mask : ndarray
+        mask : MaskData
             Mask of the image or cube.
 
         Returns
