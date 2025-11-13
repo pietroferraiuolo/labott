@@ -274,6 +274,8 @@ class _ModeFitter(ABC):
             surface[mm] = _np.dot(mat, coeff)
             surface = _np.ma.masked_array(surface, mask=image.mask)
         elif image is None and self._mgen is not None:
+            if isinstance(modes, int):
+                modes = [modes]
             surface = self._get_mode_from_generator(modes[0])
             if len(modes) > 1:
                 for mode in modes[1:]:
@@ -456,7 +458,6 @@ class ZernikeFitter(_ModeFitter):
         """
         return _ZernikeGenerator(mask)
 
-    @_lru_cache
     def _get_mode_from_generator(self, mode_index: int) -> _t.ImageData:
         """
         Get the mode defined on the mask from the generator.
@@ -471,7 +472,7 @@ class ZernikeFitter(_ModeFitter):
         mode_image : ImageData
             The Zernike mode image corresponding to the given index.
         """
-        return self._mgen.getZernike(mode_index)
+        return self._mgen.getZernike(mode_index).copy()
     
 
 class KLFitter(_ModeFitter):
