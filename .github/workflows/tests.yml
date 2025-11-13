@@ -15,7 +15,7 @@ jobs:
       matrix:
         python-version:
           - "3.11"
-          - "3.x"
+          - "3.14"
 
     steps:
       - name: Checkout repository
@@ -25,6 +25,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: |
@@ -32,7 +40,14 @@ jobs:
           pip install -r requirements.txt
           pip install -e .
 
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude ./scripts --exit-zero --max-complexity=10 --max-line-length=127
+
+
       - name: Run pytest
         run: |
-          pytest -v
+          pip install pytest pytest-cov
+          pytest --cov=opticalib
 
