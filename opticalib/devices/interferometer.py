@@ -105,6 +105,31 @@ class _4DInterferometer(_api.BaseInterferometer):
             images = _np.ma.dstack(image_list)
             data2d = _np.ma.mean(images, 2)
         return data2d
+    
+    def get_interferogram(self, index: int, rebin: int = 1) -> _ot.ImageData:
+        """
+        Acquires the interferogram at the specified index.
+        
+        Parameters
+        ----------
+        index: int
+            Index of the interferogram to acquire.
+        
+        Returns
+        -------
+        data: numpy array
+            Interferogram data.
+        """
+        json_data = self._i4d.getInterferogram(index)
+        data = _np.array(json_data["Data"], dtype=float)
+        # width = json_data["Width"]
+        # height = json_data["Height"]
+        # masked_ima = self._fromDataArrayToMaskedArray(
+        #     width, height, data #* 632.8e-9
+        # )
+        # if rebin > 1:
+        #     masked_ima = _modeRebinner(masked_ima, rebin)
+        return data
 
     def capture(self, numberOfFrames: int, folder_name: str = None) -> str:
         """
