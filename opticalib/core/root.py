@@ -81,48 +81,6 @@ def _updateInterfPaths(paths: dict[str, str]) -> None:
     PRODUCE_FOLDER_NAME_LOCAL_PC = paths["produce"]
 
 
-TEMPLATE_CONF_FILE: str = (
-    _os.path.dirname(_os.path.abspath(__file__)) + "/_configurations/configuration.yaml"
-)
-CONFIGURATION_ROOT_FOLDER: str = _os.path.dirname(TEMPLATE_CONF_FILE)
-CONFIGURATION_FILE: str = _os.getenv("AOCONF", TEMPLATE_CONF_FILE)
-
-with open(CONFIGURATION_FILE, "r") as _f:
-    _config = _gyml.load(_f)
-
-_bdp = _config["SYSTEM"].get("data_path")
-BASE_DATA_PATH: str = (
-    _bdp
-    if not _bdp == ""
-    else _os.path.join(_os.path.expanduser("~"), ".tmp_opticalibData")
-)
-
-OPT_DATA_ROOT_FOLDER: str = _os.path.join(BASE_DATA_PATH, "OPTData")
-LOGGING_ROOT_FOLDER: str = _os.path.join(BASE_DATA_PATH, "Logging")
-CONFIGURATION_FOLDER: str = _os.path.join(BASE_DATA_PATH, "SysConfig")
-OPD_SERIES_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "OPDSeries")
-OPD_IMAGES_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "OPDImages")
-ALIGNMENT_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "Alignment")
-FLAT_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "Flattening")
-MODALBASE_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "ModalBases")
-IFFUNCTIONS_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "IFFunctions")
-INTMAT_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "INTMatrices")
-CONTROL_MATRIX_FOLDER: str = _os.path.join(ALIGNMENT_ROOT_FOLDER, "ControlMatrices")
-ALIGN_CALIBRATION_ROOT_FOLDER: str = _os.path.join(ALIGNMENT_ROOT_FOLDER, "Calibration")
-ALIGN_RESULTS_ROOT_FOLDER: str = _os.path.join(ALIGNMENT_ROOT_FOLDER, "Results")
-
-create_folder_tree(BASE_DATA_PATH)
-
-########################
-# INTERFEROMETER PATHS #
-########################
-SETTINGS_CONF_FILE: str = None
-COPIED_SETTINGS_CONF_FILE: str = None
-CAPTURE_FOLDER_NAME_4D_PC: str = None
-PRODUCE_FOLDER_NAME_4D_PC: str = None
-PRODUCE_FOLDER_NAME_LOCAL_PC: str = None
-
-
 def create_configuration_file(path: str = "", data_path: str | bool = False) -> None:
     """
     Create a configuration file in the specified path.
@@ -136,9 +94,6 @@ def create_configuration_file(path: str = "", data_path: str | bool = False) -> 
         directory as the configuration file. If False, it will not be set.
         If a string, a path must be provided, and the `data_path` will be
         set to that path.
-    load : bool
-        If True, the configuration file will be loaded after creation, the folder
-        tree created (if not already) and all the paths updated.
     """
     global TEMPLATE_CONF_FILE
     bp = _os.path.expanduser("~")
@@ -172,6 +127,56 @@ def create_configuration_file(path: str = "", data_path: str | bool = False) -> 
         conf_folder = _os.path.join(data_path, "SysConfig")
         move(file, _os.path.join(conf_folder, "configuration.yaml"))
         print(f"Configuration file moved to {conf_folder}")
+
+TEMPLATE_CONF_FILE: str = (
+    _os.path.dirname(_os.path.abspath(__file__)) + "/_configurations/configuration.yaml"
+)
+CONFIGURATION_ROOT_FOLDER: str = _os.path.dirname(TEMPLATE_CONF_FILE)
+CONFIGURATION_FILE: str = _os.getenv("AOCONF", TEMPLATE_CONF_FILE)
+
+with open(CONFIGURATION_FILE, "r") as _f:
+    _config = _gyml.load(_f)
+
+_bdp = _config["SYSTEM"].get("data_path")
+_fallback_bdp = _os.path.join(_os.path.expanduser("~"), ".tmp_opticalib")
+BASE_DATA_PATH: str = (
+    _bdp
+    if not _bdp == ""
+    else _fallback_bdp
+)
+
+create_folder_tree(BASE_DATA_PATH)
+if BASE_DATA_PATH == _fallback_bdp:
+    create_configuration_file(path=_fallback_bdp, data_path=True)
+    CONFIGURATION_FILE = _os.path.join(
+        BASE_DATA_PATH, "SysConfig", "configuration.yaml"
+    )
+    with open(CONFIGURATION_FILE, "r") as _f:
+        _config = _gyml.load(_f)
+
+OPT_DATA_ROOT_FOLDER: str = _os.path.join(BASE_DATA_PATH, "OPTData")
+LOGGING_ROOT_FOLDER: str = _os.path.join(BASE_DATA_PATH, "Logging")
+CONFIGURATION_FOLDER: str = _os.path.join(BASE_DATA_PATH, "SysConfig")
+OPD_SERIES_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "OPDSeries")
+OPD_IMAGES_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "OPDImages")
+ALIGNMENT_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "Alignment")
+FLAT_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "Flattening")
+MODALBASE_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "ModalBases")
+IFFUNCTIONS_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "IFFunctions")
+INTMAT_ROOT_FOLDER: str = _os.path.join(OPT_DATA_ROOT_FOLDER, "INTMatrices")
+CONTROL_MATRIX_FOLDER: str = _os.path.join(ALIGNMENT_ROOT_FOLDER, "ControlMatrices")
+ALIGN_CALIBRATION_ROOT_FOLDER: str = _os.path.join(ALIGNMENT_ROOT_FOLDER, "Calibration")
+ALIGN_RESULTS_ROOT_FOLDER: str = _os.path.join(ALIGNMENT_ROOT_FOLDER, "Results")
+
+########################
+# INTERFEROMETER PATHS #
+########################
+SETTINGS_CONF_FILE: str = None
+COPIED_SETTINGS_CONF_FILE: str = None
+CAPTURE_FOLDER_NAME_4D_PC: str = None
+PRODUCE_FOLDER_NAME_4D_PC: str = None
+PRODUCE_FOLDER_NAME_LOCAL_PC: str = None
+
 
 
 ###############################################################################
