@@ -72,7 +72,7 @@ class _ModeFitter(ABC):
         If None, a default CircularMask will be created.
     """
 
-    def __init__(self, fit_mask: _t.Optional[_t.ImageData | _t.CircularMask | _t.MaskData] = None, method: str = 'COG'):
+    def __init__(self, fit_mask: _t.Optional[_t.ImageData | _CircularMask | _t.MaskData] = None, method: str = 'COG'):
         """
         Class for fitting Zernike polynomials to an image.
 
@@ -143,7 +143,7 @@ class _ModeFitter(ABC):
         """
         return self.auxmask
 
-    def setFitMask(self, fit_mask: _t.ImageData | _t.CircularMask | _t.MaskData, method: str = "COG") -> None:
+    def setFitMask(self, fit_mask: _t.ImageData | _CircularMask | _t.MaskData, method: str = "COG") -> None:
         """
         Set the fitting mask.
 
