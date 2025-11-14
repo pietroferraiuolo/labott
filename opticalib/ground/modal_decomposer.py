@@ -72,7 +72,7 @@ class _ModeFitter(ABC):
         If None, a default CircularMask will be created.
     """
 
-    def __init__(self, fit_mask: _t.Optional[_t.ImageData] = None):
+    def __init__(self, fit_mask: _t.Optional[_t.ImageData] = None, method: str = 'COG'):
         """
         Class for fitting Zernike polynomials to an image.
 
@@ -81,9 +81,11 @@ class _ModeFitter(ABC):
         fit_mask : ImageData or CircularMask or np.ndarray, optional
             Mask to be used for fitting. Can be an ImageData, CircularMask, or ndarray.
             If None, a default CircularMask will be created.
+        method : str, optional
+            Method used by the `CircularMask.fromMaskedArray` function. Default is 'COG
         """
         if fit_mask is not None:
-            self.setFitMask(fit_mask=fit_mask, method='COG')
+            self.setFitMask(fit_mask=fit_mask, method=method)
         else:
             self._fit_mask = None
             self.auxmask = None
@@ -107,12 +109,6 @@ class _ModeFitter(ABC):
         mat : MatrixLike
             Fitting matrix for the specified modes.
         """
-        # mat = []
-        # for zmode in modes:
-        #     vv = self._get_mode_from_generator(zmode)
-        #     mat.append(vv[mask])
-        # mat = _np.array(mat)
-        # return mat
         return _np.vstack([self._get_mode_from_generator(zmode)[mask] for zmode in modes])
 
     @abstractmethod
@@ -156,15 +152,25 @@ class _ModeFitter(ABC):
         method : str, optional
             Method used by the `CircularMask.fromMaskedArray` function. Default is 'COG'.
         """
-        if isinstance(fit_mask, _CircularMask):
-            self._fit_mask = fit_mask
-        elif isinstance(fit_mask, _np.ndarray):
-            self._fit_mask = _CircularMask.fromMaskedArray(
-                _np.ma.masked_array(fit_mask, mask=fit_mask == 1),
-                method=method,
-            )
-        else:
-            self._fit_mask = _CircularMask.fromMaskedArray(fit_mask, method="COG")
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            if isinstance(fit_mask, _CircularMask):
+                self._fit_mask = fit_mask
+            elif isinstance(fit_mask, _np.ma.masked_array):
+                self._fit_mask = _CircularMask.fromMaskedArray(
+                    _np.ma.masked_array(fit_mask, mask=fit_mask.mask.astype(bool)),
+                    method=method,
+                )
+            elif _t.isinstance_(fit_mask, 'MaskData'):
+                cmask = _CircularMask.fromMaskedArray(
+                    _np.ma.masked_array(_np.zeros_like(fit_mask), mask=fit_mask.astype(bool)),
+                    method='COG',
+                )
+                cmask._mask = fit_mask.astype(bool)
+                self._fit_mask = cmask
+            else:
+                self._fit_mask = _CircularMask.fromMaskedArray(fit_mask, method=method)
         self.auxmask = self._fit_mask.mask()
         self._mgen = self._create_modes_generator(self._fit_mask)
 
@@ -280,6 +286,7 @@ class _ModeFitter(ABC):
             if len(modes) > 1:
                 for mode in modes[1:]:
                     surface += self._get_mode_from_generator(mode)
+            surface[self.auxmask == 1] = 0.0
         return surface
     
     def filterModes(
@@ -300,8 +307,13 @@ class _ModeFitter(ABC):
         new_ima : ImageData
             Filtered image.
         """
+        # # try this:
+        # if all([self._mgen is not None, self._fit_mask is not None]):
+        #     surf = self.makeSurface(mode_index_vector, None)
+        # else:
+        image = self._make_sure_on_cpu(image)
         surf = self.makeSurface(mode_index_vector, image)
-        return _np.ma.masked_array(image - surf, image.mask)
+        return _np.ma.masked_array((image - surf).data, mask=image.mask)
 
     @_contextmanager
     def no_mask(self):
@@ -352,10 +364,10 @@ class _ModeFitter(ABC):
         try:
             if self._mgen is None:
                 self._mgen = self._create_fit_mask_from_img(image)
-                image = _np.ma.masked_array(
-                    image.data, mask=self._mgen._boolean_mask.copy()
-                )
                 was_temporary = True
+            image = _np.ma.masked_array(
+                image.data, mask=self._mgen._boolean_mask.copy()
+            )
             yield image, was_temporary
         finally:
             if was_temporary:
@@ -420,9 +432,8 @@ class ZernikeFitter(_ModeFitter):
         If None, a default CircularMask will be created.
     """
 
-    def __init__(self, fit_mask: _t.Optional[_t.ImageData] = None):
+    def __init__(self, fit_mask: _t.Optional[_t.ImageData] = None, method: str = 'COG'):
         """The Initiator."""
-        # Defines the auxmask (if any) mask from the Parent class
         super().__init__(fit_mask)
 
     def removeZernike(
@@ -486,10 +497,10 @@ class KLFitter(_ModeFitter):
         If None, a default CircularMask will be created.
     """
 
-    def __init__(self, nKLModes: int, fit_mask: _t.Optional[_t.ImageData] = None):
+    def __init__(self, nKLModes: int, fit_mask: _t.Optional[_t.ImageData] = None, method: str = 'COG'):
         """The Initiator"""
         self.nModes = nKLModes
-        super().__init__(fit_mask)
+        super().__init__(fit_mask, method)
 
     def _create_modes_generator(self, mask: _CircularMask) -> _CircularMask:
         """
@@ -541,13 +552,14 @@ class RBFitter(_ModeFitter):
         coords: _t.ArrayLike = None,
         rbfFunction: str = "TPS_RBF",
         eps: float = 1.0,
-        fit_mask: _t.Optional[_t.ImageData] = None
+        fit_mask: _t.Optional[_t.ImageData] = None,
+        method: str = 'COG'
     ):
         """The Initiator"""
         self.rbfFunction = rbfFunction
         self._coordinates = coords
         self._eps = eps
-        super().__init__(fit_mask)                
+        super().__init__(fit_mask, method)
 
     def _create_modes_generator(self, mask: _CircularMask) -> _CircularMask:
         """
