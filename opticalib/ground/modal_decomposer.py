@@ -72,17 +72,19 @@ class _ModeFitter(ABC):
         If None, a default CircularMask will be created.
     """
 
-    def __init__(self, fit_mask: _t.Optional[_t.ImageData] = None, method: str = 'COG'):
+    def __init__(self, fit_mask: _t.Optional[_t.ImageData | _t.CircularMask | _t.MaskData] = None, method: str = 'COG'):
         """
         Class for fitting Zernike polynomials to an image.
 
         Parameters
         ----------
-        fit_mask : ImageData or CircularMask or np.ndarray, optional
-            Mask to be used for fitting. Can be an ImageData, CircularMask, or ndarray.
-            If None, a default CircularMask will be created.
+        fit_mask : ImageData | CircularMask | MaskData, optional
+            Mask to be used for fitting. Can be:
+            - ImageData : A masked array from which a CircularMask is estimated.
+            - CircularMask : A pre-defined CircularMask object.
+            - MaskData : A boolean mask array.
         method : str, optional
-            Method used by the `CircularMask.fromMaskedArray` function. Default is 'COG
+            Method used by the `CircularMask.fromMaskedArray` function. Default is 'COG'
         """
         if fit_mask is not None:
             self.setFitMask(fit_mask=fit_mask, method=method)
@@ -141,14 +143,17 @@ class _ModeFitter(ABC):
         """
         return self.auxmask
 
-    def setFitMask(self, fit_mask: _t.ImageData, method: str = "COG") -> None:
+    def setFitMask(self, fit_mask: _t.ImageData | _t.CircularMask | _t.MaskData, method: str = "COG") -> None:
         """
         Set the fitting mask.
 
         Parameters
         ----------
-        fit_mask : ImageData or CircularMask or np.ndarray
-            Mask to be used for fitting. Can be an ImageData, CircularMask, or ndarray.
+        fit_mask : ImageData | CircularMask | MaskData, optional
+            Mask to be used for fitting. Can be:
+            - ImageData : A masked array from which a CircularMask is estimated.
+            - CircularMask : A pre-defined CircularMask object.
+            - MaskData : A boolean mask array.
         method : str, optional
             Method used by the `CircularMask.fromMaskedArray` function. Default is 'COG'.
         """
